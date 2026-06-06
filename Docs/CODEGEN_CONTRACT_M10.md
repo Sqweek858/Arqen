@@ -1,6 +1,6 @@
 # Codegen Contract M10
 
-Status: current M10/M10G contract
+Status: M10 historical contract, superseded in current driver by M10I backend boundary
 
 ## Target
 
@@ -21,7 +21,7 @@ ExitProcess(0)
 
 M10 manual codegen consumes the historical AST dump.
 
-M10G driver codegen consumes stable AST fields:
+M10G driver codegen consumed stable AST fields:
 
 ```text
 TITLE
@@ -35,6 +35,22 @@ Required:
 ```text
 SEMANTIC|OK
 EXIT|0
+```
+
+M10I current driver path:
+
+```text
+AST
+-> ARQIR v0
+-> WindowsX64PE backend
+-> .exe artifact
+```
+
+The current backend contract is documented in:
+
+```text
+Docs\BACKEND_CONTRACT.md
+Backends\WindowsX64PE\PE_BACKEND_CONTRACT.md
 ```
 
 ## Template

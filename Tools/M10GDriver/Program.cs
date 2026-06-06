@@ -35,15 +35,21 @@ static class Program
         if (args.Length == 0 || args[0] is "-h" or "--help")
         {
             Console.WriteLine("Usage: arqc_m10g.exe <input.arq> [-o output.exe]");
+            Console.WriteLine("       arqc_m10g.exe --backend-only <input.arqir> [-o output.exe]");
             return args.Length == 0 ? 2 : 0;
         }
 
         string? inputArg = null;
         string? outputArg = null;
+        var backendOnly = false;
 
         for (var i = 0; i < args.Length; i++)
         {
-            if (args[i] == "-o")
+            if (args[i] == "--backend-only")
+            {
+                backendOnly = true;
+            }
+            else if (args[i] == "-o")
             {
                 if (i + 1 >= args.Length)
                 {
@@ -88,15 +94,24 @@ static class Program
         var buildRoot = Path.Combine(repoRoot, "Build");
         var tokenDir = Path.Combine(buildRoot, "Tokens");
         var astDir = Path.Combine(buildRoot, "AST");
+        var irDir = Path.Combine(buildRoot, "IR");
         var exeDir = Path.Combine(buildRoot, "EXE");
         var errorDir = Path.Combine(buildRoot, "Errors");
+        var manifestDir = Path.Combine(buildRoot, "Manifests");
         var logDir = Path.Combine(buildRoot, "Logs");
+        var diagnosticsRoot = Path.Combine(buildRoot, "Diagnostics");
+        var diagnosticsLexer = Path.Combine(diagnosticsRoot, "Lexer");
+        var diagnosticsParser = Path.Combine(diagnosticsRoot, "Parser");
+        var diagnosticsSemantic = Path.Combine(diagnosticsRoot, "Semantic");
+        var diagnosticsIr = Path.Combine(diagnosticsRoot, "IR");
+        var diagnosticsBackend = Path.Combine(diagnosticsRoot, "Backend");
 
-        foreach (var dir in new[] { tokenDir, astDir, exeDir, errorDir, logDir })
+        foreach (var dir in new[] { tokenDir, astDir, irDir, exeDir, errorDir, manifestDir, logDir, diagnosticsLexer, diagnosticsParser, diagnosticsSemantic, diagnosticsIr, diagnosticsBackend })
             Directory.CreateDirectory(dir);
 
         var tokenPath = Path.Combine(tokenDir, stem + ".tokens");
         var astPath = Path.Combine(astDir, stem + ".ast");
+        var irPath = Path.Combine(irDir, stem + ".arqir");
         var outputPath = outputArg == null
             ? Path.Combine(exeDir, stem + ".exe")
             : Path.GetFullPath(Path.Combine(cwd, outputArg));
@@ -105,6 +120,7 @@ static class Program
             Directory.CreateDirectory(outputDir);
 
         var logPath = Path.Combine(logDir, stem + ".build.log");
+        var manifestPath = Path.Combine(manifestDir, stem + ".manifest.txt");
         var log = new List<string>();
 
         void Emit(string line)
@@ -114,9 +130,49 @@ static class Program
         }
 
         string ErrorPath(string stage) => Path.Combine(errorDir, $"{stem}.{stage.ToLowerInvariant()}.error.txt");
+        string DiagnosticPath(string stage) => Path.Combine(stage.ToUpperInvariant() switch
+        {
+            "LEX" => diagnosticsLexer,
+            "PARSE" => diagnosticsParser,
+            "SEMANTIC" => diagnosticsSemantic,
+            "IR" => diagnosticsIr,
+            "BACKEND" or "CODEGEN" => diagnosticsBackend,
+            _ => errorDir
+        }, $"{stem}.{stage.ToLowerInvariant()}.diagnostic.txt");
+
+        void WriteStageError(string stage, CompileError ex)
+        {
+            var text = ex.Format();
+            File.WriteAllText(ErrorPath(stage), text, Encoding.UTF8);
+            File.WriteAllText(DiagnosticPath(stage), text, Encoding.UTF8);
+        }
 
         foreach (var old in Directory.GetFiles(errorDir, $"{stem}.*.error.txt"))
             File.Delete(old);
+        foreach (var dir in new[] { diagnosticsLexer, diagnosticsParser, diagnosticsSemantic, diagnosticsIr, diagnosticsBackend })
+            foreach (var old in Directory.GetFiles(dir, $"{stem}.*.diagnostic.txt"))
+                File.Delete(old);
+
+        if (backendOnly)
+        {
+            try
+            {
+                var backendManifestPath = Path.Combine(manifestDir, Path.GetFileNameWithoutExtension(outputPath) + ".manifest.txt");
+                BackendFromIr(repoRoot, inputPath, outputPath);
+                WriteManifest(backendManifestPath, Rel(repoRoot, outputPath), SourceFromIr(inputPath), Rel(repoRoot, inputPath), "WindowsX64PE_MessageBoxBackend", "windows-x64-pe", "success");
+                Emit($"[BACKEND] PASS -> {Rel(repoRoot, outputPath)}");
+                Emit($"[ARTIFACT] PASS -> {Rel(repoRoot, backendManifestPath)}");
+                File.WriteAllLines(logPath, log, Encoding.UTF8);
+                return 0;
+            }
+            catch (CompileError ex)
+            {
+                WriteStageError("BACKEND", ex);
+                Emit($"[BACKEND] FAIL {ex.Code} -> {Rel(repoRoot, ErrorPath("BACKEND"))}");
+                File.WriteAllLines(logPath, log, Encoding.UTF8);
+                return 1;
+            }
+        }
 
         try
         {
@@ -135,11 +191,10 @@ static class Program
             }
             catch (CompileError ex) when (ex.Stage is "PARSE" or "SEMANTIC")
             {
-                var err = ErrorPath(ex.Stage);
-                File.WriteAllText(err, ex.Format(), Encoding.UTF8);
+                WriteStageError(ex.Stage, ex);
                 if (ex.Stage == "SEMANTIC")
                     Emit("[PARSE] PASS -> syntax OK");
-                Emit($"[{ex.Stage}] FAIL {ex.Code} -> {Rel(repoRoot, err)}");
+                Emit($"[{ex.Stage}] FAIL {ex.Code} -> {Rel(repoRoot, ErrorPath(ex.Stage))}");
                 Emit(ex.Stage == "PARSE" ? "Compiler stopped before semantic." : "Compiler stopped before codegen.");
                 File.WriteAllLines(logPath, log, Encoding.UTF8);
                 return 1;
@@ -147,14 +202,18 @@ static class Program
 
             try
             {
-                Codegen(repoRoot, astPath, outputPath);
-                Emit($"[CODEGEN] PASS -> {Rel(repoRoot, outputPath)}");
+                File.WriteAllLines(irPath, IrLines(ast, Rel(repoRoot, inputPath)), Encoding.UTF8);
+                Emit($"[IR] PASS -> {Rel(repoRoot, irPath)}");
+                BackendFromIr(repoRoot, irPath, outputPath);
+                Emit($"[BACKEND] PASS -> {Rel(repoRoot, outputPath)}");
+                WriteManifest(manifestPath, Rel(repoRoot, outputPath), Rel(repoRoot, inputPath), Rel(repoRoot, irPath), "WindowsX64PE_MessageBoxBackend", "windows-x64-pe", "success");
+                Emit($"[ARTIFACT] PASS -> {Rel(repoRoot, manifestPath)}");
             }
             catch (CompileError ex)
             {
-                var err = ErrorPath("CODEGEN");
-                File.WriteAllText(err, ex.Format(), Encoding.UTF8);
-                Emit($"[CODEGEN] FAIL {ex.Code} -> {Rel(repoRoot, err)}");
+                var stage = ex.Stage == "IR" ? "IR" : "BACKEND";
+                WriteStageError(stage, ex);
+                Emit($"[{stage}] FAIL {ex.Code} -> {Rel(repoRoot, ErrorPath(stage))}");
                 File.WriteAllLines(logPath, log, Encoding.UTF8);
                 return 1;
             }
@@ -165,9 +224,8 @@ static class Program
         }
         catch (CompileError ex) when (ex.Stage == "LEX")
         {
-            var err = ErrorPath("LEX");
-            File.WriteAllText(err, ex.Format(), Encoding.UTF8);
-            Emit($"[LEX] FAIL {ex.Code} -> {Rel(repoRoot, err)}");
+            WriteStageError("LEX", ex);
+            Emit($"[LEX] FAIL {ex.Code} -> {Rel(repoRoot, ErrorPath("LEX"))}");
             Emit("Compiler stopped before parser.");
             File.WriteAllLines(logPath, log, Encoding.UTF8);
             return 1;
@@ -314,6 +372,20 @@ static class Program
         yield return "SEMANTIC|OK";
     }
 
+    static IEnumerable<string> IrLines(AstModel ast, string sourcePath)
+    {
+        yield return "ARQIR|version=0";
+        yield return $"TARGET|kind=program|name={Esc(ast.Program)}";
+        yield return $"META|source={Esc(sourcePath.Replace('\\', '/'))}";
+        yield return $"CONST|id=str_0|type=text|value={Esc(ast.Title)}";
+        yield return $"CONST|id=str_1|type=text|value={Esc(ast.Message)}";
+        yield return $"CONST|id=i32_0|type=int|value={ast.ExitCode}";
+        yield return "ACTION|id=act_0|op=show_message|title=str_0|text=str_1";
+        yield return "ACTION|id=act_1|op=exit|code=i32_0";
+        yield return "ENTRY|actions=act_0,act_1";
+        yield return "END";
+    }
+
     static string Esc(string value)
     {
         return value.Replace("\\", "\\\\").Replace("|", "\\p").Replace("\r", "\\r").Replace("\n", "\\n");
@@ -342,42 +414,150 @@ static class Program
         return sb.ToString();
     }
 
-    static void Codegen(string repoRoot, string astPath, string outputPath)
+    static void BackendFromIr(string repoRoot, string irPath, string outputPath)
     {
-        var fields = new Dictionary<string, string>();
-        foreach (var line in File.ReadAllLines(astPath, Encoding.UTF8))
-        {
-            var parts = SplitStable(line);
-            if (parts.Count >= 2 && parts[0] is "PROGRAM" or "TITLE" or "MESSAGE" or "EXIT" or "SEMANTIC")
-                fields[parts[0]] = parts[1];
-        }
+        var ir = ParseIr(irPath);
 
-        if (!fields.TryGetValue("TITLE", out var title) ||
-            !fields.TryGetValue("MESSAGE", out var message) ||
-            !fields.TryGetValue("EXIT", out var exitText) ||
-            exitText != "0" ||
-            !fields.TryGetValue("SEMANTIC", out var semantic) ||
-            semantic != "OK")
-            throw new CompileError("CODEGEN", "C001", 0, 0, "Invalid AST for M10G codegen.");
+        if (ir.Version != "0")
+            throw new CompileError("BACKEND", "B001", 0, 0, "Unsupported ARQIR version.");
+
+        if (!ir.Actions.TryGetValue("act_0", out var show) ||
+            !show.TryGetValue("op", out var showOp) ||
+            showOp != "show_message")
+            throw new CompileError("BACKEND", "B001", 0, 0, "Missing supported show_message action.");
+
+        if (!show.TryGetValue("title", out var titleId) ||
+            !show.TryGetValue("text", out var textId) ||
+            !ir.Consts.TryGetValue(titleId, out var titleConst) ||
+            !ir.Consts.TryGetValue(textId, out var textConst) ||
+            titleConst.Type != "text" ||
+            textConst.Type != "text")
+            throw new CompileError("BACKEND", "B001", 0, 0, "Invalid show_message constants.");
+
+        if (!ir.Actions.TryGetValue("act_1", out var exit) ||
+            !exit.TryGetValue("op", out var exitOp) ||
+            exitOp != "exit" ||
+            !exit.TryGetValue("code", out var codeId) ||
+            !ir.Consts.TryGetValue(codeId, out var codeConst) ||
+            codeConst.Type != "int" ||
+            codeConst.Value != "0")
+            throw new CompileError("BACKEND", "B001", 0, 0, "Only exit code 0 is supported by this backend.");
 
         var templatePath = Path.Combine(repoRoot, "Experiments", "M10_SimpleExpressions", "template_messagebox_m8.exe");
         if (!File.Exists(templatePath))
-            throw new CompileError("CODEGEN", "C001", 0, 0, "Missing MessageBox PE template.");
+            throw new CompileError("BACKEND", "B001", 0, 0, "Missing MessageBox PE template.");
 
         var pe = File.ReadAllBytes(templatePath);
-        PatchUtf16(pe, 0x400, 64, message);
-        PatchUtf16(pe, 0x440, 64, title);
+        PatchUtf16(pe, 0x400, 64, textConst.Value);
+        PatchUtf16(pe, 0x440, 64, titleConst.Value);
 
         var tmpPath = outputPath + ".tmp";
         File.WriteAllBytes(tmpPath, pe);
         File.Move(tmpPath, outputPath, true);
     }
 
+    record IrConst(string Type, string Value);
+    record IrModel(string Version, string Source, Dictionary<string, IrConst> Consts, Dictionary<string, Dictionary<string, string>> Actions);
+
+    static IrModel ParseIr(string irPath)
+    {
+        if (!File.Exists(irPath))
+            throw new CompileError("BACKEND", "B001", 0, 0, "IR file not found.");
+
+        string? version = null;
+        var source = "";
+        var consts = new Dictionary<string, IrConst>(StringComparer.Ordinal);
+        var actions = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
+        var sawEnd = false;
+
+        foreach (var raw in File.ReadAllLines(irPath, Encoding.UTF8))
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                continue;
+
+            var parts = SplitStable(raw);
+            var op = parts[0];
+            var fields = KeyValues(parts.Skip(1));
+
+            switch (op)
+            {
+                case "ARQIR":
+                    fields.TryGetValue("version", out version);
+                    break;
+                case "META":
+                    fields.TryGetValue("source", out source);
+                    break;
+                case "CONST":
+                    if (!fields.TryGetValue("id", out var id) ||
+                        !fields.TryGetValue("type", out var type) ||
+                        !fields.TryGetValue("value", out var value))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed CONST in IR.");
+                    consts[id] = new IrConst(type, value);
+                    break;
+                case "ACTION":
+                    if (!fields.TryGetValue("id", out var actionId))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed ACTION in IR.");
+                    actions[actionId] = fields;
+                    break;
+                case "END":
+                    sawEnd = true;
+                    break;
+            }
+        }
+
+        if (version == null || !sawEnd)
+            throw new CompileError("BACKEND", "B001", 0, 0, "Invalid ARQIR file.");
+
+        return new IrModel(version, source ?? "", consts, actions);
+    }
+
+    static Dictionary<string, string> KeyValues(IEnumerable<string> parts)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var part in parts)
+        {
+            var at = part.IndexOf('=');
+            if (at <= 0)
+                continue;
+            result[part[..at]] = part[(at + 1)..];
+        }
+        return result;
+    }
+
+    static string SourceFromIr(string irPath)
+    {
+        try
+        {
+            return ParseIr(irPath).Source;
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    static void WriteManifest(string manifestPath, string artifactPath, string sourcePath, string irPath, string backend, string target, string status)
+    {
+        var lines = new[]
+        {
+            $"ARTIFACT|{Esc(artifactPath.Replace('\\', '/'))}",
+            $"SOURCE|{Esc(sourcePath.Replace('\\', '/'))}",
+            $"IR|{Esc(irPath.Replace('\\', '/'))}",
+            $"BACKEND|{backend}",
+            $"TARGET|{target}",
+            $"STATUS|{status}",
+            "ACTIONS|show_message,exit",
+            "EXIT_CODE|0",
+            $"CREATED_AT|{DateTimeOffset.Now:O}"
+        };
+        File.WriteAllLines(manifestPath, lines, Encoding.UTF8);
+    }
+
     static void PatchUtf16(byte[] pe, int offset, int maxBytes, string value)
     {
         var bytes = Encoding.Unicode.GetBytes(value + "\0");
         if (bytes.Length > maxBytes)
-            throw new CompileError("CODEGEN", "C001", 0, 0, $"String too long for PE template buffer: {value}");
+            throw new CompileError("BACKEND", "B001", 0, 0, $"String too long for PE template buffer: {value}");
         Array.Clear(pe, offset, maxBytes);
         Array.Copy(bytes, 0, pe, offset, bytes.Length);
     }

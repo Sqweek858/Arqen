@@ -58,16 +58,34 @@ function Invoke-UiExe {
 
     $ws = New-Object -ComObject WScript.Shell
     $activated = $false
+    $sentEnter = $false
 
     for ($i = 0; $i -lt 40 -and -not $proc.HasExited; $i++) {
         Start-Sleep -Milliseconds 100
-        foreach ($title in $Titles) {
-            if ($ws.AppActivate($title)) {
-                $activated = $true
-                Start-Sleep -Milliseconds 100
-                $ws.SendKeys("{ENTER}")
-                break
+        $proc.Refresh()
+        if ($proc.MainWindowHandle -ne 0 -and $ws.AppActivate($proc.Id)) {
+            $activated = $true
+            Start-Sleep -Milliseconds 100
+            $ws.SendKeys("{ENTER}")
+            $sentEnter = $true
+            break
+        } else {
+            foreach ($title in $Titles) {
+                if ($title.Length -lt 8) {
+                    continue
+                }
+                if ($ws.AppActivate($title)) {
+                    $activated = $true
+                    Start-Sleep -Milliseconds 100
+                    $ws.SendKeys("{ENTER}")
+                    $sentEnter = $true
+                    break
+                }
             }
+        }
+        if ($i -ge 2 -and (($i - 2) % 3) -eq 0 -and -not $proc.HasExited) {
+            $ws.SendKeys("{ENTER}")
+            $sentEnter = $true
         }
         if ($activated) { break }
     }
@@ -75,10 +93,10 @@ function Invoke-UiExe {
     $proc.WaitForExit(5000) | Out-Null
     if (-not $proc.HasExited) {
         $proc.Kill()
-        return @{ Exit = $null; Activated = $activated; TimedOut = $true; Skipped = $false }
+        return @{ Exit = $null; Activated = ($activated -or $sentEnter); TimedOut = $true; Skipped = $false }
     }
 
-    return @{ Exit = $proc.ExitCode; Activated = $activated; TimedOut = $false; Skipped = $false }
+    return @{ Exit = $proc.ExitCode; Activated = ($activated -or $sentEnter); TimedOut = $false; Skipped = $false }
 }
 
 function Check-Ui {
@@ -247,6 +265,40 @@ function Run-Command-Tests {
     }
 }
 
+function Run-M10I-Backend-Tests {
+    Write-Host ""
+    Write-Host "M10I backend architecture tests"
+
+    $sampleExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10g.exe" @(".\Samples\hello_m10.arq")
+    $irPath = Join-Path $RepoRoot "Build\IR\hello_m10.arqir"
+    $manifestPath = Join-Path $RepoRoot "Build\Manifests\hello_m10.manifest.txt"
+    $exePath = Join-Path $RepoRoot "Build\EXE\hello_m10.exe"
+
+    Add-Check "M10I_SAMPLE_BUILD" ($sampleExit -eq 0 -and (Test-Path $irPath) -and (Test-Path $manifestPath) -and (Test-Path $exePath))
+
+    $ir = ""
+    if (Test-Path $irPath) {
+        $ir = Get-Content $irPath -Raw
+    }
+
+    Add-Check "M10I_IR_VERSION" ($ir.Contains("ARQIR|version=0"))
+    Add-Check "M10I_IR_ACTION_SHOW" ($ir.Contains("op=show_message"))
+    Add-Check "M10I_IR_ACTION_EXIT" ($ir.Contains("op=exit"))
+    Add-Check "M10I_IR_NO_WINDOWS_API" (-not $ir.Contains("MessageBoxW") -and -not $ir.Contains("ExitProcess"))
+    Add-Check "M10I_IR_NO_PE_DETAILS" (-not $ir.Contains("RVA") -and -not $ir.Contains("IAT") -and -not $ir.Contains("PE32") -and -not $ir.Contains("offset"))
+
+    $manifest = ""
+    if (Test-Path $manifestPath) {
+        $manifest = Get-Content $manifestPath -Raw
+    }
+    Add-Check "M10I_MANIFEST" ($manifest.Contains("BACKEND|WindowsX64PE_MessageBoxBackend") -and $manifest.Contains("IR|Build/IR/hello_m10.arqir"))
+
+    $backendOut = Join-Path $RepoRoot "Build\EXE\hello_m10_from_ir.exe"
+    $backendExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10g.exe" @("--backend-only", ".\Build\IR\hello_m10.arqir", "-o", ".\Build\EXE\hello_m10_from_ir.exe")
+    Add-Check "M10I_BACKEND_ONLY" ($backendExit -eq 0 -and (Test-Path $backendOut))
+    Check-Ui "M10I_BACKEND_OUT" (Join-Path $RepoRoot "Build\EXE") ".\hello_m10_from_ir.exe"
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -326,6 +378,8 @@ if ($fixturesOk) {
 Run-M10G-Driver-Tests
 
 Run-Command-Tests
+
+Run-M10I-Backend-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

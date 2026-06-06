@@ -1,6 +1,6 @@
 # Tool Map
 
-Status: M10F foundation hardening
+Status: M10I backend architecture
 
 Use this file to know which executable is safe to run and which one is old, broken, partial, or only a generated output.
 
@@ -18,7 +18,7 @@ unknown     not enough evidence yet
 
 | File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `arqc_m10g.exe` | `Tools` | M10G | compiler stage | Single driver: lexes, parses, checks semantics, and generates exe | any M10 `.arq` file | `Build\Tokens`, `Build\AST`, `Build\EXE`, `Build\Errors`, `Build\Logs` | `.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq` | yes | no | known-good | Bootstrap .NET tool; normal current workflow |
+| `arqc_m10g.exe` | `Tools` | M10I | compiler stage | Single driver: lexes, parses, checks semantics, lowers to ARQIR, runs backend, and writes artifact manifest | any M10 `.arq` file or `--backend-only` `.arqir` file | `Build\Tokens`, `Build\AST`, `Build\IR`, `Build\EXE`, `Build\Manifests`, `Build\Errors`, `Build\Diagnostics`, `Build\Logs` | `.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq` | yes | no | known-good | Bootstrap .NET tool; current workflow |
 | `new_command_scaffold.ps1` | `Tools` | M10H | bootstrap helper | Creates command implementation draft folders | command name | `Experiments\CommandDrafts\<Name>` | `.\Tools\new_command_scaffold.ps1 BlendMixToCode` | no | no | known-good | PowerShell scaffold helper, not compiler runtime |
 | `arq_lexer_m10_tokens.exe` | `Experiments\M10_SimpleExpressions` | M10 | compiler stage | Lexes M10 source | `m10.arq` | `m10.tokens.txt` | `.\arq_lexer_m10_tokens.exe` | yes | no | known-good | Latest lexer artifact |
 | `arq_parser_m10.exe` | `Experiments\M10_SimpleExpressions` | M10 | compiler stage | Parses M10 token dump and folds message expression | `m10.tokens.txt` | `m10.ast.txt` or `arqen_m10_error.txt` | `.\arq_parser_m10.exe` | yes | no | known-good | Target-shaped but passing |
@@ -96,6 +96,23 @@ If you only want the latest working pipeline, use:
 cd C:\Users\Sqweek\Documents\Arqen\Arqen
 .\Tools\arqc_m10g.exe .\Samples\hello_m10.arq
 .\Build\EXE\hello_m10.exe
+```
+
+Current M10I outputs:
+
+```text
+Build\Tokens\hello_m10.tokens
+Build\AST\hello_m10.ast
+Build\IR\hello_m10.arqir
+Build\EXE\hello_m10.exe
+Build\Manifests\hello_m10.manifest.txt
+Build\Logs\hello_m10.build.log
+```
+
+Backend-only bootstrap test:
+
+```powershell
+.\Tools\arqc_m10g.exe --backend-only .\Build\IR\hello_m10.arqir -o .\Build\EXE\hello_m10_from_ir.exe
 ```
 
 The old M10 manual stages remain available for debugging.

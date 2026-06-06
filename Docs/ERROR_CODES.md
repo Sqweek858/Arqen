@@ -78,15 +78,32 @@ Do not reuse P012 for another expression error without renaming one side.
 | --- | --- | --- | --- |
 | C001 | M8/M10/M10G codegen | Invalid AST or codegen input for current codegen | missing expected `title`, `message`, or `exit_code`; string too long for PE template |
 
+## Backend Errors
+
+| Code | Stage | Meaning | Example |
+| --- | --- | --- | --- |
+| B001 | M10I backend | Invalid or unsupported ARQIR/backend input | unsupported ARQIR version, missing supported action, invalid constants, non-zero exit code, missing PE template, string too long |
+
 ## M10G Error Routing
 
-M10G writes stage-specific error files:
+M10G/M10I writes stage-specific error files:
 
 ```text
 Build\Errors\<name>.lex.error.txt
 Build\Errors\<name>.parse.error.txt
 Build\Errors\<name>.semantic.error.txt
-Build\Errors\<name>.codegen.error.txt
+Build\Errors\<name>.ir.error.txt
+Build\Errors\<name>.backend.error.txt
+```
+
+M10I also mirrors current-stage diagnostics to:
+
+```text
+Build\Diagnostics\Lexer\<name>.lex.diagnostic.txt
+Build\Diagnostics\Parser\<name>.parse.diagnostic.txt
+Build\Diagnostics\Semantic\<name>.semantic.diagnostic.txt
+Build\Diagnostics\IR\<name>.ir.diagnostic.txt
+Build\Diagnostics\Backend\<name>.backend.diagnostic.txt
 ```
 
 Examples:

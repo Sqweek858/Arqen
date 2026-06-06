@@ -943,3 +943,92 @@ Known limitations:
 - command tests use the M10G driver
 - BlendMixToCode is only a draft, not implemented
 - no new language syntax was added
+
+## M10I - Backend Architecture
+
+Status: PASSED
+
+Goal:
+
+- Insert an explicit IR and backend boundary into the current compiler pipeline.
+- Keep language behavior unchanged.
+- Produce ARQIR v0 before backend generation.
+- Allow backend-only artifact generation from `.arqir`.
+
+Pipeline:
+
+```text
+Source
+-> Lexer
+-> Tokens
+-> Parser
+-> AST
+-> Semantic
+-> IR
+-> Backend
+-> Artifact
+```
+
+Command:
+
+```powershell
+.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq
+.\Tools\arqc_m10g.exe --backend-only .\Build\IR\hello_m10.arqir -o .\Build\EXE\hello_m10_from_ir.exe
+```
+
+Created:
+
+```text
+IR\Formats\ARQIR_V0.md
+IR\Samples\hello_m10.arqir
+Docs\IR_FORMAT_ARQIR_V0.md
+Docs\BACKEND_ARCHITECTURE.md
+Docs\BACKEND_CONTRACT.md
+Backends\WindowsX64PE\README.md
+Backends\WindowsX64PE\PE_BACKEND_CONTRACT.md
+Experiments\M10I_BackendArchitecture\EXPERIMENT_LOG.md
+Build\IR\.gitkeep
+Build\Manifests\.gitkeep
+Build\Diagnostics\*\.gitkeep
+```
+
+Output:
+
+```text
+Build\Tokens\hello_m10.tokens
+Build\AST\hello_m10.ast
+Build\IR\hello_m10.arqir
+Build\EXE\hello_m10.exe
+Build\EXE\hello_m10_from_ir.exe
+Build\Manifests\hello_m10.manifest.txt
+Build\Manifests\hello_m10_from_ir.manifest.txt
+```
+
+Stage result:
+
+```text
+[LEX] PASS -> Build\Tokens\hello_m10.tokens
+[PARSE] PASS -> syntax OK
+[SEMANTIC] PASS -> Build\AST\hello_m10.ast
+[IR] PASS -> Build\IR\hello_m10.arqir
+[BACKEND] PASS -> Build\EXE\hello_m10.exe
+[ARTIFACT] PASS -> Build\Manifests\hello_m10.manifest.txt
+[BUILD] PASS
+```
+
+Pass/fail:
+
+```text
+Tools\run_all_tests.ps1 -> Total: 61/61 passed
+Backend-only from ARQIR -> PASS
+Generated backend-only EXE -> PASS
+M10/M10G/M10H regressions -> PASS
+```
+
+Known limitations:
+
+- driver is still a bootstrap .NET tool, not the final self-hosted compiler
+- backend still uses the M8 MessageBox PE template
+- ARQIR v0 supports only `show_message` and `exit`
+- backend supports only exit code `0`
+- no if/else, blend mix implementation, functions, loops, UI/window/style, or new operators were added
