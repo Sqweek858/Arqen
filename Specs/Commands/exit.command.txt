@@ -1,10 +1,11 @@
-COMMAND exit
-SYNTAX exit <int>
-TOKENS KEYWORD(exit) INT
-AST Exit(code)
-SEMANTIC only code 0 supported today
-CODEGEN ExitProcess(0)
-TEST_VALID exit 0
-TEST_INVALID exit 1
-LIMITATIONS non-zero exit codes not supported yet
-ALIASES future draft may replace with blend mix to code
+COMMAND_ID|exit
+CANONICAL|exit <int>
+CATEGORY|control
+TOKENS|KEYWORD(exit) INT
+AST_NODE|Exit
+SEMANTIC|only code 0 supported today
+IR|exit
+BACKEND|WindowsX64PE.exit
+VALID_TEST|Tests\CommandTests\exit\valid_zero.arq
+INVALID_TEST|Tests\CommandTests\exit\invalid_one.arq
+STATUS|stable

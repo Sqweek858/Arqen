@@ -19,14 +19,15 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $group = if ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
-        $script:StructuredResults += "PASS|$group|$Name"
+        $script:StructuredResults += "PASS|$group|$resultName"
         Write-Host ("{0} PASS {1}" -f $Name, $Note)
     } else {
         $script:Failures += "$Name $Note"
-        $script:StructuredResults += "FAIL|$group|$Name|$Note"
+        $script:StructuredResults += "FAIL|$group|$resultName|$Note"
         Write-Host ("{0} FAIL {1}" -f $Name, $Note)
     }
 }
@@ -396,6 +397,39 @@ function Run-M10JK-Tests {
     Add-Check "M10JK_TEMPLATE_FAILURE" ($templateExit -ne 0 -and -not (Test-Path $templateExe) -and (Manifest-Has $templateManifest "FAILED_STAGE|backend") -and (Manifest-Has $templateError "B002"))
 }
 
+function Run-M10L-Tests {
+    Write-Host ""
+    Write-Host "M10L command integration automation tests"
+
+    $generated = Join-Path $RepoRoot "Build\Generated"
+    New-Item -ItemType Directory -Force -Path $generated | Out-Null
+
+    $specExit = Invoke-Stage $RepoRoot ".\Tools\validate_command_specs.ps1"
+    $specOut = Join-Path $generated "command_spec_validation.txt"
+    $specText = if (Test-Path $specOut) { Get-Content $specOut -Raw } else { "" }
+    Add-Check "M10L_command_spec_validation" ($specExit -eq 0 -and $specText.Contains("PASS|let") -and $specText.Contains("PASS|message_text"))
+
+    $keywordExit = Invoke-Stage $RepoRoot ".\Tools\generate_keyword_registry.ps1"
+    $keywordOut = Join-Path $generated "keyword_registry.txt"
+    $keywordText = if (Test-Path $keywordOut) { Get-Content $keywordOut -Raw } else { "" }
+    Add-Check "M10L_keyword_registry_generation" ($keywordExit -eq 0 -and $keywordText.Contains("KEYWORD|program") -and $keywordText.Contains("KEYWORD|true") -and $keywordText.Contains("KEYWORD|false"))
+
+    $ruleExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1"
+    $ruleOut = Join-Path $generated "parser_rule_registry.txt"
+    $ruleText = if (Test-Path $ruleOut) { Get-Content $ruleOut -Raw } else { "" }
+    Add-Check "M10L_parser_rule_registry_generation" ($ruleExit -eq 0 -and $ruleText.Contains("RULE|program|starts=KEYWORD(program)|ast=Program") -and $ruleText.Contains("RULE|message_text|starts=KEYWORD(message),KEYWORD(text)|ast=MessageText"))
+
+    $indexExit = Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1"
+    $indexOut = Join-Path $generated "command_test_index.txt"
+    $indexText = if (Test-Path $indexOut) { Get-Content $indexOut -Raw } else { "" }
+    Add-Check "M10L_command_test_index_generation" ($indexExit -eq 0 -and $indexText.Contains("TEST|let|valid|Tests\CommandTests\let\valid_basic.arq") -and $indexText.Contains("TEST|message_text|invalid|Tests\CommandTests\message_text\invalid_unknown_variable.arq"))
+
+    $statusExit = Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1"
+    $statusOut = Join-Path $generated "command_status.txt"
+    $statusText = if (Test-Path $statusOut) { Get-Content $statusOut -Raw } else { "" }
+    Add-Check "M10L_command_status_generation" ($statusExit -eq 0 -and $statusText.Contains("COMMAND|message_text|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and $statusText.Contains("COMMAND|BlendMixToCode|spec=draft|tests=draft|lexer=no|parser=no|ast=no|semantic=no|ir=no|backend=no|status=planned"))
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -479,6 +513,8 @@ Run-Command-Tests
 Run-M10I-Backend-Tests
 
 Run-M10JK-Tests
+
+Run-M10L-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

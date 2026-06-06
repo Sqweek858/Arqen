@@ -1,9 +1,11 @@
-COMMAND let
-SYNTAX let <identifier> be <literal>
-TOKENS KEYWORD(let) IDENT KEYWORD(be) LITERAL
-AST LetDeclaration(name, type, value)
-SEMANTIC declare variable, reject duplicate names, literal values only
-CODEGEN none directly
-TEST_VALID let userName be "Sqweek"
-TEST_INVALID let userName "Sqweek"
-LIMITATIONS no reassignment, no scopes, no expression values
+COMMAND_ID|let
+CANONICAL|let <identifier> be <literal>
+CATEGORY|declaration
+TOKENS|KEYWORD(let) IDENT KEYWORD(be) LITERAL
+AST_NODE|LetDeclaration
+SEMANTIC|declare variable; reject duplicate names; literal values only
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\let\valid_basic.arq
+INVALID_TEST|Tests\CommandTests\let\invalid_duplicate.arq
+STATUS|stable

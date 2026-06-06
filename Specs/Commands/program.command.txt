@@ -1,9 +1,11 @@
-COMMAND program
-SYNTAX program <name> ... end program <name>
-TOKENS KEYWORD(program) STRING_OR_IDENT ... KEYWORD(end) KEYWORD(program) STRING_OR_IDENT
-AST Program(name)
-SEMANTIC program name required, end program name must match
-CODEGEN none directly
-TEST_VALID program "Hello" ... end program "Hello"
-TEST_INVALID program "Hello" ... end program "Other"
-LIMITATIONS no nested programs, no modules
+COMMAND_ID|program
+CANONICAL|program <name> ... end program <name>
+CATEGORY|structure
+TOKENS|KEYWORD(program) STRING_OR_IDENT NEWLINE ... KEYWORD(end) KEYWORD(program) STRING_OR_IDENT
+AST_NODE|Program
+SEMANTIC|program name required; end program name must match
+IR|target_program
+BACKEND|none
+VALID_TEST|Tests\CommandTests\program\valid_basic.arq
+INVALID_TEST|Tests\CommandTests\program\invalid_end_name.arq
+STATUS|stable
