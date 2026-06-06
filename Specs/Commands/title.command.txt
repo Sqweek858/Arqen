@@ -1,0 +1,9 @@
+COMMAND title
+SYNTAX title <string>
+TOKENS KEYWORD(title) STRING
+AST Title(value)
+SEMANTIC title must be text and fit output buffer
+CODEGEN write UTF-16LE title into MessageBox PE template
+TEST_VALID title "Arqen Byte Zero"
+TEST_INVALID title 0
+LIMITATIONS no title expressions

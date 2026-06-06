@@ -1,0 +1,10 @@
+COMMAND exit
+SYNTAX exit <int>
+TOKENS KEYWORD(exit) INT
+AST Exit(code)
+SEMANTIC only code 0 supported today
+CODEGEN ExitProcess(0)
+TEST_VALID exit 0
+TEST_INVALID exit 1
+LIMITATIONS non-zero exit codes not supported yet
+ALIASES future draft may replace with blend mix to code

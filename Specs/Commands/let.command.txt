@@ -1,0 +1,9 @@
+COMMAND let
+SYNTAX let <identifier> be <literal>
+TOKENS KEYWORD(let) IDENT KEYWORD(be) LITERAL
+AST LetDeclaration(name, type, value)
+SEMANTIC declare variable, reject duplicate names, literal values only
+CODEGEN none directly
+TEST_VALID let userName be "Sqweek"
+TEST_INVALID let userName "Sqweek"
+LIMITATIONS no reassignment, no scopes, no expression values

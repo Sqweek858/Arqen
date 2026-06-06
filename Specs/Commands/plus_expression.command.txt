@@ -1,0 +1,9 @@
+COMMAND plus_expression
+SYNTAX <text-expression> + <text-expression>
+TOKENS EXPRESSION PLUS EXPRESSION
+AST BinaryPlus(left, right)
+SEMANTIC only text + text is valid
+CODEGEN compile-time text folding
+TEST_VALID message text "Hello, " + name
+TEST_INVALID message text "Active: " + active
+LIMITATIONS no int math, no bool logic, no runtime expression evaluation

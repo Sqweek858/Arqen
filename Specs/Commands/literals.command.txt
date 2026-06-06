@@ -1,0 +1,9 @@
+COMMAND literals
+SYNTAX "text" | 0 | true | false
+TOKENS STRING | INT | BOOL
+AST Literal(type, value)
+SEMANTIC type inferred from literal token
+CODEGEN text literals can be folded into MessageBox output
+TEST_VALID let active be true
+TEST_INVALID let active be maybe
+LIMITATIONS no string escapes yet

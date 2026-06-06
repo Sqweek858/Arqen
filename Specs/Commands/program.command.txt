@@ -1,0 +1,9 @@
+COMMAND program
+SYNTAX program <name> ... end program <name>
+TOKENS KEYWORD(program) STRING_OR_IDENT ... KEYWORD(end) KEYWORD(program) STRING_OR_IDENT
+AST Program(name)
+SEMANTIC program name required, end program name must match
+CODEGEN none directly
+TEST_VALID program "Hello" ... end program "Hello"
+TEST_INVALID program "Hello" ... end program "Other"
+LIMITATIONS no nested programs, no modules

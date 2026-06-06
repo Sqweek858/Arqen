@@ -1,0 +1,12 @@
+COMMAND BlendMixToCode
+SYNTAX blend mix to code <int>
+TOKENS KEYWORD(blend) KEYWORD(mix) KEYWORD(to) KEYWORD(code) INT
+AST BlendMixToCode(code)
+SEMANTIC code must be int, only 0 supported initially
+CODEGEN same as ExitProcess(0)
+TEST_VALID blend mix to code 0
+TEST_INVALID blend mix to code true
+TEST_INVALID blend to code 0
+TEST_INVALID blend mix code 0
+TEST_INVALID blend mix to code 1
+LIMITATIONS draft only, not implemented in M10H

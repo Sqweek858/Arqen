@@ -897,3 +897,49 @@ Known limitations:
 - no new language syntax was added
 - `let` values are still literals only
 - `message text` remains the only expression-enabled field
+
+## M10H - Command System Upgrade
+
+Status: PASSED
+
+Goal:
+
+- Create infrastructure for adding future Arqen commands predictably.
+- Keep current language behavior unchanged.
+- Add command registry, machine-readable command specs, scaffold generator, command tests, and system contracts.
+
+Created:
+
+```text
+Docs\COMMAND_REGISTRY.md
+Docs\COMMAND_IMPLEMENTATION_CHECKLIST.md
+Docs\PARSER_RECOVERY_PLAN.md
+Docs\SYMBOL_TABLE_FORMAT.md
+Docs\EXPRESSION_SYSTEM_M10.md
+Docs\CODEGEN_CONTRACT_M10.md
+Specs\Commands\*.command.txt
+Tools\new_command_scaffold.ps1
+Tests\CommandTests\...
+Experiments\CommandDrafts\BlendMixToCode\...
+```
+
+Command scaffold:
+
+```powershell
+.\Tools\new_command_scaffold.ps1 BlendMixToCode
+```
+
+Pass/fail:
+
+```text
+Tools\run_all_tests.ps1 -> Total: 52/52 passed
+Command tests -> PASS
+M10/M10G regression -> PASS
+```
+
+Known limitations:
+
+- specs do not generate compiler code yet
+- command tests use the M10G driver
+- BlendMixToCode is only a draft, not implemented
+- no new language syntax was added

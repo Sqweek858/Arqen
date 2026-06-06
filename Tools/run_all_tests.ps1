@@ -190,6 +190,64 @@ function Run-M10G-Driver-Tests {
     }
 }
 
+function Run-Command-Tests {
+    $root = Join-Path $RepoRoot "Tests\CommandTests"
+    if (-not (Test-Path $root)) {
+        Write-Host "Command tests folder missing; skipping."
+        return
+    }
+
+    Write-Host ""
+    Write-Host "Command tests"
+
+    $folders = Get-ChildItem $root -Directory | Sort-Object Name
+    foreach ($folder in $folders) {
+        $expectedPath = Join-Path $folder.FullName "expected.txt"
+        if (-not (Test-Path $expectedPath)) {
+            Add-Check ("CMD_{0}_EXPECTED" -f $folder.Name.ToUpperInvariant()) $false "missing expected.txt"
+            continue
+        }
+
+        $lines = Get-Content $expectedPath | Where-Object { $_.Trim() -ne "" -and -not $_.Trim().StartsWith("#") }
+        foreach ($line in $lines) {
+            $parts = $line.Split("|")
+            if ($parts.Length -lt 4) {
+                Add-Check ("CMD_{0}_BAD_EXPECTED" -f $folder.Name.ToUpperInvariant()) $false $line
+                continue
+            }
+
+            $file = $parts[0]
+            $wantExit = [int]$parts[1]
+            $kind = $parts[2]
+            $want = $parts[3]
+            $stage = if ($parts.Length -ge 5) { $parts[4] } else { "" }
+            $input = Join-Path $folder.FullName $file
+            $stem = [System.IO.Path]::GetFileNameWithoutExtension($input)
+            $exit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10g.exe" @($input)
+            $name = "CMD_{0}_{1}" -f $folder.Name.ToUpperInvariant(), $stem.ToUpperInvariant()
+
+            if ($kind -eq "MESSAGE") {
+                $astPath = Join-Path $RepoRoot "Build\AST\$stem.ast"
+                $ast = ""
+                if (Test-Path $astPath) {
+                    $ast = Get-Content $astPath -Raw
+                }
+                Add-Check $name ($exit -eq $wantExit -and $ast.Contains("MESSAGE|$want"))
+            } elseif ($kind -eq "ERROR") {
+                $errPath = Join-Path $RepoRoot "Build\Errors\$stem.$stage.error.txt"
+                $err = ""
+                if (Test-Path $errPath) {
+                    $err = Get-Content $errPath -Raw
+                }
+                Add-Check $name ($exit -eq $wantExit -and $err.Contains("Error $want"))
+            } else {
+                Add-Check $name $false "unknown expected kind $kind"
+            }
+        }
+    }
+}
+
+Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
 
@@ -266,6 +324,11 @@ if ($fixturesOk) {
 }
 
 Run-M10G-Driver-Tests
+
+Run-Command-Tests
+
+Write-Host ""
+Write-Host "=== Regression summary ==="
 
 Write-Host ""
 Write-Host ("Total: {0}/{1} passed" -f $script:Passed, $script:Total)

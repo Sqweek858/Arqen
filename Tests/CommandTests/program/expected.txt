@@ -1,0 +1,2 @@
+valid_basic.arq|0|MESSAGE|Hello
+invalid_end_name.arq|1|ERROR|P001|parse
