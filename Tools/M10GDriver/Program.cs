@@ -378,19 +378,37 @@ static class Program
             yield return $"LET|{Esc(v.Name)}|{Esc(v.Type)}|{Esc(v.Value)}";
         foreach (var line in ast.Flow)
             yield return line;
+        foreach (var line in AstTitleLines(ast))
+            yield return line;
+        foreach (var line in AstMessageLines(ast))
+            yield return line;
+        foreach (var line in AstFinalLines(ast))
+            yield return line;
+        yield return "SEMANTIC|OK";
+    }
+
+    static IEnumerable<string> AstTitleLines(AstModel ast)
+    {
         if (ast.TitleCommand == "set_title_to")
             yield return $"SET_TITLE|{Esc(ast.Title)}";
         yield return $"TITLE|{Esc(ast.Title)}";
         yield return $"TITLE_EXPR|{Esc(ast.TitleExpr)}";
+    }
+
+    static IEnumerable<string> AstMessageLines(AstModel ast)
+    {
         if (ast.MessageCommand == "show_message")
             yield return $"SHOW_MESSAGE|{Esc(ast.Message)}";
         yield return $"MESSAGE|{Esc(ast.Message)}";
         yield return $"MESSAGE_EXPR|{Esc(ast.MessageExpr)}";
+    }
+
+    static IEnumerable<string> AstFinalLines(AstModel ast)
+    {
         if (ast.FinalCommand == "blend_mix_to_code")
             yield return $"BLEND_MIX_TO_CODE|{ast.ExitCode}";
         else
             yield return $"EXIT|{ast.ExitCode}";
-        yield return "SEMANTIC|OK";
     }
 
     static IEnumerable<string> IrLines(AstModel ast, string sourcePath)
@@ -398,14 +416,17 @@ static class Program
         yield return "ARQIR|version=0";
         yield return $"TARGET|kind=program|name={Esc(ast.Program)}";
         yield return $"META|source={Esc(sourcePath.Replace('\\', '/'))}";
-        yield return $"CONST|id=str_0|type=text|value={Esc(ast.Title)}";
-        yield return $"CONST|id=str_1|type=text|value={Esc(ast.Message)}";
-        yield return $"CONST|id=i32_0|type=int|value={ast.ExitCode}";
-        yield return "ACTION|id=act_0|op=show_message|title=str_0|text=str_1";
-        yield return "ACTION|id=act_1|op=exit|code=i32_0";
+        yield return IrConstLine("str_0", "text", ast.Title);
+        yield return IrConstLine("str_1", "text", ast.Message);
+        yield return IrConstLine("i32_0", "int", ast.ExitCode.ToString());
+        yield return IrActionLine("act_0", "show_message", "title=str_0|text=str_1");
+        yield return IrActionLine("act_1", "exit", "code=i32_0");
         yield return "ENTRY|actions=act_0,act_1";
         yield return "END";
     }
+
+    static string IrConstLine(string id, string type, string value) => $"CONST|id={id}|type={type}|value={Esc(value)}";
+    static string IrActionLine(string id, string op, string fields) => $"ACTION|id={id}|op={op}|{fields}";
 
     static string Esc(string value)
     {
@@ -622,6 +643,7 @@ static class Program
         readonly Dictionary<string, VarInfo> _vars = new(StringComparer.Ordinal);
         readonly List<(string Name, string Type, string Value)> _varList = new();
         readonly List<string> _flow = new();
+        readonly List<StatementRule> _statementRules;
         int _pos;
         string? _title;
         string _titleExpr = "";
@@ -636,6 +658,17 @@ static class Program
         public Parser(List<Token> tokens)
         {
             _tokens = tokens;
+            _statementRules =
+            [
+                new StatementRule(() => IsKeyword("let"), ParseLegacyLetStatement),
+                new StatementRule(() => IsKeyword("define"), ParseCanonicalDefineStatement),
+                new StatementRule(() => IsKeyword("rename"), ParseRenameStatement),
+                new StatementRule(() => IsKeyword("title") || IsKeyword("set"), ParseTitleStatement),
+                new StatementRule(() => IsKeyword("message") || IsKeyword("show"), ParseMessageStatement),
+                new StatementRule(() => IsKeyword("exit"), ParseExitStatement),
+                new StatementRule(() => IsKeyword("blend"), ParseBlendMixToCodeStatement),
+                new StatementRule(() => IsKeyword("if"), ParseIfStatement),
+            ];
         }
 
         public AstModel Parse()
@@ -679,77 +712,12 @@ static class Program
             if (CurrentIs("EOF"))
                 throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected statement.");
 
-            if (IsKeyword("let"))
-            {
-                if (inIf)
-                    throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "let declarations inside compile-time if are not supported in M13.");
-                ParseLet();
-                return;
-            }
-
-            if (IsKeyword("define"))
-            {
-                if (inIf)
-                    throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "define declarations inside compile-time if are not supported in M14A.");
-                ParseDefine();
-                return;
-            }
-
-            if (IsKeyword("rename"))
-            {
-                if (inIf)
-                    throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "rename inside compile-time if is not supported in M14A.");
-                ParseRename();
-                return;
-            }
-
-            if (IsKeyword("title") || IsKeyword("set"))
-            {
-                var title = IsKeyword("title") ? ParseTitleCommand() : ParseSetTitleTo();
-                if (apply)
+            foreach (var rule in _statementRules)
+                if (rule.Matches())
                 {
-                    _title = title.Value;
-                    _titleExpr = title.Repr;
-                    _titleCommand = title.Command;
+                    rule.Parse(apply, inIf);
+                    return;
                 }
-                return;
-            }
-
-            if (IsKeyword("message") || IsKeyword("show"))
-            {
-                var message = IsKeyword("message") ? ParseMessageCommand() : ParseShowMessage();
-                if (apply)
-                {
-                    _message = message.Value;
-                    _messageExpr = message.Repr;
-                    _messageCommand = message.Command;
-                }
-                return;
-            }
-
-            if (IsKeyword("exit"))
-            {
-                ParseExit();
-                if (apply)
-                    _finalCommand = "exit";
-                return;
-            }
-
-            if (IsKeyword("blend"))
-            {
-                ParseBlendMixToCode();
-                if (apply)
-                    _finalCommand = "blend_mix_to_code";
-                return;
-            }
-
-            if (IsKeyword("if"))
-            {
-                if (inIf || _ifDepth > 0)
-                    throw new CompileError("PARSE", "P054", Current.Line, Current.Column, "Nested if statements are not supported in M13.");
-                ParseCompileTimeIf(apply);
-                return;
-            }
 
             if (IsKeyword("else"))
                 throw new CompileError("PARSE", "P055", Current.Line, Current.Column, "Unexpected else without matching if.");
@@ -758,6 +726,76 @@ static class Program
                 throw new CompileError("PARSE", "P056", Current.Line, Current.Column, "Unexpected end if without matching if.");
 
             throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected statement.");
+        }
+
+        void ParseLegacyLetStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "let declarations inside compile-time if are not supported in M13.");
+            ParseLet();
+        }
+
+        void ParseCanonicalDefineStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "define declarations inside compile-time if are not supported in M14A.");
+            ParseDefine();
+        }
+
+        void ParseRenameStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "rename inside compile-time if is not supported in M14A.");
+            ParseRename();
+        }
+
+        void ParseTitleStatement(bool apply, bool inIf)
+        {
+            var title = IsKeyword("title") ? ParseTitleCommand() : ParseSetTitleTo();
+            if (apply)
+                ApplyTitle(title);
+        }
+
+        void ParseMessageStatement(bool apply, bool inIf)
+        {
+            var message = IsKeyword("message") ? ParseMessageCommand() : ParseShowMessage();
+            if (apply)
+                ApplyMessage(message);
+        }
+
+        void ParseExitStatement(bool apply, bool inIf)
+        {
+            ParseExit();
+            if (apply)
+                _finalCommand = "exit";
+        }
+
+        void ParseBlendMixToCodeStatement(bool apply, bool inIf)
+        {
+            ParseBlendMixToCode();
+            if (apply)
+                _finalCommand = "blend_mix_to_code";
+        }
+
+        void ParseIfStatement(bool apply, bool inIf)
+        {
+            if (inIf || _ifDepth > 0)
+                throw new CompileError("PARSE", "P054", Current.Line, Current.Column, "Nested if statements are not supported in M13.");
+            ParseCompileTimeIf(apply);
+        }
+
+        void ApplyTitle(CommandExpr title)
+        {
+            _title = title.Value;
+            _titleExpr = title.Repr;
+            _titleCommand = title.Command;
+        }
+
+        void ApplyMessage(CommandExpr message)
+        {
+            _message = message.Value;
+            _messageExpr = message.Repr;
+            _messageCommand = message.Command;
         }
 
         void ParseCompileTimeIf(bool apply)
@@ -905,8 +943,7 @@ static class Program
             if (!CurrentIs("IDENT"))
                 throw new CompileError("SEMANTIC", "S002", Current.Line, Current.Column, "Invalid variable name.");
             var nameTok = Advance();
-            if (_vars.ContainsKey(nameTok.Value))
-                throw new CompileError("SEMANTIC", "S001", nameTok.Line, nameTok.Column, $"Variable \"{nameTok.Value}\" is already defined.");
+            CheckDuplicateSymbol(nameTok, "Variable");
             ExpectKeyword("be");
 
             if (CurrentIs("NEWLINE") || CurrentIs("EOF"))
@@ -941,8 +978,7 @@ static class Program
                 throw new CompileError("SEMANTIC", "T001", Current.Line, Current.Column, "Unknown literal type for variable.");
             }
 
-            _vars[nameTok.Value] = new VarInfo(type, value);
-            _varList.Add((nameTok.Value, type, value));
+            DefineSymbol(nameTok.Value, type, value);
             ExpectLine();
         }
 
@@ -960,15 +996,14 @@ static class Program
             if (!CurrentIs("STRING"))
                 throw new CompileError("PARSE", "P072", Current.Line, Current.Column, "Expected quoted symbol name after \"called\".");
             var nameTok = Advance();
-            if (_vars.ContainsKey(nameTok.Value))
-                throw new CompileError("SEMANTIC", "S001", nameTok.Line, nameTok.Column, $"Symbol \"{nameTok.Value}\" is already defined.");
+            CheckDuplicateSymbol(nameTok, "Symbol");
 
             if (!IsKeyword("be"))
                 throw new CompileError("PARSE", "P073", Current.Line, Current.Column, "Expected keyword \"be\" after symbol name.");
             ExpectKeyword("be");
 
             var value = ParseCanonicalValue(declaredType.Value);
-            AddSymbol(nameTok.Value, value.Type, value.Value);
+            DefineSymbol(nameTok.Value, value.Type, value.Value);
             ExpectLine();
         }
 
@@ -978,47 +1013,52 @@ static class Program
             {
                 if (!IsKeyword("string"))
                     throw new CompileError("SEMANTIC", "S030", Current.Line, Current.Column, "define string requires string literal syntax: string \"...\".");
-                ExpectKeyword("string");
-                var s = Expect("STRING", "string literal");
-                return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
+                return ParseCanonicalStringLiteral();
             }
 
             if (declaredType == "int")
             {
                 if (!CurrentIs("INT"))
                     throw new CompileError("SEMANTIC", "S031", Current.Line, Current.Column, "define int requires an integer literal.");
-                var i = Advance();
-                return new ExprResult("int", i.Value, $"int({i.Value})");
+                return ParseIntLiteral();
             }
 
             if (declaredType == "bool")
             {
                 if (!CurrentIs("BOOL"))
                     throw new CompileError("SEMANTIC", "S032", Current.Line, Current.Column, "define bool requires true or false.");
-                var b = Advance();
-                return new ExprResult("bool", b.Value, $"bool({b.Value})");
+                return ParseBoolLiteral();
             }
 
             if (IsKeyword("string"))
-            {
-                ExpectKeyword("string");
-                var s = Expect("STRING", "string literal");
-                return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
-            }
+                return ParseCanonicalStringLiteral();
 
             if (CurrentIs("INT"))
-            {
-                var i = Advance();
-                return new ExprResult("int", i.Value, $"int({i.Value})");
-            }
+                return ParseIntLiteral();
 
             if (CurrentIs("BOOL"))
-            {
-                var b = Advance();
-                return new ExprResult("bool", b.Value, $"bool({b.Value})");
-            }
+                return ParseBoolLiteral();
 
             throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, or bool literal value.");
+        }
+
+        ExprResult ParseCanonicalStringLiteral()
+        {
+            ExpectKeyword("string");
+            var s = Expect("STRING", "string literal");
+            return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
+        }
+
+        ExprResult ParseIntLiteral()
+        {
+            var i = Expect("INT", "integer literal");
+            return new ExprResult("int", i.Value, $"int({i.Value})");
+        }
+
+        ExprResult ParseBoolLiteral()
+        {
+            var b = Expect("BOOL", "bool literal");
+            return new ExprResult("bool", b.Value, $"bool({b.Value})");
         }
 
         void ParseRename()
@@ -1030,9 +1070,50 @@ static class Program
             ExpectKeyword("to");
             var newTok = Expect("STRING", "new symbol name");
 
-            if (!_vars.TryGetValue(oldTok.Value, out var info))
-                throw new CompileError("SEMANTIC", "S034", oldTok.Line, oldTok.Column, $"Cannot rename missing symbol \"{oldTok.Value}\".");
-            if (_vars.ContainsKey(newTok.Value))
+            RenameSymbol(oldTok, newTok);
+            ExpectLine();
+        }
+
+        void CheckDuplicateSymbol(Token nameTok, string label)
+        {
+            if (SymbolExists(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S001", nameTok.Line, nameTok.Column, $"{label} \"{nameTok.Value}\" is already defined.");
+        }
+
+        bool SymbolExists(string name) => _vars.ContainsKey(name);
+
+        VarInfo ResolveSymbol(Token token, string code, string message)
+        {
+            if (_vars.TryGetValue(token.Value, out var info))
+                return info;
+            throw new CompileError("SEMANTIC", code, token.Line, token.Column, message);
+        }
+
+        VarInfo ResolveSymbol(Token token, string code, Func<string, string> message)
+            => ResolveSymbol(token, code, message(token.Value));
+
+        ExprResult FormatSymbolForOutput(Token token, string code = "S036")
+        {
+            var info = ResolveSymbol(token, code, name => $"Unknown symbol \"{name}\".");
+            return new ExprResult("text", info.Value, $"symbol({token.Value})");
+        }
+
+        ExprResult FormatVariableReference(Token token, string code, Func<string, string> message)
+        {
+            var info = ResolveSymbol(token, code, message);
+            return new ExprResult(info.Type, info.Value, $"var({token.Value})");
+        }
+
+        void DefineSymbol(string name, string type, string value)
+        {
+            _vars[name] = new VarInfo(type, value);
+            _varList.Add((name, type, value));
+        }
+
+        void RenameSymbol(Token oldTok, Token newTok)
+        {
+            var info = ResolveSymbol(oldTok, "S034", name => $"Cannot rename missing symbol \"{name}\".");
+            if (SymbolExists(newTok.Value))
                 throw new CompileError("SEMANTIC", "S035", newTok.Line, newTok.Column, $"Cannot rename to existing symbol \"{newTok.Value}\".");
 
             _vars.Remove(oldTok.Value);
@@ -1045,13 +1126,6 @@ static class Program
                     break;
                 }
             }
-            ExpectLine();
-        }
-
-        void AddSymbol(string name, string type, string value)
-        {
-            _vars[name] = new VarInfo(type, value);
-            _varList.Add((name, type, value));
         }
 
         CompareResult ParseComparison()
@@ -1088,44 +1162,36 @@ static class Program
         ExprResult ParseComparisonOperand(string code, string message)
         {
             if (IsKeyword("string"))
-            {
-                ExpectKeyword("string");
-                var s = Expect("STRING", "string literal");
-                return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
-            }
+                return ParseCanonicalStringLiteral();
 
             if (CurrentIs("STRING"))
             {
                 var t = Advance();
-                if (_vars.TryGetValue(t.Value, out var info))
+                if (SymbolExists(t.Value))
+                {
+                    var info = ResolveSymbol(t, "S036", name => $"Unknown symbol \"{name}\".");
                     return new ExprResult(info.Type, info.Value, $"symbol({t.Value})");
+                }
                 return new ExprResult("text", t.Value, $"str(\"{t.Value}\")");
             }
 
             if (CurrentIs("INT"))
-            {
-                var t = Advance();
-                return new ExprResult("int", t.Value, $"int({t.Value})");
-            }
+                return ParseIntLiteral();
 
             if (CurrentIs("BOOL"))
-            {
-                var t = Advance();
-                return new ExprResult("bool", t.Value, $"bool({t.Value})");
-            }
+                return ParseBoolLiteral();
 
             if (CurrentIs("IDENT"))
             {
                 var t = Advance();
-                if (!_vars.TryGetValue(t.Value, out var info))
-                    throw new CompileError("SEMANTIC", "S020", t.Line, t.Column, $"Unknown variable \"{t.Value}\" in comparison.");
-                return new ExprResult(info.Type, info.Value, $"var({t.Value})");
+                return FormatVariableReference(t, "S020", name => $"Unknown variable \"{name}\" in comparison.");
             }
 
             throw new CompileError("PARSE", code, Current.Line, Current.Column, message);
         }
 
         record CommandExpr(string Value, string Repr, string Command);
+        record StatementRule(Func<bool> Matches, Action<bool, bool> Parse);
 
         ExprResult ParseExpression(string context, string missingCode, string missingMessage)
         {
@@ -1162,11 +1228,7 @@ static class Program
                 throw new CompileError("PARSE", missingCode, Current.Line, Current.Column, missingMessage);
 
             if (IsKeyword("string"))
-            {
-                ExpectKeyword("string");
-                var s = Expect("STRING", "string literal");
-                return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
-            }
+                return ParseCanonicalStringLiteral();
 
             if (CurrentIs("STRING"))
             {
@@ -1175,14 +1237,10 @@ static class Program
 
                 var t = Advance();
                 if (context == "show")
-                {
-                    if (!_vars.TryGetValue(t.Value, out var info))
-                        throw new CompileError("SEMANTIC", "S036", t.Line, t.Column, $"Unknown symbol \"{t.Value}\".");
-                    return new ExprResult("text", info.Value, $"symbol({t.Value})");
-                }
+                    return FormatSymbolForOutput(t);
 
-                if (_vars.TryGetValue(t.Value, out var titleInfo))
-                    return new ExprResult("text", titleInfo.Value, $"symbol({t.Value})");
+                if (SymbolExists(t.Value))
+                    return FormatSymbolForOutput(t);
                 if (IsSymbolName(t.Value))
                     throw new CompileError("SEMANTIC", "S036", t.Line, t.Column, $"Unknown symbol \"{t.Value}\".");
                 return new ExprResult("text", t.Value, $"str(\"{t.Value}\")");
@@ -1203,22 +1261,14 @@ static class Program
             if (CurrentIs("IDENT"))
             {
                 var t = Advance();
-                if (!_vars.TryGetValue(t.Value, out var info))
-                    throw new CompileError("SEMANTIC", "S010", t.Line, t.Column, $"Unknown variable \"{t.Value}\".");
-                return new ExprResult(info.Type, info.Value, $"var({t.Value})");
+                return FormatVariableReference(t, "S010", name => $"Unknown variable \"{name}\".");
             }
 
             if (CurrentIs("INT"))
-            {
-                var t = Advance();
-                return new ExprResult("int", t.Value, $"int({t.Value})");
-            }
+                return ParseIntLiteral();
 
             if (CurrentIs("BOOL"))
-            {
-                var t = Advance();
-                return new ExprResult("bool", t.Value, $"bool({t.Value})");
-            }
+                return ParseBoolLiteral();
 
             if (afterPlus)
                 throw new CompileError("PARSE", "P011", Current.Line, Current.Column, "Expected expression after +.");
