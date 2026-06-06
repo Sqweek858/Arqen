@@ -5,9 +5,11 @@ $root = Get-ArqenRepoRoot
 $generated = Get-ArqenGeneratedDir
 $outPath = Join-Path $generated "command_status.txt"
 $lines = @()
+$implementedIds = @{}
 
 foreach ($spec in Get-ArqenCommandSpecs) {
     $id = Get-ArqenSpecValue $spec "COMMAND_ID" $spec.Id
+    $implementedIds[$id] = $true
     $valid = Get-ArqenSpecValue $spec "VALID_TEST" ""
     $invalid = Get-ArqenSpecValue $spec "INVALID_TEST" ""
     $tokens = Get-ArqenSpecValue $spec "TOKENS" ""
@@ -27,7 +29,7 @@ foreach ($spec in Get-ArqenCommandSpecs) {
 }
 
 $draft = Join-Path $root "Experiments\CommandDrafts\BlendMixToCode\COMMAND_SPEC.command.txt"
-if (Test-Path $draft) {
+if ((Test-Path $draft) -and -not $implementedIds.ContainsKey("BlendMixToCode")) {
     $lines += "COMMAND|BlendMixToCode|spec=draft|tests=draft|lexer=no|parser=no|ast=no|semantic=no|ir=no|backend=no|status=planned"
 }
 

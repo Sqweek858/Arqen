@@ -3,7 +3,7 @@ using System.Text;
 record Token(string Type, string Value, int Line, int Column);
 record VarInfo(string Type, string Value);
 record ExprResult(string Type, string Value, string Repr);
-record AstModel(string Program, List<(string Name, string Type, string Value)> Vars, string Title, string Message, string MessageExpr, int ExitCode);
+record AstModel(string Program, List<(string Name, string Type, string Value)> Vars, string Title, string Message, string MessageExpr, int ExitCode, string FinalCommand);
 
 sealed class CompileError : Exception
 {
@@ -318,7 +318,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "exit" or "end")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "exit" or "blend" or "mix" or "to" or "code" or "end")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -368,7 +368,10 @@ static class Program
         yield return $"TITLE|{Esc(ast.Title)}";
         yield return $"MESSAGE|{Esc(ast.Message)}";
         yield return $"MESSAGE_EXPR|{Esc(ast.MessageExpr)}";
-        yield return $"EXIT|{ast.ExitCode}";
+        if (ast.FinalCommand == "blend_mix_to_code")
+            yield return $"BLEND_MIX_TO_CODE|{ast.ExitCode}";
+        else
+            yield return $"EXIT|{ast.ExitCode}";
         yield return "SEMANTIC|OK";
     }
 
@@ -632,11 +635,13 @@ static class Program
             ExpectLine();
 
             SkipNewlines();
-            ExpectKeyword("exit");
-            var exitTok = Expect("INT", "exit code");
-            if (exitTok.Value != "0")
-                throw new CompileError("SEMANTIC", "S013", exitTok.Line, exitTok.Column, "Only exit 0 is supported in M10G.");
-            ExpectLine();
+            var finalCommand = "";
+            if (IsKeyword("exit"))
+                finalCommand = ParseExit();
+            else if (IsKeyword("blend"))
+                finalCommand = ParseBlendMixToCode();
+            else
+                throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected final command.");
 
             SkipNewlines();
             ExpectKeyword("end");
@@ -648,7 +653,38 @@ static class Program
             SkipNewlines();
             Expect("EOF", "end of file");
 
-            return new AstModel(program, _varList, titleTok.Value, expr.Value, expr.Repr, 0);
+            return new AstModel(program, _varList, titleTok.Value, expr.Value, expr.Repr, 0, finalCommand);
+        }
+
+        string ParseExit()
+        {
+            ExpectKeyword("exit");
+            var exitTok = Expect("INT", "exit code");
+            if (exitTok.Value != "0")
+                throw new CompileError("SEMANTIC", "S013", exitTok.Line, exitTok.Column, "Only exit 0 is supported in M10G.");
+            ExpectLine();
+            return "exit";
+        }
+
+        string ParseBlendMixToCode()
+        {
+            ExpectKeyword("blend");
+            if (!IsKeyword("mix"))
+                throw new CompileError("PARSE", "P040", Current.Line, Current.Column, "Expected keyword \"mix\" after \"blend\".");
+            ExpectKeyword("mix");
+            if (!IsKeyword("to"))
+                throw new CompileError("PARSE", "P041", Current.Line, Current.Column, "Expected keyword \"to\" after \"blend mix\".");
+            ExpectKeyword("to");
+            if (!IsKeyword("code"))
+                throw new CompileError("PARSE", "P042", Current.Line, Current.Column, "Expected keyword \"code\" after \"blend mix to\".");
+            ExpectKeyword("code");
+            if (!CurrentIs("INT"))
+                throw new CompileError("PARSE", "P043", Current.Line, Current.Column, "Expected integer after \"blend mix to code\".");
+            var codeTok = Advance();
+            if (codeTok.Value != "0")
+                throw new CompileError("SEMANTIC", "S021", codeTok.Line, codeTok.Column, "blend mix to code only supports 0 currently.");
+            ExpectLine();
+            return "blend_mix_to_code";
         }
 
         void ParseLet()

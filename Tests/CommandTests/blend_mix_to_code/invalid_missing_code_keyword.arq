@@ -1,0 +1,5 @@
+program "BadBlend"
+title "Bad"
+message text "Bad"
+blend mix to 0
+end program "BadBlend"

@@ -1,0 +1,7 @@
+program "BlendTest"
+
+title "Arqen Blend"
+message text "Blend works"
+blend mix to code 0
+
+end program "BlendTest"

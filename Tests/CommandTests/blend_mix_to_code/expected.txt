@@ -1,0 +1,7 @@
+valid_code_0.arq|0|MESSAGE|Blend works
+invalid_missing_mix.arq|1|ERROR|P040|parse
+invalid_missing_to.arq|1|ERROR|P041|parse
+invalid_missing_code_keyword.arq|1|ERROR|P042|parse
+invalid_missing_exit_code.arq|1|ERROR|P043|parse
+invalid_nonzero_code.arq|1|ERROR|S021|semantic
+invalid_bool_code.arq|1|ERROR|P043|parse

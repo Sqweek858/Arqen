@@ -7,6 +7,5 @@ SEMANTIC|code must be int; only code 0 supported in M11
 IR|exit
 BACKEND|WindowsX64PE.exit
 VALID_TEST|Tests\CommandTests\blend_mix_to_code\valid_code_0.arq
-INVALID_TEST|Tests\CommandTests\blend_mix_to_code\invalid_bool_code.arq;Tests\CommandTests\blend_mix_to_code\invalid_nonzero_code.arq
+INVALID_TEST|Tests\CommandTests\blend_mix_to_code\invalid_bool_code.arq;Tests\CommandTests\blend_mix_to_code\invalid_nonzero_code.arq;Tests\CommandTests\blend_mix_to_code\invalid_missing_mix.arq
 STATUS|stable
-LIMITATIONS|only code 0 in M11

@@ -19,8 +19,8 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
-    $resultName = if ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
+    $group = if ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
         $script:StructuredResults += "PASS|$group|$resultName"
@@ -106,10 +106,11 @@ function Check-Ui {
     param(
         [string]$Name,
         [string]$Dir,
-        [string]$Exe
+        [string]$Exe,
+        [string[]]$Titles = @("Arqen Byte Zero", "Arqen", "Hello")
     )
 
-    $r = Invoke-UiExe -Dir $Dir -Exe $Exe
+    $r = Invoke-UiExe -Dir $Dir -Exe $Exe -Titles $Titles
     if ($r.Skipped) {
         Add-Check $Name $true "SKIPPED_UI"
     } else {
@@ -425,27 +426,27 @@ function Run-M10L-Tests {
     $specExit = Invoke-Stage $RepoRoot ".\Tools\validate_command_specs.ps1"
     $specOut = Join-Path $generated "command_spec_validation.txt"
     $specText = if (Test-Path $specOut) { Get-Content $specOut -Raw } else { "" }
-    Add-Check "M10L_command_spec_validation" ($specExit -eq 0 -and $specText.Contains("PASS|let") -and $specText.Contains("PASS|message_text"))
+    Add-Check "M10L_command_spec_validation" ($specExit -eq 0 -and $specText.Contains("PASS|let") -and $specText.Contains("PASS|message_text") -and $specText.Contains("PASS|BlendMixToCode"))
 
     $keywordExit = Invoke-Stage $RepoRoot ".\Tools\generate_keyword_registry.ps1"
     $keywordOut = Join-Path $generated "keyword_registry.txt"
     $keywordText = if (Test-Path $keywordOut) { Get-Content $keywordOut -Raw } else { "" }
-    Add-Check "M10L_keyword_registry_generation" ($keywordExit -eq 0 -and $keywordText.Contains("KEYWORD|program") -and $keywordText.Contains("KEYWORD|true") -and $keywordText.Contains("KEYWORD|false"))
+    Add-Check "M10L_keyword_registry_generation" ($keywordExit -eq 0 -and $keywordText.Contains("KEYWORD|program") -and $keywordText.Contains("KEYWORD|blend") -and $keywordText.Contains("KEYWORD|mix") -and $keywordText.Contains("KEYWORD|to") -and $keywordText.Contains("KEYWORD|code") -and $keywordText.Contains("KEYWORD|true") -and $keywordText.Contains("KEYWORD|false"))
 
     $ruleExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1"
     $ruleOut = Join-Path $generated "parser_rule_registry.txt"
     $ruleText = if (Test-Path $ruleOut) { Get-Content $ruleOut -Raw } else { "" }
-    Add-Check "M10L_parser_rule_registry_generation" ($ruleExit -eq 0 -and $ruleText.Contains("RULE|program|starts=KEYWORD(program)|ast=Program") -and $ruleText.Contains("RULE|message_text|starts=KEYWORD(message),KEYWORD(text)|ast=MessageText"))
+    Add-Check "M10L_parser_rule_registry_generation" ($ruleExit -eq 0 -and $ruleText.Contains("RULE|program|starts=KEYWORD(program)|ast=Program") -and $ruleText.Contains("RULE|message_text|starts=KEYWORD(message),KEYWORD(text)|ast=MessageText") -and $ruleText.Contains("RULE|BlendMixToCode|starts=KEYWORD(blend),KEYWORD(mix),KEYWORD(to),KEYWORD(code)|ast=BlendMixToCode"))
 
     $indexExit = Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1"
     $indexOut = Join-Path $generated "command_test_index.txt"
     $indexText = if (Test-Path $indexOut) { Get-Content $indexOut -Raw } else { "" }
-    Add-Check "M10L_command_test_index_generation" ($indexExit -eq 0 -and $indexText.Contains("TEST|let|valid|Tests\CommandTests\let\valid_basic.arq") -and $indexText.Contains("TEST|message_text|invalid|Tests\CommandTests\message_text\invalid_unknown_variable.arq"))
+    Add-Check "M10L_command_test_index_generation" ($indexExit -eq 0 -and $indexText.Contains("TEST|let|valid|Tests\CommandTests\let\valid_basic.arq") -and $indexText.Contains("TEST|message_text|invalid|Tests\CommandTests\message_text\invalid_unknown_variable.arq") -and $indexText.Contains("TEST|blend_mix_to_code|valid|Tests\CommandTests\blend_mix_to_code\valid_code_0.arq"))
 
     $statusExit = Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1"
     $statusOut = Join-Path $generated "command_status.txt"
     $statusText = if (Test-Path $statusOut) { Get-Content $statusOut -Raw } else { "" }
-    Add-Check "M10L_command_status_generation" ($statusExit -eq 0 -and $statusText.Contains("COMMAND|message_text|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and $statusText.Contains("COMMAND|BlendMixToCode|spec=draft|tests=draft|lexer=no|parser=no|ast=no|semantic=no|ir=no|backend=no|status=planned"))
+    Add-Check "M10L_command_status_generation" ($statusExit -eq 0 -and $statusText.Contains("COMMAND|message_text|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and $statusText.Contains("COMMAND|BlendMixToCode|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and -not $statusText.Contains("COMMAND|BlendMixToCode|spec=draft"))
 }
 
 function Diagnostic-ErrorCount {
@@ -543,6 +544,62 @@ function Run-M10O-Tests {
     Add-Check "M10O_cache_backend_only_bypass" ($backendOnlyExit -eq 0 -and (Manifest-Has $backendOnlyManifest "CACHE_STATUS|bypass") -and (Manifest-Has $backendOnlyManifest "CACHE_REASON|backend-only") -and (Test-Path (Join-Path $RepoRoot "Build\EXE\hello_m10_from_ir.exe")))
 }
 
+function Run-M11-InvalidBlendCase {
+    param(
+        [string]$CheckName,
+        [string]$File,
+        [string]$WantCode,
+        [string]$WantStage
+    )
+
+    $stem = [System.IO.Path]::GetFileNameWithoutExtension($File)
+    $input = ".\Tests\CommandTests\blend_mix_to_code\$File"
+    $exe = Join-Path $RepoRoot "Build\EXE\$stem.exe"
+    Remove-Item $exe -Force -ErrorAction SilentlyContinue
+
+    $exit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($input, "--rebuild")
+    $diag = Join-Path $RepoRoot "Build\Diagnostics\$stem.all_errors.txt"
+    $manifest = Join-Path $RepoRoot "Build\Manifests\$stem.build.txt"
+    $diagText = if (Test-Path $diag) { Get-Content $diag -Raw } else { "" }
+    $manifestText = if (Test-Path $manifest) { Get-Content $manifest -Raw } else { "" }
+    $count = Diagnostic-ErrorCount $diag
+    $backendSkipped = $manifestText.Contains("STAGES_SKIPPED|") -and $manifestText.Contains("backend")
+
+    Add-Check $CheckName ($exit -ne 0 -and -not (Test-Path $exe) -and $count -gt 0 -and $diagText.Contains($WantCode) -and $diagText.Contains($WantStage) -and $backendSkipped)
+}
+
+function Run-M11-Tests {
+    Write-Host ""
+    Write-Host "M11 BlendMixToCode tests"
+
+    $validStem = "valid_code_0"
+    $validExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\blend_mix_to_code\valid_code_0.arq", "--rebuild")
+    $validExe = Join-Path $RepoRoot "Build\EXE\$validStem.exe"
+    $validAstPath = Join-Path $RepoRoot "Build\AST\$validStem.ast"
+    $validIrPath = Join-Path $RepoRoot "Build\IR\$validStem.arqir"
+    $validDiag = Join-Path $RepoRoot "Build\Diagnostics\$validStem.all_errors.txt"
+    $validAst = if (Test-Path $validAstPath) { Get-Content $validAstPath -Raw } else { "" }
+    $validIr = if (Test-Path $validIrPath) { Get-Content $validIrPath -Raw } else { "" }
+
+    Add-Check "M11_blend_valid_build" ($validExit -eq 0 -and (Test-Path $validExe) -and (Manifest-Has $validDiag "ERROR_COUNT|0"))
+    Add-Check "M11_blend_valid_ast" ($validAst.Contains("BLEND_MIX_TO_CODE|0"))
+    Add-Check "M11_blend_valid_ir_exit" ($validIr.Contains("op=exit") -and $validIr.Contains("type=int|value=0") -and -not $validIr.Contains("ExitProcess") -and -not $validIr.Contains("MessageBoxW") -and -not $validIr.Contains("RVA") -and -not $validIr.Contains("IAT"))
+    Check-Ui "M11_blend_valid_exe" (Join-Path $RepoRoot "Build\EXE") ".\valid_code_0.exe" -Titles @("Arqen Blend", "Blend works")
+
+    Run-M11-InvalidBlendCase "M11_blend_missing_mix" "invalid_missing_mix.arq" "P040" "parser"
+    Run-M11-InvalidBlendCase "M11_blend_missing_to" "invalid_missing_to.arq" "P041" "parser"
+    Run-M11-InvalidBlendCase "M11_blend_missing_code_keyword" "invalid_missing_code_keyword.arq" "P042" "parser"
+    Run-M11-InvalidBlendCase "M11_blend_missing_exit_code" "invalid_missing_exit_code.arq" "P043" "parser"
+    Run-M11-InvalidBlendCase "M11_blend_nonzero_code" "invalid_nonzero_code.arq" "S021" "semantic"
+    Run-M11-InvalidBlendCase "M11_blend_bool_code" "invalid_bool_code.arq" "P043" "parser"
+
+    $exitCompat = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\hello_m10.arq", "--rebuild")
+    $exitAstPath = Join-Path $RepoRoot "Build\AST\hello_m10.ast"
+    $exitDiag = Join-Path $RepoRoot "Build\Diagnostics\hello_m10.all_errors.txt"
+    $exitAst = if (Test-Path $exitAstPath) { Get-Content $exitAstPath -Raw } else { "" }
+    Add-Check "M11_exit_still_works" ($exitCompat -eq 0 -and (Test-Path (Join-Path $RepoRoot "Build\EXE\hello_m10.exe")) -and $exitAst.Contains("EXIT|0") -and (Manifest-Has $exitDiag "ERROR_COUNT|0"))
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -632,6 +689,8 @@ Run-M10L-Tests
 Run-M10N-Tests
 
 Run-M10O-Tests
+
+Run-M11-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

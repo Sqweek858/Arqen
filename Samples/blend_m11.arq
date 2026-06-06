@@ -1,0 +1,9 @@
+program "BlendDemo"
+
+let userName be "Sqweek"
+
+title "Arqen M11"
+message text "Blend mix works, " + userName
+blend mix to code 0
+
+end program "BlendDemo"
