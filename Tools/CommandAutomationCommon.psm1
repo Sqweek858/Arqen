@@ -45,10 +45,15 @@ function Read-ArqenCommandSpec {
         switch ($key) {
             "COMMAND" { $fields["COMMAND_ID"] = $value.Replace(" ", "_") }
             "SYNTAX" { $fields["CANONICAL"] = $value }
+            "CATEGORY" { $fields["CATEGORY"] = $value }
             "TOKENS" { $fields["TOKENS"] = $value }
             "AST" { $fields["AST_NODE"] = ($value.Split("(", 2)[0]) }
             "SEMANTIC" { $fields["SEMANTIC"] = $value }
+            "IR" { $fields["IR"] = $value }
+            "BACKEND" { $fields["BACKEND"] = $value }
             "CODEGEN" { $fields["BACKEND"] = $value }
+            "STATUS" { $fields["STATUS"] = $value }
+            "LIMITATIONS" { $fields["LIMITATIONS"] = $value }
             "TEST_VALID" { $fields["VALID_TEST"] = $value }
             "TEST_INVALID" {
                 if ($fields.Contains("INVALID_TEST")) {

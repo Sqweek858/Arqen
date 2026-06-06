@@ -1,83 +1,54 @@
 param(
     [Parameter(Mandatory=$true)]
-    [string]$Name
+    [string]$Name,
+    [string]$Syntax = "",
+    [string]$Tokens = "",
+    [string]$Ast = "",
+    [string]$Semantic = "",
+    [string]$Ir = "none",
+    [string]$Backend = "none",
+    [string]$Category = "draft",
+    [switch]$DryRun,
+    [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
-$draftRoot = Join-Path $repoRoot "Experiments\CommandDrafts\$Name"
-
-if (Test-Path $draftRoot) {
-    Write-Host "Command draft already exists: $draftRoot"
-    exit 1
+function Normalize-CommandId {
+    param([string]$Value)
+    $id = $Value.Trim().ToLowerInvariant() -replace '[\s-]+', '_'
+    $id = $id -replace '[^a-z0-9_]', ''
+    return $id.Trim("_")
 }
 
-New-Item -ItemType Directory -Force $draftRoot | Out-Null
-
-function Write-DraftFile {
-    param(
-        [string]$FileName,
-        [string]$Content
-    )
-    Set-Content -Path (Join-Path $draftRoot $FileName) -Value $Content -Encoding UTF8
+$commandId = Normalize-CommandId $Name
+if ([string]::IsNullOrWhiteSpace($commandId)) {
+    Write-Host "ERROR|invalid_Name"
+    exit 2
 }
 
-Write-DraftFile "LANGUAGE_DESIGN.md" @"
-# $Name Language Design
+if ([string]::IsNullOrWhiteSpace($Syntax)) {
+    $Syntax = $commandId.Replace("_", " ")
+}
+if ([string]::IsNullOrWhiteSpace($Tokens)) {
+    $first = $commandId.Split("_")[0]
+    $Tokens = "KEYWORD($first)"
+}
+if ([string]::IsNullOrWhiteSpace($Ast)) {
+    $Ast = "$($commandId)_Skeleton"
+}
+if ([string]::IsNullOrWhiteSpace($Semantic)) {
+    $Semantic = "generated skeleton"
+}
 
-Canonical syntax:
-
-TODO
-
-Meaning:
-
-TODO
-
-Valid examples:
-
-TODO
-
-Invalid examples:
-
-TODO
-"@
-
-Write-DraftFile "COMMAND_SPEC.command.txt" @"
-COMMAND $Name
-SYNTAX TODO
-TOKENS TODO
-AST TODO
-SEMANTIC TODO
-CODEGEN TODO
-TEST_VALID TODO
-TEST_INVALID TODO
-LIMITATIONS TODO
-"@
-
-Write-DraftFile "LEXER_CHANGES.md" "# $Name Lexer Changes`r`n`r`nTODO`r`n"
-Write-DraftFile "PARSER_CHANGES.md" "# $Name Parser Changes`r`n`r`nTODO`r`n"
-Write-DraftFile "AST_CHANGES.md" "# $Name AST Changes`r`n`r`nTODO`r`n"
-Write-DraftFile "SEMANTIC_CHANGES.md" "# $Name Semantic Changes`r`n`r`nTODO`r`n"
-Write-DraftFile "CODEGEN_CHANGES.md" "# $Name Codegen Changes`r`n`r`nTODO`r`n"
-Write-DraftFile "TESTS.md" "# $Name Tests`r`n`r`nTODO`r`n"
-
-Write-DraftFile "IMPLEMENTATION_CHECKLIST.md" @"
-# $Name Implementation Checklist
-
-- [ ] syntax designed
-- [ ] examples written
-- [ ] invalid examples written
-- [ ] lexer tokens added
-- [ ] token dump verified
-- [ ] parser rule added
-- [ ] AST node added
-- [ ] semantic checks added
-- [ ] codegen behavior added or explicitly none
-- [ ] positive tests added
-- [ ] negative tests added
-- [ ] docs updated
-- [ ] old tests still pass
-"@
-
-Write-Host "Created command draft: $draftRoot"
+$target = Join-Path $PSScriptRoot "CommandAutomation\new_command_skeleton.ps1"
+if ($DryRun -and $Force) {
+    & $target -CommandId $commandId -Syntax $Syntax -Tokens $Tokens -Ast $Ast -Semantic $Semantic -Ir $Ir -Backend $Backend -Category $Category -DryRun -Force
+} elseif ($DryRun) {
+    & $target -CommandId $commandId -Syntax $Syntax -Tokens $Tokens -Ast $Ast -Semantic $Semantic -Ir $Ir -Backend $Backend -Category $Category -DryRun
+} elseif ($Force) {
+    & $target -CommandId $commandId -Syntax $Syntax -Tokens $Tokens -Ast $Ast -Semantic $Semantic -Ir $Ir -Backend $Backend -Category $Category -Force
+} else {
+    & $target -CommandId $commandId -Syntax $Syntax -Tokens $Tokens -Ast $Ast -Semantic $Semantic -Ir $Ir -Backend $Backend -Category $Category
+}
+exit $LASTEXITCODE

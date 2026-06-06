@@ -19,8 +19,8 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
-    $resultName = if ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
+    $group = if ($Name.StartsWith("M12B_")) { "M12B" } elseif ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M12B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
         $script:StructuredResults += "PASS|$group|$resultName"
@@ -680,6 +680,129 @@ function Run-M12-Tests {
     Add-Check "M12_blend_still_works" ($blendExit -eq 0 -and $blendAst.Contains("BLEND_MIX_TO_CODE|0"))
 }
 
+function Remove-M12B-Skeleton {
+    param([string]$CommandId)
+
+    if ([string]::IsNullOrWhiteSpace($CommandId)) {
+        return
+    }
+
+    $specPath = Join-Path $RepoRoot "Specs\Commands\$CommandId.command.txt"
+    if (Test-Path $specPath) {
+        $specText = Get-Content $specPath -Raw
+        if ($specText.Contains("STATUS skeleton")) {
+            Remove-Item $specPath -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    $skeletonDir = Join-Path $RepoRoot "Tests\CommandSkeletons\$CommandId"
+    $expectedRoot = Join-Path $RepoRoot "Tests\CommandSkeletons"
+    $resolved = [IO.Path]::GetFullPath($skeletonDir)
+    $rootResolved = [IO.Path]::GetFullPath($expectedRoot)
+    if ($resolved.StartsWith($rootResolved, [StringComparison]::OrdinalIgnoreCase) -and (Test-Path $skeletonDir)) {
+        Remove-Item $skeletonDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Test-M12B-VerifyCommand {
+    param(
+        [string]$CheckName,
+        [string]$CommandId
+    )
+
+    $exit = Invoke-Stage $RepoRoot "powershell" @("-ExecutionPolicy", "Bypass", "-File", ".\Tools\CommandAutomation\verify_command_integration.ps1", "-CommandId", $CommandId)
+    $norm = $CommandId.Trim().ToLowerInvariant() -replace '[\s-]+', '_'
+    $outPath = Join-Path $RepoRoot "Build\Generated\CommandSkeletons\$norm.integration_verification.txt"
+    $text = if (Test-Path $outPath) { Get-Content $outPath -Raw } else { "" }
+    Add-Check $CheckName ($exit -eq 0 -and $text.Contains("PASS|spec_exists") -and $text.Contains("PASS|command_status") -and -not $text.Contains("FAIL|"))
+}
+
+function Run-M12B-Tests {
+    Write-Host ""
+    Write-Host "M12B command skeleton automation tests"
+
+    $id = "m12b_skeleton_probe"
+    $specPath = Join-Path $RepoRoot "Specs\Commands\$id.command.txt"
+    $testDir = Join-Path $RepoRoot "Tests\CommandSkeletons\$id"
+    $generatedDir = Join-Path $RepoRoot "Build\Generated\CommandSkeletons"
+    $touchMap = Join-Path $generatedDir "$id.touch_map.txt"
+    $checklist = Join-Path $generatedDir "$id.implementation_checklist.txt"
+    $verifyOut = Join-Path $generatedDir "$id.integration_verification.txt"
+
+    Remove-M12B-Skeleton $id
+    Remove-Item $touchMap, $checklist, $verifyOut -Force -ErrorAction SilentlyContinue
+
+    Add-Check "M12B_skeleton_generator_exists" (Test-Path (Join-Path $RepoRoot "Tools\CommandAutomation\new_command_skeleton.ps1"))
+    Add-Check "M12B_integration_verifier_exists" (Test-Path (Join-Path $RepoRoot "Tools\CommandAutomation\verify_command_integration.ps1"))
+
+    $dryRunExit = Invoke-Stage $RepoRoot "powershell" @(
+        "-ExecutionPolicy", "Bypass",
+        "-File", ".\Tools\CommandAutomation\new_command_skeleton.ps1",
+        "-CommandId", $id,
+        "-Syntax", "probe stop <int>",
+        "-Tokens", "KEYWORD(probe) KEYWORD(stop) INT",
+        "-Ast", "ProbeStop(code)",
+        "-Semantic", "code must be int, only 0 supported initially",
+        "-Ir", "exit",
+        "-Backend", "WindowsX64PE:exit",
+        "-Category", "final_statement",
+        "-DryRun"
+    )
+    Add-Check "M12B_skeleton_dry_run" ($dryRunExit -eq 0 -and -not (Test-Path $specPath) -and -not (Test-Path $testDir))
+
+    $generationExit = Invoke-Stage $RepoRoot "powershell" @(
+        "-ExecutionPolicy", "Bypass",
+        "-File", ".\Tools\CommandAutomation\new_command_skeleton.ps1",
+        "-CommandId", $id,
+        "-Syntax", "probe stop <int>",
+        "-Tokens", "KEYWORD(probe) KEYWORD(stop) INT",
+        "-Ast", "ProbeStop(code)",
+        "-Semantic", "code must be int, only 0 supported initially",
+        "-Ir", "exit",
+        "-Backend", "WindowsX64PE:exit",
+        "-Category", "final_statement",
+        "-Force"
+    )
+    Add-Check "M12B_skeleton_generation" ($generationExit -eq 0 -and (Test-Path $specPath) -and (Test-Path (Join-Path $testDir "expected.txt")))
+    Add-Check "M12B_touch_map_generated" ((Test-Path $touchMap) -and (Get-Content $touchMap -Raw).Contains("TOUCH|parser|required"))
+    Add-Check "M12B_checklist_generated" ((Test-Path $checklist) -and (Get-Content $checklist -Raw).Contains("CHECK|parser_rule_added|pending"))
+
+    Invoke-Stage $RepoRoot ".\Tools\validate_command_specs.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_keyword_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
+    $statusText = Get-Content (Join-Path $RepoRoot "Build\Generated\command_status.txt") -Raw
+    Add-Check "M12B_skeleton_status_not_stable" ($statusText.Contains("COMMAND|$id|") -and $statusText.Contains("status=skeleton") -and -not $statusText.Contains("COMMAND|$id|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable"))
+
+    Test-M12B-VerifyCommand "M12B_verify_blend_mix_to_code" "blend_mix_to_code"
+    Test-M12B-VerifyCommand "M12B_verify_show_message" "show_message"
+    Test-M12B-VerifyCommand "M12B_verify_set_title_to" "set_title_to"
+    Test-M12B-VerifyCommand "M12B_verify_comments" "comments"
+
+    $wrapperExit = Invoke-Stage $RepoRoot "powershell" @(
+        "-ExecutionPolicy", "Bypass",
+        "-File", ".\Tools\new_command_scaffold.ps1",
+        "-Name", "wrapper probe",
+        "-Syntax", "wrapper probe <int>",
+        "-Tokens", "KEYWORD(wrapper) KEYWORD(probe) INT",
+        "-Ast", "WrapperProbe(code)",
+        "-Semantic", "generated wrapper skeleton",
+        "-Ir", "none",
+        "-Backend", "none",
+        "-Category", "draft",
+        "-DryRun"
+    )
+    $validateExit = Invoke-Stage $RepoRoot ".\Tools\validate_command_specs.ps1"
+    Add-Check "M12B_existing_wrappers_still_work" ($wrapperExit -eq 0 -and $validateExit -eq 0)
+
+    Remove-M12B-Skeleton $id
+    Invoke-Stage $RepoRoot ".\Tools\generate_keyword_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -773,6 +896,8 @@ Run-M10O-Tests
 Run-M11-Tests
 
 Run-M12-Tests
+
+Run-M12B-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="
