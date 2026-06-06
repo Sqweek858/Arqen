@@ -19,8 +19,8 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M13_")) { "M13" } elseif ($Name.StartsWith("M12B_")) { "M12B" } elseif ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
-    $resultName = if ($Name.StartsWith("M13_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M12B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
+    $group = if ($Name.StartsWith("M13B_")) { "M13B" } elseif ($Name.StartsWith("M13_")) { "M13" } elseif ($Name.StartsWith("M12B_")) { "M12B" } elseif ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M13B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M13_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M12B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
         $script:StructuredResults += "PASS|$group|$resultName"
@@ -895,6 +895,40 @@ function Run-M13-Tests {
     Add-Check "M13_diagnostics_still_work" ((Diagnostic-ErrorCount $diagPath) -gt 0 -and (Manifest-Has $diagPath "S021"))
 }
 
+function Run-M13B-Tests {
+    Write-Host ""
+    Write-Host "M13B parser statement automation and expected IR tests"
+
+    $mapExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_statement_map.ps1"
+    $mapPath = Join-Path $RepoRoot "Build\Generated\parser_statement_map.txt"
+    $mapText = if (Test-Path $mapPath) { Get-Content $mapPath -Raw } else { "" }
+    Add-Check "M13B_parser_statement_map_generation" ($mapExit -eq 0 -and (Test-Path $mapPath))
+    Add-Check "M13B_parser_statement_map_core_rules" ($mapText.Contains("RULE_ID|if_statement|") -and $mapText.Contains("RULE_ID|else_statement|") -and $mapText.Contains("RULE_ID|end_if_statement|") -and $mapText.Contains("RULE_ID|blend_mix_to_code_statement|"))
+    Add-Check "M13B_parser_statement_map_expected_ir_flag" ($mapText.Contains("RULE_ID|if_statement|") -and $mapText.Contains("EXPECTED_IR_AVAILABLE|true"))
+
+    $expectedIrExit = Invoke-Stage $RepoRoot "powershell" @("-ExecutionPolicy", "Bypass", "-File", ".\Tools\verify_expected_ir.ps1")
+    $expectedIrPath = Join-Path $RepoRoot "Build\Generated\expected_ir_validation.txt"
+    $expectedIrText = if (Test-Path $expectedIrPath) { Get-Content $expectedIrPath -Raw } else { "" }
+    Add-Check "M13B_expected_ir_checker" ($expectedIrExit -eq 0 -and (Test-Path $expectedIrPath) -and -not $expectedIrText.Contains("FAIL|"))
+    Add-Check "M13B_expected_ir_true_branch" ($expectedIrText.Contains("PASS|m13b_if_true_branch|"))
+    Add-Check "M13B_expected_ir_false_branch" ($expectedIrText.Contains("PASS|m13b_if_false_branch|"))
+    Add-Check "M13B_expected_ir_no_else_true" ($expectedIrText.Contains("PASS|m13b_if_no_else_true|"))
+    Add-Check "M13B_expected_ir_no_else_false" ($expectedIrText.Contains("PASS|m13b_if_no_else_false|"))
+    Add-Check "M13B_expected_ir_is_not" ($expectedIrText.Contains("PASS|m13b_is_not_true|"))
+    Add-Check "M13B_expected_ir_bool_comparison" ($expectedIrText.Contains("PASS|m13b_bool_comparison|"))
+
+    Run-M13-InvalidCase "M13B_invalid_end_if_without_if" ".\Tests\CommandTests\if_compile_time\invalid_if_end_if_without_if.arq" "P056" "parser"
+    Run-M13-InvalidCase "M13B_invalid_is_not_missing_operand" ".\Tests\CommandTests\comparison_is\invalid_missing_right_operand_after_is_not.arq" "P051" "parser"
+    Run-M13-InvalidCase "M13B_invalid_duplicate_else" ".\Tests\CommandTests\if_compile_time\invalid_if_duplicate_else.arq" "P055" "parser"
+
+    $ruleExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1"
+    $indexExit = Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1"
+    $statusExit = Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1"
+    Add-Check "M13B_generated_parser_rule_registry" ($ruleExit -eq 0 -and (Test-Path (Join-Path $RepoRoot "Build\Generated\parser_rule_registry.txt")))
+    Add-Check "M13B_generated_command_test_index" ($indexExit -eq 0 -and (Test-Path (Join-Path $RepoRoot "Build\Generated\command_test_index.txt")))
+    Add-Check "M13B_generated_command_status" ($statusExit -eq 0 -and (Test-Path (Join-Path $RepoRoot "Build\Generated\command_status.txt")))
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -992,6 +1026,8 @@ Run-M12-Tests
 Run-M12B-Tests
 
 Run-M13-Tests
+
+Run-M13B-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

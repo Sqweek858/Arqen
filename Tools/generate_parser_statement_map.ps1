@@ -1,0 +1,54 @@
+$ErrorActionPreference = "Stop"
+Import-Module (Join-Path $PSScriptRoot "CommandAutomationCommon.psm1") -Force
+
+$root = Get-ArqenRepoRoot
+$generated = Get-ArqenGeneratedDir
+$outPath = Join-Path $generated "parser_statement_map.txt"
+$testRoot = Join-Path $root "Tests\CommandTests"
+$expectedIrRoot = Join-Path $root "Tests\ExpectedIR"
+
+$statementRows = @(
+    @{ Rule = "program_start"; Command = "program"; Keywords = "program" },
+    @{ Rule = "program_end"; Command = "program"; Keywords = "end,program" },
+    @{ Rule = "let_statement"; Command = "let"; Keywords = "let,be" },
+    @{ Rule = "title_statement"; Command = "title"; Keywords = "title" },
+    @{ Rule = "set_title_statement"; Command = "set_title_to"; Keywords = "set,title,to" },
+    @{ Rule = "message_text_statement"; Command = "message_text"; Keywords = "message,text" },
+    @{ Rule = "show_message_statement"; Command = "show_message"; Keywords = "show,message" },
+    @{ Rule = "exit_statement"; Command = "exit"; Keywords = "exit" },
+    @{ Rule = "blend_mix_to_code_statement"; Command = "BlendMixToCode"; Keywords = "blend,mix,to,code" },
+    @{ Rule = "if_statement"; Command = "if_compile_time"; Keywords = "if" },
+    @{ Rule = "else_statement"; Command = "if_compile_time"; Keywords = "else" },
+    @{ Rule = "end_if_statement"; Command = "if_compile_time"; Keywords = "end,if" }
+)
+
+$specs = @{}
+foreach ($spec in Get-ArqenCommandSpecs) {
+    $id = Get-ArqenSpecValue $spec "COMMAND_ID" $spec.Id
+    $specs[$id] = $spec
+}
+
+$lines = @()
+foreach ($row in $statementRows) {
+    $commandId = $row.Command
+    $spec = if ($specs.ContainsKey($commandId)) { $specs[$commandId] } else { $null }
+    $status = if ($null -ne $spec) { Get-ArqenSpecValue $spec "STATUS" "stable" } else { "missing" }
+    $specPath = if ($null -ne $spec) { ConvertTo-ArqenRelativePath $spec.Path } else { "none" }
+    $testDir = Join-Path $testRoot ($commandId -replace '^BlendMixToCode$', 'blend_mix_to_code')
+    $hasTests = Test-Path $testDir
+    $validCount = if ($hasTests) { @(Get-ChildItem $testDir -Filter "valid_*.arq" -File -ErrorAction SilentlyContinue).Count } else { 0 }
+    $invalidCount = if ($hasTests) { @(Get-ChildItem $testDir -Filter "invalid_*.arq" -File -ErrorAction SilentlyContinue).Count } else { 0 }
+    $expectedIr = $false
+    if (Test-Path $expectedIrRoot) {
+        $expectedIr = @(Get-ChildItem $expectedIrRoot -Filter "*.expected.ir" -File -Recurse | Where-Object {
+            (Get-Content $_.FullName -Raw).Contains("COMMAND_ID|$commandId") -or
+            (Get-Content $_.FullName -Raw).Contains("RULE_ID|$($row.Rule)")
+        }).Count -gt 0
+    }
+
+    $lines += "RULE_ID|$($row.Rule)|COMMAND_ID|$commandId|KEYWORDS|$($row.Keywords)|STATUS|$status|SOURCE_SPEC|$specPath|HAS_TESTS|$($hasTests.ToString().ToLowerInvariant())|HAS_VALID_SAMPLE|$(($validCount -gt 0).ToString().ToLowerInvariant())|HAS_INVALID_SAMPLE|$(($invalidCount -gt 0).ToString().ToLowerInvariant())|EXPECTED_IR_AVAILABLE|$($expectedIr.ToString().ToLowerInvariant())"
+}
+
+Set-Content -Path $outPath -Value $lines -Encoding UTF8
+$lines | ForEach-Object { Write-Host $_ }
+exit 0

@@ -1,0 +1,12 @@
+program "IfIsNot"
+
+let name be "Sqweek"
+
+set title to "M13B If"
+if name is not "Arqen"
+show message "ok"
+end if
+
+blend mix to code 0
+
+end program "IfIsNot"

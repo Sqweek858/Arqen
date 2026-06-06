@@ -7,3 +7,4 @@ invalid_type_mismatch_int_text.arq|1|ERROR|S021|semantic
 invalid_type_mismatch_bool_text.arq|1|ERROR|S021|semantic
 invalid_unknown_variable.arq|1|ERROR|S020|semantic
 invalid_missing_right_operand.arq|1|ERROR|P050|parse
+invalid_missing_right_operand_after_is_not.arq|1|ERROR|P051|parse

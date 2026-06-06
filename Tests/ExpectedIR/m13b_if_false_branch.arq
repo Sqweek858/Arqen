@@ -1,0 +1,14 @@
+program "IfFalse"
+
+let number be 1
+
+set title to "M13B If"
+if number is 0
+show message "true branch"
+else
+show message "false branch"
+end if
+
+blend mix to code 0
+
+end program "IfFalse"
