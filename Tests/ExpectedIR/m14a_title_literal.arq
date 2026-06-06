@@ -1,0 +1,7 @@
+program "TitleLiteral"
+
+set title to string "Arqen"
+show string "Hello"
+blend mix to code 0
+
+end program "TitleLiteral"

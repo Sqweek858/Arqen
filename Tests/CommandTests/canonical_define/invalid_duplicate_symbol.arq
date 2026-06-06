@@ -1,0 +1,9 @@
+program "DuplicateSymbol"
+
+define int called "score" be 1
+define int called "score" be 2
+set title to string "M14A"
+show string "bad"
+blend mix to code 0
+
+end program "DuplicateSymbol"

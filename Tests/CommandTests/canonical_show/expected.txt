@@ -1,0 +1,5 @@
+valid_show_string.arq|0|MESSAGE|Hello
+valid_show_string_symbol.arq|0|MESSAGE|Sqweek
+valid_show_int_symbol.arq|0|MESSAGE|10
+valid_show_bool_symbol.arq|0|MESSAGE|true
+invalid_show_missing_symbol.arq|1|ERROR|S036|semantic

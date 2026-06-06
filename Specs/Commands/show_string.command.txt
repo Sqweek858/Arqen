@@ -1,0 +1,11 @@
+COMMAND_ID|show_string
+CANONICAL|show string "<text>"
+CATEGORY|output
+TOKENS|KEYWORD(show) KEYWORD(string) STRING
+AST_NODE|ShowString
+SEMANTIC|string literal is lowered to visual message output
+IR|show_message.text
+BACKEND|WindowsX64PE.show_message
+VALID_TEST|Tests\CommandTests\canonical_show\valid_show_string.arq
+INVALID_TEST|Tests\CommandTests\canonical_show\invalid_show_missing_symbol.arq
+STATUS|stable

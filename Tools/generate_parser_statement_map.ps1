@@ -11,10 +11,14 @@ $statementRows = @(
     @{ Rule = "program_start"; Command = "program"; Keywords = "program" },
     @{ Rule = "program_end"; Command = "program"; Keywords = "end,program" },
     @{ Rule = "let_statement"; Command = "let"; Keywords = "let,be" },
+    @{ Rule = "define_statement"; Command = "define"; Keywords = "define,called,be"; TestFolder = "canonical_define" },
+    @{ Rule = "rename_statement"; Command = "rename"; Keywords = "rename,to"; TestFolder = "rename" },
     @{ Rule = "title_statement"; Command = "title"; Keywords = "title" },
     @{ Rule = "set_title_statement"; Command = "set_title_to"; Keywords = "set,title,to" },
     @{ Rule = "message_text_statement"; Command = "message_text"; Keywords = "message,text" },
     @{ Rule = "show_message_statement"; Command = "show_message"; Keywords = "show,message" },
+    @{ Rule = "show_string_statement"; Command = "show_string"; Keywords = "show,string"; TestFolder = "canonical_show" },
+    @{ Rule = "show_value_statement"; Command = "show_value"; Keywords = "show"; TestFolder = "canonical_show" },
     @{ Rule = "exit_statement"; Command = "exit"; Keywords = "exit" },
     @{ Rule = "blend_mix_to_code_statement"; Command = "BlendMixToCode"; Keywords = "blend,mix,to,code" },
     @{ Rule = "if_statement"; Command = "if_compile_time"; Keywords = "if" },
@@ -34,7 +38,8 @@ foreach ($row in $statementRows) {
     $spec = if ($specs.ContainsKey($commandId)) { $specs[$commandId] } else { $null }
     $status = if ($null -ne $spec) { Get-ArqenSpecValue $spec "STATUS" "stable" } else { "missing" }
     $specPath = if ($null -ne $spec) { ConvertTo-ArqenRelativePath $spec.Path } else { "none" }
-    $testDir = Join-Path $testRoot ($commandId -replace '^BlendMixToCode$', 'blend_mix_to_code')
+    $folderName = if ($row.ContainsKey("TestFolder")) { $row.TestFolder } else { ($commandId -replace '^BlendMixToCode$', 'blend_mix_to_code') }
+    $testDir = Join-Path $testRoot $folderName
     $hasTests = Test-Path $testDir
     $validCount = if ($hasTests) { @(Get-ChildItem $testDir -Filter "valid_*.arq" -File -ErrorAction SilentlyContinue).Count } else { 0 }
     $invalidCount = if ($hasTests) { @(Get-ChildItem $testDir -Filter "invalid_*.arq" -File -ErrorAction SilentlyContinue).Count } else { 0 }

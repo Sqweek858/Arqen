@@ -1,0 +1,14 @@
+program "CanonicalIfString"
+
+define string called "name" be string "Sqweek"
+
+set title to string "M14A"
+if "name" is string "Sqweek"
+show string "ok"
+else
+show string "bad"
+end if
+
+blend mix to code 0
+
+end program "CanonicalIfString"

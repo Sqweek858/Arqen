@@ -1,0 +1,8 @@
+program "ShowBoolSymbol"
+
+define bool called "alive" be true
+set title to string "M14A"
+show "alive"
+blend mix to code 0
+
+end program "ShowBoolSymbol"

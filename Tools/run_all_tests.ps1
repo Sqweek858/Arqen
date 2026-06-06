@@ -19,8 +19,8 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M13B_")) { "M13B" } elseif ($Name.StartsWith("M13_")) { "M13" } elseif ($Name.StartsWith("M12B_")) { "M12B" } elseif ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
-    $resultName = if ($Name.StartsWith("M13B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M13_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M12B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
+    $group = if ($Name.StartsWith("M14A_")) { "M14A" } elseif ($Name.StartsWith("M13B_")) { "M13B" } elseif ($Name.StartsWith("M13_")) { "M13" } elseif ($Name.StartsWith("M12B_")) { "M12B" } elseif ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M14A_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M13B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M13_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M12B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
         $script:StructuredResults += "PASS|$group|$resultName"
@@ -929,6 +929,63 @@ function Run-M13B-Tests {
     Add-Check "M13B_generated_command_status" ($statusExit -eq 0 -and (Test-Path (Join-Path $RepoRoot "Build\Generated\command_status.txt")))
 }
 
+function Run-M14A-Tests {
+    Write-Host ""
+    Write-Host "M14A canonical define/show/title and rename tests"
+
+    $defineExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\canonical_define\valid_typed_values.arq", "--rebuild")
+    $defineAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_typed_values.ast") -Raw
+    Add-Check "M14A_define_typed_values" ($defineExit -eq 0 -and $defineAst.Contains("LET|name|text|Sqweek") -and $defineAst.Contains("LET|score|int|10") -and $defineAst.Contains("LET|alive|bool|true"))
+
+    $showStringExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\canonical_show\valid_show_string.arq", "--rebuild")
+    $showStringIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_show_string.arqir") -Raw
+    Add-Check "M14A_show_string_literal" ($showStringExit -eq 0 -and $showStringIr.Contains("value=Hello"))
+
+    $showValueExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\canonical_show\valid_show_int_symbol.arq", "--rebuild")
+    $showValueIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_show_int_symbol.arqir") -Raw
+    Add-Check "M14A_show_quoted_value" ($showValueExit -eq 0 -and $showValueIr.Contains("value=10"))
+
+    $titleLiteralExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\canonical_title\valid_title_literal.arq", "--rebuild")
+    $titleLiteralIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_title_literal.arqir") -Raw
+    Add-Check "M14A_set_title_string_literal" ($titleLiteralExit -eq 0 -and $titleLiteralIr.Contains("CONST|id=str_0|type=text|value=Arqen"))
+
+    $titleSymbolExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\canonical_title\valid_title_symbol.arq", "--rebuild")
+    $titleSymbolIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_title_symbol.arqir") -Raw
+    Add-Check "M14A_set_title_symbol" ($titleSymbolExit -eq 0 -and $titleSymbolIr.Contains("CONST|id=str_0|type=text|value=Arqen"))
+
+    $renameExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\rename\valid_rename_int.arq", "--rebuild")
+    $renameIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_rename_int.arqir") -Raw
+    Add-Check "M14A_rename_keeps_value" ($renameExit -eq 0 -and $renameIr.Contains("CONST|id=str_1|type=text|value=10"))
+
+    Run-M13-InvalidCase "M14A_define_missing_called" ".\Tests\CommandTests\canonical_define\invalid_missing_called.arq" "P071" "parser"
+    Run-M13-InvalidCase "M14A_define_missing_quoted_name" ".\Tests\CommandTests\canonical_define\invalid_missing_quoted_name.arq" "P072" "parser"
+    Run-M13-InvalidCase "M14A_define_missing_be" ".\Tests\CommandTests\canonical_define\invalid_missing_be.arq" "P073" "parser"
+    Run-M13-InvalidCase "M14A_define_invalid_int" ".\Tests\CommandTests\canonical_define\invalid_int_value.arq" "S031" "semantic"
+    Run-M13-InvalidCase "M14A_define_invalid_bool" ".\Tests\CommandTests\canonical_define\invalid_bool_value.arq" "S032" "semantic"
+    Run-M13-InvalidCase "M14A_define_duplicate_symbol" ".\Tests\CommandTests\canonical_define\invalid_duplicate_symbol.arq" "S001" "semantic"
+    Run-M13-InvalidCase "M14A_show_missing_symbol" ".\Tests\CommandTests\canonical_show\invalid_show_missing_symbol.arq" "S036" "semantic"
+    Run-M13-InvalidCase "M14A_title_missing_symbol" ".\Tests\CommandTests\canonical_title\invalid_title_missing_symbol.arq" "S036" "semantic"
+    Run-M13-InvalidCase "M14A_rename_missing_symbol" ".\Tests\CommandTests\rename\invalid_missing_symbol.arq" "S034" "semantic"
+    Run-M13-InvalidCase "M14A_rename_existing_symbol" ".\Tests\CommandTests\rename\invalid_existing_target.arq" "S035" "semantic"
+    Run-M13-InvalidCase "M14A_rename_old_name_missing" ".\Tests\CommandTests\rename\invalid_show_old_name_after_rename.arq" "S036" "semantic"
+
+    $expectedIrExit = Invoke-Stage $RepoRoot "powershell" @("-ExecutionPolicy", "Bypass", "-File", ".\Tools\verify_expected_ir.ps1")
+    $expectedIrText = Get-Content (Join-Path $RepoRoot "Build\Generated\expected_ir_validation.txt") -Raw
+    Add-Check "M14A_expected_ir_show_title_if_rename" ($expectedIrExit -eq 0 -and $expectedIrText.Contains("PASS|m14a_show_string_literal|") -and $expectedIrText.Contains("PASS|m14a_title_symbol|") -and $expectedIrText.Contains("PASS|m14a_if_canonical_int|") -and $expectedIrText.Contains("PASS|m14a_rename_string|"))
+
+    $mapExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_statement_map.ps1"
+    $mapText = Get-Content (Join-Path $RepoRoot "Build\Generated\parser_statement_map.txt") -Raw
+    Add-Check "M14A_parser_statement_map" ($mapExit -eq 0 -and $mapText.Contains("RULE_ID|define_statement|") -and $mapText.Contains("RULE_ID|rename_statement|") -and $mapText.Contains("RULE_ID|show_string_statement|") -and $mapText.Contains("RULE_ID|show_value_statement|"))
+
+    $legacyHello = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\hello_m10.arq", "--rebuild")
+    $legacyComfort = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\comfort_m12.arq", "--rebuild")
+    Add-Check "M14A_legacy_syntax_still_works" ($legacyHello -eq 0 -and $legacyComfort -eq 0)
+
+    Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -1028,6 +1085,8 @@ Run-M12B-Tests
 Run-M13-Tests
 
 Run-M13B-Tests
+
+Run-M14A-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

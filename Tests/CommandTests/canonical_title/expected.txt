@@ -1,0 +1,3 @@
+valid_title_literal.arq|0|MESSAGE|Hello
+valid_title_symbol.arq|0|MESSAGE|Hello
+invalid_title_missing_symbol.arq|1|ERROR|S036|semantic

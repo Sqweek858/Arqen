@@ -1,0 +1,8 @@
+program "InvalidBoolValue"
+
+define bool called "alive" be string "true"
+set title to string "M14A"
+show string "bad"
+blend mix to code 0
+
+end program "InvalidBoolValue"

@@ -1,0 +1,9 @@
+program "RenameString"
+
+define string called "name" be string "Sqweek"
+rename "name" to "playerName"
+set title to string "M14A"
+show "playerName"
+blend mix to code 0
+
+end program "RenameString"

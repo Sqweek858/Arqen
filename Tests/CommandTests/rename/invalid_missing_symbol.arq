@@ -1,0 +1,8 @@
+program "RenameMissing"
+
+rename "missing" to "newName"
+set title to string "M14A"
+show string "bad"
+blend mix to code 0
+
+end program "RenameMissing"

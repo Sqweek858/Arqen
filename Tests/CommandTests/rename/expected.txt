@@ -1,0 +1,5 @@
+valid_rename_int.arq|0|MESSAGE|10
+valid_rename_string.arq|0|MESSAGE|Sqweek
+invalid_missing_symbol.arq|1|ERROR|S034|semantic
+invalid_existing_target.arq|1|ERROR|S035|semantic
+invalid_show_old_name_after_rename.arq|1|ERROR|S036|semantic

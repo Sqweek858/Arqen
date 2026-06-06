@@ -329,7 +329,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -687,6 +687,22 @@ static class Program
                 return;
             }
 
+            if (IsKeyword("define"))
+            {
+                if (inIf)
+                    throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "define declarations inside compile-time if are not supported in M14A.");
+                ParseDefine();
+                return;
+            }
+
+            if (IsKeyword("rename"))
+            {
+                if (inIf)
+                    throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "rename inside compile-time if is not supported in M14A.");
+                ParseRename();
+                return;
+            }
+
             if (IsKeyword("title") || IsKeyword("set"))
             {
                 var title = IsKeyword("title") ? ParseTitleCommand() : ParseSetTitleTo();
@@ -813,7 +829,7 @@ static class Program
             if (!IsKeyword("to"))
                 throw new CompileError("PARSE", "P051", Current.Line, Current.Column, "Expected keyword \"to\" after \"set title\".");
             ExpectKeyword("to");
-            var expr = ParseExpression("set title to", "P052", "Expected expression after set title to.");
+            var expr = ParseTextLikeExpression("set title to", "P052", "Expected expression after set title to.");
             ExpectLine();
             return new CommandExpr(expr.Value, expr.Repr, "set_title_to");
         }
@@ -838,12 +854,18 @@ static class Program
         CommandExpr ParseShowMessage()
         {
             ExpectKeyword("show");
-            if (!IsKeyword("message"))
-                throw new CompileError("PARSE", "P060", Current.Line, Current.Column, "Expected keyword \"message\" after \"show\".");
-            ExpectKeyword("message");
-            var expr = ParseExpression("show message", "P061", "Expected expression after show message.");
+            if (IsKeyword("message"))
+            {
+                ExpectKeyword("message");
+                var legacyExpr = ParseExpression("show message", "P061", "Expected expression after show message.");
+                ExpectLine();
+                return new CommandExpr(legacyExpr.Value, legacyExpr.Repr, "show_message");
+            }
+
+            var canonicalString = IsKeyword("string");
+            var expr = ParseTextLikeExpression("show", "P061", "Expected expression after show.");
             ExpectLine();
-            return new CommandExpr(expr.Value, expr.Repr, "show_message");
+            return new CommandExpr(expr.Value, expr.Repr, canonicalString ? "show_string" : "show_value");
         }
 
         string ParseExit()
@@ -924,6 +946,114 @@ static class Program
             ExpectLine();
         }
 
+        void ParseDefine()
+        {
+            ExpectKeyword("define");
+            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "bool" or "var"))
+                throw new CompileError("PARSE", "P070", Current.Line, Current.Column, "Expected canonical type after \"define\".");
+            var declaredType = Advance();
+
+            if (!IsKeyword("called"))
+                throw new CompileError("PARSE", "P071", Current.Line, Current.Column, "Expected keyword \"called\" after define type.");
+            ExpectKeyword("called");
+
+            if (!CurrentIs("STRING"))
+                throw new CompileError("PARSE", "P072", Current.Line, Current.Column, "Expected quoted symbol name after \"called\".");
+            var nameTok = Advance();
+            if (_vars.ContainsKey(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S001", nameTok.Line, nameTok.Column, $"Symbol \"{nameTok.Value}\" is already defined.");
+
+            if (!IsKeyword("be"))
+                throw new CompileError("PARSE", "P073", Current.Line, Current.Column, "Expected keyword \"be\" after symbol name.");
+            ExpectKeyword("be");
+
+            var value = ParseCanonicalValue(declaredType.Value);
+            AddSymbol(nameTok.Value, value.Type, value.Value);
+            ExpectLine();
+        }
+
+        ExprResult ParseCanonicalValue(string declaredType)
+        {
+            if (declaredType == "string")
+            {
+                if (!IsKeyword("string"))
+                    throw new CompileError("SEMANTIC", "S030", Current.Line, Current.Column, "define string requires string literal syntax: string \"...\".");
+                ExpectKeyword("string");
+                var s = Expect("STRING", "string literal");
+                return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
+            }
+
+            if (declaredType == "int")
+            {
+                if (!CurrentIs("INT"))
+                    throw new CompileError("SEMANTIC", "S031", Current.Line, Current.Column, "define int requires an integer literal.");
+                var i = Advance();
+                return new ExprResult("int", i.Value, $"int({i.Value})");
+            }
+
+            if (declaredType == "bool")
+            {
+                if (!CurrentIs("BOOL"))
+                    throw new CompileError("SEMANTIC", "S032", Current.Line, Current.Column, "define bool requires true or false.");
+                var b = Advance();
+                return new ExprResult("bool", b.Value, $"bool({b.Value})");
+            }
+
+            if (IsKeyword("string"))
+            {
+                ExpectKeyword("string");
+                var s = Expect("STRING", "string literal");
+                return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
+            }
+
+            if (CurrentIs("INT"))
+            {
+                var i = Advance();
+                return new ExprResult("int", i.Value, $"int({i.Value})");
+            }
+
+            if (CurrentIs("BOOL"))
+            {
+                var b = Advance();
+                return new ExprResult("bool", b.Value, $"bool({b.Value})");
+            }
+
+            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, or bool literal value.");
+        }
+
+        void ParseRename()
+        {
+            ExpectKeyword("rename");
+            var oldTok = Expect("STRING", "old symbol name");
+            if (!IsKeyword("to"))
+                throw new CompileError("PARSE", "P074", Current.Line, Current.Column, "Expected keyword \"to\" after old symbol name.");
+            ExpectKeyword("to");
+            var newTok = Expect("STRING", "new symbol name");
+
+            if (!_vars.TryGetValue(oldTok.Value, out var info))
+                throw new CompileError("SEMANTIC", "S034", oldTok.Line, oldTok.Column, $"Cannot rename missing symbol \"{oldTok.Value}\".");
+            if (_vars.ContainsKey(newTok.Value))
+                throw new CompileError("SEMANTIC", "S035", newTok.Line, newTok.Column, $"Cannot rename to existing symbol \"{newTok.Value}\".");
+
+            _vars.Remove(oldTok.Value);
+            _vars[newTok.Value] = info;
+            for (var i = 0; i < _varList.Count; i++)
+            {
+                if (_varList[i].Name == oldTok.Value)
+                {
+                    _varList[i] = (newTok.Value, info.Type, info.Value);
+                    break;
+                }
+            }
+            ExpectLine();
+        }
+
+        void AddSymbol(string name, string type, string value)
+        {
+            _vars[name] = new VarInfo(type, value);
+            _varList.Add((name, type, value));
+        }
+
         CompareResult ParseComparison()
         {
             var left = ParseComparisonOperand("P052", "Expected comparison left operand.");
@@ -957,9 +1087,18 @@ static class Program
 
         ExprResult ParseComparisonOperand(string code, string message)
         {
+            if (IsKeyword("string"))
+            {
+                ExpectKeyword("string");
+                var s = Expect("STRING", "string literal");
+                return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
+            }
+
             if (CurrentIs("STRING"))
             {
                 var t = Advance();
+                if (_vars.TryGetValue(t.Value, out var info))
+                    return new ExprResult(info.Type, info.Value, $"symbol({t.Value})");
                 return new ExprResult("text", t.Value, $"str(\"{t.Value}\")");
             }
 
@@ -1015,6 +1154,42 @@ static class Program
                 throw new CompileError("SEMANTIC", "S013", Current.Line, Current.Column, "Unsupported expression type in M10G.");
 
             return left;
+        }
+
+        ExprResult ParseTextLikeExpression(string context, string missingCode, string missingMessage)
+        {
+            if (CurrentIs("NEWLINE") || CurrentIs("EOF"))
+                throw new CompileError("PARSE", missingCode, Current.Line, Current.Column, missingMessage);
+
+            if (IsKeyword("string"))
+            {
+                ExpectKeyword("string");
+                var s = Expect("STRING", "string literal");
+                return new ExprResult("text", s.Value, $"str(\"{s.Value}\")");
+            }
+
+            if (CurrentIs("STRING"))
+            {
+                if (context != "show" && PeekType("PLUS"))
+                    return ParseExpression(context, missingCode, missingMessage);
+
+                var t = Advance();
+                if (context == "show")
+                {
+                    if (!_vars.TryGetValue(t.Value, out var info))
+                        throw new CompileError("SEMANTIC", "S036", t.Line, t.Column, $"Unknown symbol \"{t.Value}\".");
+                    return new ExprResult("text", info.Value, $"symbol({t.Value})");
+                }
+
+                if (_vars.TryGetValue(t.Value, out var titleInfo))
+                    return new ExprResult("text", titleInfo.Value, $"symbol({t.Value})");
+                if (IsSymbolName(t.Value))
+                    throw new CompileError("SEMANTIC", "S036", t.Line, t.Column, $"Unknown symbol \"{t.Value}\".");
+                return new ExprResult("text", t.Value, $"str(\"{t.Value}\")");
+            }
+
+            var expr = ParseExpression(context, missingCode, missingMessage);
+            return new ExprResult("text", expr.Value, expr.Repr);
         }
 
         ExprResult ParsePrimary(bool afterPlus)
@@ -1107,10 +1282,28 @@ static class Program
 
         bool IsEndProgram() => IsKeyword("end") && PeekKeyword("program");
         bool IsEndIf() => IsKeyword("end") && PeekKeyword("if");
+        static bool IsSymbolName(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+            if (!(char.IsLetter(value[0]) || value[0] == '_'))
+                return false;
+            for (var i = 1; i < value.Length; i++)
+                if (!(char.IsLetterOrDigit(value[i]) || value[i] == '_'))
+                    return false;
+            return true;
+        }
+
         bool PeekKeyword(string value)
         {
             var next = _pos + 1;
             return next < _tokens.Count && _tokens[next].Type == "KEYWORD" && _tokens[next].Value == value;
+        }
+
+        bool PeekType(string type)
+        {
+            var next = _pos + 1;
+            return next < _tokens.Count && _tokens[next].Type == type;
         }
 
         bool IsKeyword(string value) => Current.Type == "KEYWORD" && Current.Value == value;

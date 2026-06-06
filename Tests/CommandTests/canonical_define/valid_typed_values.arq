@@ -1,0 +1,14 @@
+program "CanonicalDefine"
+
+define string called "name" be string "Sqweek"
+define int called "score" be 10
+define bool called "alive" be true
+define var called "autoName" be string "Arqen"
+define var called "autoScore" be 5
+define var called "autoAlive" be false
+
+set title to string "M14A"
+show string "Done"
+blend mix to code 0
+
+end program "CanonicalDefine"

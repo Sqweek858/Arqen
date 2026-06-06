@@ -1,0 +1,11 @@
+COMMAND_ID|define
+CANONICAL|define <type> called "<name>" be <literal>
+CATEGORY|declaration
+TOKENS|KEYWORD(define) KEYWORD(string) KEYWORD(int) KEYWORD(bool) KEYWORD(var) KEYWORD(called) STRING KEYWORD(be) VALUE
+AST_NODE|Define
+SEMANTIC|creates typed compile-time symbol; reject duplicate names and invalid literal types
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\canonical_define\valid_typed_values.arq
+INVALID_TEST|Tests\CommandTests\canonical_define\invalid_missing_called.arq;Tests\CommandTests\canonical_define\invalid_duplicate_symbol.arq
+STATUS|stable

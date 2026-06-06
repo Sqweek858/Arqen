@@ -1,0 +1,3 @@
+RULE_ID|show_value_statement
+COMMAND_ID|show_value
+EXPECT_CONTAINS|CONST|id=str_1|type=text|value=true
