@@ -1,6 +1,6 @@
 # Post-M4 Roadmap
 
-Status: `PLANNED`
+Status: `HISTORICAL ROADMAP - COMPLETED THROUGH M10, WITH M4D PARTIAL`
 
 ## M4D: Clear `.arq` Errors
 
@@ -36,6 +36,8 @@ message "Hello from Arqen"
 
 ## M5: Minimal CLI
 
+Status: `PASSED`
+
 Goal:
 
 ```text
@@ -55,6 +57,8 @@ Windows API:
 Avoid `CommandLineToArgvW` for now because it requires `shell32.dll`.
 
 ## M6: Lexer v1
+
+Status: `PASSED`
 
 Token types:
 
@@ -77,6 +81,8 @@ exit 0
 
 ## M7: Minimal AST + Semantic Check
 
+Status: `PASSED`
+
 Internal structure:
 
 ```text
@@ -98,6 +104,8 @@ Checks:
 
 ## M8: Clean Codegen From AST
 
+Status: `PASSED`
+
 Pipeline:
 
 ```text
@@ -112,13 +120,25 @@ source .arq
 
 At M8, Arqen has a real tiny compiler.
 
+## M9-M10 Completed Follow-up
+
+Status: `PASSED THROUGH M10`
+
+Current completed path:
+
+```text
+M9: let variables
+M9B: text/int/bool let variables plus clearer let errors
+M10: simple message expressions with text concatenation
+```
+
 ## Later Roadmap
 
-- M9: string variables
-- M10: `show message` command
+- M10F: foundation hardening
+- M10G: single `arqc` driver
+- M10R: generic parser/token contract migration
 - M11: int + real exit code
 - M12: simple `if`
 - M13: multiple statements
 - M14: basic functions
 - M15: create window
-

@@ -69,7 +69,7 @@ Observed PowerShell exit code:
 Status:
 
 ```text
-IN PROGRESS
+PASSED
 ```
 
 Goal:
@@ -138,7 +138,7 @@ Current sample:
 Status:
 
 ```text
-PLANNING
+M4A PASSED, M4B PASSED, M4C PASSED, M4D PARTIAL PASS
 ```
 
 Goal:
@@ -208,17 +208,18 @@ Post-M4 roadmap:
 
 - `POST_M4_ROADMAP.md`
 
-## Milestone 5: Minimal Parser
+## Milestone 5: Minimal CLI
 
 Status:
 
 ```text
-CLI PASSED, PARSER NOT STARTED
+PASSED
 ```
 
 Goal:
 
-- `.arq` -> minimal AST -> PE generator
+- `arqc_m5.exe hello_m5.arq` writes `hello_m5.exe`.
+- This is a CLI milestone, not the later token-stream parser milestone.
 
 Supported source:
 
@@ -494,6 +495,7 @@ C:\Users\Sqweek\Documents\Arqen\Codex\emit_m7b.js
 C:\Users\Sqweek\Documents\Arqen\Codex\emit_m8.js
 C:\Users\Sqweek\Documents\Arqen\Codex\emit_m9.js
 C:\Users\Sqweek\Documents\Arqen\Codex\emit_m9b.js
+C:\Users\Sqweek\Documents\Arqen\Codex\emit_m10.js
 ```
 
 These JavaScript files may patch or emit PE files during bootstrap, but they are not the final Arqen compiler implementation.
@@ -770,3 +772,52 @@ Known limitations:
 - only `message text` accepts expressions
 - `+` is text concatenation only
 - no if/else, functions, runtime string allocation, math, UI, or window syntax
+
+## M10F - Foundation Hardening
+
+Status: PASSED
+
+Goal:
+
+- Stabilize the current M10 compiler pipeline.
+- Add snapshot safety.
+- Document tools, token dumps, AST dumps, error codes, and command implementation rules.
+- Add a repeatable smoke test harness.
+- Archive old failed artifacts without deleting them.
+- Do not add new language syntax.
+
+Created:
+
+```text
+Docs\TOOL_MAP.md
+Docs\TOKEN_DUMP_FORMAT.md
+Docs\AST_DUMP_FORMAT.md
+Docs\COMMAND_IMPLEMENTATION_TEMPLATE.md
+Docs\ERROR_CODES.md
+Docs\SINGLE_ARQC_DRIVER_PLAN.md
+Tools\run_all_tests.ps1
+Samples\hello_m10.arq
+Samples\README.md
+Experiments_Archive_FailedArtifacts
+```
+
+Git:
+
+```text
+Initial snapshot: M10 working compiler pipeline
+Remote: https://github.com/Sqweek858/Arqen.git
+```
+
+Pass/fail:
+
+```text
+Tools\run_all_tests.ps1 -> Total: 29/29 passed
+M10 fixtures -> 6/6 passed
+```
+
+Known limitations:
+
+- M10 parser is still target-shaped
+- token dump migration is documented but not implemented
+- single `arqc` driver is planned but not implemented
+- Codex emitters remain temporary bootstrap tooling

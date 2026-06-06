@@ -10,6 +10,7 @@ C:\Users\Sqweek\Documents\Arqen\Codex\emit_m7b.js
 C:\Users\Sqweek\Documents\Arqen\Codex\emit_m8.js
 C:\Users\Sqweek\Documents\Arqen\Codex\emit_m9.js
 C:\Users\Sqweek\Documents\Arqen\Codex\emit_m9b.js
+C:\Users\Sqweek\Documents\Arqen\Codex\emit_m10.js
 ```
 
 `emit_m7b.js` is the current M7 token-stream parser emitter. If notes refer to `emit_m7.js`, they mean this M7B emitter.

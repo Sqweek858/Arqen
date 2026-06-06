@@ -242,9 +242,9 @@ unsupported exit code
 unknown keyword
 ```
 
-### 5. Docs have status drift
+### 5. Docs had status drift before M10F
 
-Some docs still carry older labels:
+Before M10F, some docs carried older labels:
 
 - M2 says `IN PROGRESS` in one place even though M2 passed.
 - M4 says `PLANNING` in one place even though M4A/B/C passed and M4D partial passed.
@@ -255,6 +255,12 @@ Risk:
 
 ```text
 Future you may trust old status labels and lose time.
+```
+
+M10F note:
+
+```text
+Docs\MILESTONES.md, Docs\BOOTSTRAP_BYTE_EMITTERS.md, and Docs\POST_M4_ROADMAP.md were updated to fix this drift.
 ```
 
 ### 6. Old failed artifacts are still present

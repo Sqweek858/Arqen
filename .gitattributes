@@ -1,0 +1,7 @@
+*.exe binary
+*.dll binary
+*.bin binary
+*.md text eol=lf
+*.txt text eol=lf
+*.arq text eol=lf
+*.ps1 text eol=crlf
