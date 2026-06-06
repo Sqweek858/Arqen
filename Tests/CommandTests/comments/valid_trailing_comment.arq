@@ -1,0 +1,7 @@
+program "CommentsTrailing"
+
+title "Comments Trailing" // ignored title comment
+message text "Trailing comment works" // ignored message comment
+exit 0 // ignored exit comment
+
+end program "CommentsTrailing" // ignored end comment

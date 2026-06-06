@@ -1,0 +1,6 @@
+program "SetTitleBadBool"
+let active be true
+set title to active
+message text "Bad"
+exit 0
+end program "SetTitleBadBool"

@@ -320,7 +320,7 @@ function Add-SourceDiagnostics {
         return
     }
 
-    $knownStarts = @("program", "end", "let", "title", "message", "exit", "blend")
+    $knownStarts = @("program", "end", "let", "title", "message", "show", "set", "exit", "blend")
     $lines = Get-Content $inputPath
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $lineNo = $i + 1

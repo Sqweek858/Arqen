@@ -1,0 +1,7 @@
+program "CommentString"
+
+title "Comments String"
+message text "not // a comment inside string"
+exit 0
+
+end program "CommentString"

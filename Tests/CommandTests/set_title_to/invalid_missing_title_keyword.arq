@@ -1,0 +1,5 @@
+program "SetTitleBadKeyword"
+set name to "Bad"
+message text "Bad"
+exit 0
+end program "SetTitleBadKeyword"

@@ -1,0 +1,5 @@
+program "ShowBadUnknown"
+title "Bad"
+show message missingName
+exit 0
+end program "ShowBadUnknown"

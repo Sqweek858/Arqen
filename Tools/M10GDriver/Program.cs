@@ -3,7 +3,7 @@ using System.Text;
 record Token(string Type, string Value, int Line, int Column);
 record VarInfo(string Type, string Value);
 record ExprResult(string Type, string Value, string Repr);
-record AstModel(string Program, List<(string Name, string Type, string Value)> Vars, string Title, string Message, string MessageExpr, int ExitCode, string FinalCommand);
+record AstModel(string Program, List<(string Name, string Type, string Value)> Vars, string Title, string TitleExpr, string TitleCommand, string Message, string MessageExpr, string MessageCommand, int ExitCode, string FinalCommand);
 
 sealed class CompileError : Exception
 {
@@ -281,6 +281,16 @@ static class Program
                 continue;
             }
 
+            if (ch == '/' && i + 1 < source.Length && source[i + 1] == '/')
+            {
+                while (i < source.Length && source[i] != '\r' && source[i] != '\n')
+                {
+                    i++;
+                    col++;
+                }
+                continue;
+            }
+
             if (ch == '"')
             {
                 var startLine = line;
@@ -318,7 +328,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "exit" or "blend" or "mix" or "to" or "code" or "end")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -365,7 +375,12 @@ static class Program
         yield return $"PROGRAM|{Esc(ast.Program)}";
         foreach (var v in ast.Vars)
             yield return $"LET|{Esc(v.Name)}|{Esc(v.Type)}|{Esc(v.Value)}";
+        if (ast.TitleCommand == "set_title_to")
+            yield return $"SET_TITLE|{Esc(ast.Title)}";
         yield return $"TITLE|{Esc(ast.Title)}";
+        yield return $"TITLE_EXPR|{Esc(ast.TitleExpr)}";
+        if (ast.MessageCommand == "show_message")
+            yield return $"SHOW_MESSAGE|{Esc(ast.Message)}";
         yield return $"MESSAGE|{Esc(ast.Message)}";
         yield return $"MESSAGE_EXPR|{Esc(ast.MessageExpr)}";
         if (ast.FinalCommand == "blend_mix_to_code")
@@ -624,15 +639,10 @@ static class Program
                 SkipNewlines();
             }
 
-            ExpectKeyword("title");
-            var titleTok = Expect("STRING", "title string");
-            ExpectLine();
+            var title = ParseTitleCommand();
 
             SkipNewlines();
-            ExpectKeyword("message");
-            ExpectKeyword("text");
-            var expr = ParseExpression();
-            ExpectLine();
+            var message = ParseMessageCommand();
 
             SkipNewlines();
             var finalCommand = "";
@@ -653,7 +663,65 @@ static class Program
             SkipNewlines();
             Expect("EOF", "end of file");
 
-            return new AstModel(program, _varList, titleTok.Value, expr.Value, expr.Repr, 0, finalCommand);
+            return new AstModel(program, _varList, title.Value, title.Repr, title.Command, message.Value, message.Repr, message.Command, 0, finalCommand);
+        }
+
+        CommandExpr ParseTitleCommand()
+        {
+            if (IsKeyword("title"))
+            {
+                ExpectKeyword("title");
+                var titleTok = Expect("STRING", "title string");
+                ExpectLine();
+                return new CommandExpr(titleTok.Value, $"str(\"{titleTok.Value}\")", "title");
+            }
+
+            if (IsKeyword("set"))
+                return ParseSetTitleTo();
+
+            throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected title command.");
+        }
+
+        CommandExpr ParseSetTitleTo()
+        {
+            ExpectKeyword("set");
+            if (!IsKeyword("title"))
+                throw new CompileError("PARSE", "P050", Current.Line, Current.Column, "Expected keyword \"title\" after \"set\".");
+            ExpectKeyword("title");
+            if (!IsKeyword("to"))
+                throw new CompileError("PARSE", "P051", Current.Line, Current.Column, "Expected keyword \"to\" after \"set title\".");
+            ExpectKeyword("to");
+            var expr = ParseExpression("set title to", "P052", "Expected expression after set title to.");
+            ExpectLine();
+            return new CommandExpr(expr.Value, expr.Repr, "set_title_to");
+        }
+
+        CommandExpr ParseMessageCommand()
+        {
+            if (IsKeyword("message"))
+            {
+                ExpectKeyword("message");
+                ExpectKeyword("text");
+                var expr = ParseExpression("message text", "P010", "Expected expression after message text.");
+                ExpectLine();
+                return new CommandExpr(expr.Value, expr.Repr, "message_text");
+            }
+
+            if (IsKeyword("show"))
+                return ParseShowMessage();
+
+            throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected message command.");
+        }
+
+        CommandExpr ParseShowMessage()
+        {
+            ExpectKeyword("show");
+            if (!IsKeyword("message"))
+                throw new CompileError("PARSE", "P060", Current.Line, Current.Column, "Expected keyword \"message\" after \"show\".");
+            ExpectKeyword("message");
+            var expr = ParseExpression("show message", "P061", "Expected expression after show message.");
+            ExpectLine();
+            return new CommandExpr(expr.Value, expr.Repr, "show_message");
         }
 
         string ParseExit()
@@ -734,10 +802,12 @@ static class Program
             ExpectLine();
         }
 
-        ExprResult ParseExpression()
+        record CommandExpr(string Value, string Repr, string Command);
+
+        ExprResult ParseExpression(string context, string missingCode, string missingMessage)
         {
             if (CurrentIs("NEWLINE") || CurrentIs("EOF"))
-                throw new CompileError("PARSE", "P010", Current.Line, Current.Column, "Expected expression after message text.");
+                throw new CompileError("PARSE", missingCode, Current.Line, Current.Column, missingMessage);
 
             var left = ParsePrimary(afterPlus: false);
             var sawPlus = false;
@@ -755,7 +825,7 @@ static class Program
             }
 
             if (!sawPlus && left.Type != "text")
-                throw new CompileError("SEMANTIC", "S012", Current.Line, Current.Column, "message text requires text expression.");
+                throw new CompileError("SEMANTIC", "S012", Current.Line, Current.Column, $"{context} requires text expression.");
 
             if (left.Type != "text")
                 throw new CompileError("SEMANTIC", "S013", Current.Line, Current.Column, "Unsupported expression type in M10G.");

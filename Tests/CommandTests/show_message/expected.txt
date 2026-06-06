@@ -1,0 +1,6 @@
+valid_literal.arq|0|MESSAGE|Show literal works
+valid_concat_variable.arq|0|MESSAGE|Hello, Sqweek
+invalid_unknown_variable.arq|1|ERROR|S010|semantic
+invalid_bool_concat.arq|1|ERROR|S011|semantic
+invalid_missing_message_keyword.arq|1|ERROR|P060|parse
+invalid_missing_expression.arq|1|ERROR|P061|parse

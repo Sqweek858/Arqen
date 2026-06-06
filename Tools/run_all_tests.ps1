@@ -19,8 +19,8 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
-    $resultName = if ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
+    $group = if ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
         $script:StructuredResults += "PASS|$group|$resultName"
@@ -426,27 +426,27 @@ function Run-M10L-Tests {
     $specExit = Invoke-Stage $RepoRoot ".\Tools\validate_command_specs.ps1"
     $specOut = Join-Path $generated "command_spec_validation.txt"
     $specText = if (Test-Path $specOut) { Get-Content $specOut -Raw } else { "" }
-    Add-Check "M10L_command_spec_validation" ($specExit -eq 0 -and $specText.Contains("PASS|let") -and $specText.Contains("PASS|message_text") -and $specText.Contains("PASS|BlendMixToCode"))
+    Add-Check "M10L_command_spec_validation" ($specExit -eq 0 -and $specText.Contains("PASS|let") -and $specText.Contains("PASS|message_text") -and $specText.Contains("PASS|BlendMixToCode") -and $specText.Contains("PASS|comments") -and $specText.Contains("PASS|show_message") -and $specText.Contains("PASS|set_title_to"))
 
     $keywordExit = Invoke-Stage $RepoRoot ".\Tools\generate_keyword_registry.ps1"
     $keywordOut = Join-Path $generated "keyword_registry.txt"
     $keywordText = if (Test-Path $keywordOut) { Get-Content $keywordOut -Raw } else { "" }
-    Add-Check "M10L_keyword_registry_generation" ($keywordExit -eq 0 -and $keywordText.Contains("KEYWORD|program") -and $keywordText.Contains("KEYWORD|blend") -and $keywordText.Contains("KEYWORD|mix") -and $keywordText.Contains("KEYWORD|to") -and $keywordText.Contains("KEYWORD|code") -and $keywordText.Contains("KEYWORD|true") -and $keywordText.Contains("KEYWORD|false"))
+    Add-Check "M10L_keyword_registry_generation" ($keywordExit -eq 0 -and $keywordText.Contains("KEYWORD|program") -and $keywordText.Contains("KEYWORD|show") -and $keywordText.Contains("KEYWORD|set") -and $keywordText.Contains("KEYWORD|blend") -and $keywordText.Contains("KEYWORD|mix") -and $keywordText.Contains("KEYWORD|to") -and $keywordText.Contains("KEYWORD|code") -and $keywordText.Contains("KEYWORD|true") -and $keywordText.Contains("KEYWORD|false"))
 
     $ruleExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1"
     $ruleOut = Join-Path $generated "parser_rule_registry.txt"
     $ruleText = if (Test-Path $ruleOut) { Get-Content $ruleOut -Raw } else { "" }
-    Add-Check "M10L_parser_rule_registry_generation" ($ruleExit -eq 0 -and $ruleText.Contains("RULE|program|starts=KEYWORD(program)|ast=Program") -and $ruleText.Contains("RULE|message_text|starts=KEYWORD(message),KEYWORD(text)|ast=MessageText") -and $ruleText.Contains("RULE|BlendMixToCode|starts=KEYWORD(blend),KEYWORD(mix),KEYWORD(to),KEYWORD(code)|ast=BlendMixToCode"))
+    Add-Check "M10L_parser_rule_registry_generation" ($ruleExit -eq 0 -and $ruleText.Contains("RULE|program|starts=KEYWORD(program)|ast=Program") -and $ruleText.Contains("RULE|message_text|starts=KEYWORD(message),KEYWORD(text)|ast=MessageText") -and $ruleText.Contains("RULE|show_message|starts=KEYWORD(show),KEYWORD(message)|ast=ShowMessage") -and $ruleText.Contains("RULE|set_title_to|starts=KEYWORD(set),KEYWORD(title),KEYWORD(to)|ast=SetTitle") -and $ruleText.Contains("RULE|BlendMixToCode|starts=KEYWORD(blend),KEYWORD(mix),KEYWORD(to),KEYWORD(code)|ast=BlendMixToCode"))
 
     $indexExit = Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1"
     $indexOut = Join-Path $generated "command_test_index.txt"
     $indexText = if (Test-Path $indexOut) { Get-Content $indexOut -Raw } else { "" }
-    Add-Check "M10L_command_test_index_generation" ($indexExit -eq 0 -and $indexText.Contains("TEST|let|valid|Tests\CommandTests\let\valid_basic.arq") -and $indexText.Contains("TEST|message_text|invalid|Tests\CommandTests\message_text\invalid_unknown_variable.arq") -and $indexText.Contains("TEST|blend_mix_to_code|valid|Tests\CommandTests\blend_mix_to_code\valid_code_0.arq"))
+    Add-Check "M10L_command_test_index_generation" ($indexExit -eq 0 -and $indexText.Contains("TEST|let|valid|Tests\CommandTests\let\valid_basic.arq") -and $indexText.Contains("TEST|message_text|invalid|Tests\CommandTests\message_text\invalid_unknown_variable.arq") -and $indexText.Contains("TEST|blend_mix_to_code|valid|Tests\CommandTests\blend_mix_to_code\valid_code_0.arq") -and $indexText.Contains("TEST|comments|valid|Tests\CommandTests\comments\valid_full_line_comment.arq") -and $indexText.Contains("TEST|show_message|valid|Tests\CommandTests\show_message\valid_literal.arq") -and $indexText.Contains("TEST|set_title_to|valid|Tests\CommandTests\set_title_to\valid_literal.arq"))
 
     $statusExit = Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1"
     $statusOut = Join-Path $generated "command_status.txt"
     $statusText = if (Test-Path $statusOut) { Get-Content $statusOut -Raw } else { "" }
-    Add-Check "M10L_command_status_generation" ($statusExit -eq 0 -and $statusText.Contains("COMMAND|message_text|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and $statusText.Contains("COMMAND|BlendMixToCode|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and -not $statusText.Contains("COMMAND|BlendMixToCode|spec=draft"))
+    Add-Check "M10L_command_status_generation" ($statusExit -eq 0 -and $statusText.Contains("COMMAND|message_text|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and $statusText.Contains("COMMAND|BlendMixToCode|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and $statusText.Contains("COMMAND|comments|spec=yes|tests=yes|lexer=yes|parser=no|ast=none|semantic=yes|ir=none|backend=none|status=stable") -and $statusText.Contains("COMMAND|show_message|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and $statusText.Contains("COMMAND|set_title_to|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and -not $statusText.Contains("COMMAND|BlendMixToCode|spec=draft"))
 }
 
 function Diagnostic-ErrorCount {
@@ -600,6 +600,86 @@ function Run-M11-Tests {
     Add-Check "M11_exit_still_works" ($exitCompat -eq 0 -and (Test-Path (Join-Path $RepoRoot "Build\EXE\hello_m10.exe")) -and $exitAst.Contains("EXIT|0") -and (Manifest-Has $exitDiag "ERROR_COUNT|0"))
 }
 
+function Run-M12-InvalidCase {
+    param(
+        [string]$CheckName,
+        [string]$SourcePath,
+        [string]$WantCode,
+        [string]$WantStage
+    )
+
+    $stem = [System.IO.Path]::GetFileNameWithoutExtension($SourcePath)
+    $exe = Join-Path $RepoRoot "Build\EXE\$stem.exe"
+    Remove-Item $exe -Force -ErrorAction SilentlyContinue
+
+    $exit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($SourcePath, "--rebuild")
+    $diag = Join-Path $RepoRoot "Build\Diagnostics\$stem.all_errors.txt"
+    $manifest = Join-Path $RepoRoot "Build\Manifests\$stem.build.txt"
+    $diagText = if (Test-Path $diag) { Get-Content $diag -Raw } else { "" }
+    $manifestText = if (Test-Path $manifest) { Get-Content $manifest -Raw } else { "" }
+    $count = Diagnostic-ErrorCount $diag
+    $backendSkipped = $manifestText.Contains("STAGES_SKIPPED|") -and $manifestText.Contains("backend")
+
+    Add-Check $CheckName ($exit -ne 0 -and -not (Test-Path $exe) -and $count -gt 0 -and $diagText.Contains($WantCode) -and $diagText.Contains($WantStage) -and $backendSkipped)
+}
+
+function Run-M12-Tests {
+    Write-Host ""
+    Write-Host "M12 comfort command tests"
+
+    $commentsFullExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\comments\valid_full_line_comment.arq", "--rebuild")
+    $commentsFullAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_full_line_comment.ast") -Raw
+    $commentsFullIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_full_line_comment.arqir") -Raw
+    Add-Check "M12_comments_full_line" ($commentsFullExit -eq 0 -and $commentsFullAst.Contains("MESSAGE|Full comment works") -and -not $commentsFullAst.Contains("ignored full line comment") -and -not $commentsFullIr.Contains("ignored full line comment"))
+
+    $commentsTrailingExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\comments\valid_trailing_comment.arq", "--rebuild")
+    $commentsTrailingAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_trailing_comment.ast") -Raw
+    $commentsTrailingIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_trailing_comment.arqir") -Raw
+    Add-Check "M12_comments_trailing" ($commentsTrailingExit -eq 0 -and $commentsTrailingAst.Contains("MESSAGE|Trailing comment works") -and -not $commentsTrailingAst.Contains("ignored message comment") -and -not $commentsTrailingIr.Contains("ignored message comment"))
+
+    $commentsStringExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\comments\valid_comment_inside_string.arq", "--rebuild")
+    $commentsStringAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_comment_inside_string.ast") -Raw
+    Add-Check "M12_comments_inside_string" ($commentsStringExit -eq 0 -and $commentsStringAst.Contains("MESSAGE|not // a comment inside string"))
+
+    Run-M12-InvalidCase "M12_comments_single_slash_invalid" ".\Tests\CommandTests\comments\invalid_single_slash.arq" "L001" "lexer"
+
+    $showLiteralExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\show_message\valid_literal.arq", "--rebuild")
+    $showLiteralAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_literal.ast") -Raw
+    $showLiteralIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_literal.arqir") -Raw
+    Add-Check "M12_show_message_literal" ($showLiteralExit -eq 0 -and $showLiteralAst.Contains("SHOW_MESSAGE|Show literal works") -and $showLiteralIr.Contains("op=show_message"))
+
+    $showConcatExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\show_message\valid_concat_variable.arq", "--rebuild")
+    $showConcatAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_concat_variable.ast") -Raw
+    Add-Check "M12_show_message_concat" ($showConcatExit -eq 0 -and $showConcatAst.Contains("SHOW_MESSAGE|Hello, Sqweek"))
+
+    Run-M12-InvalidCase "M12_show_message_unknown_variable" ".\Tests\CommandTests\show_message\invalid_unknown_variable.arq" "S010" "semantic"
+    Run-M12-InvalidCase "M12_show_message_bool_error" ".\Tests\CommandTests\show_message\invalid_bool_concat.arq" "S011" "semantic"
+    Run-M12-InvalidCase "M12_show_message_missing_expression" ".\Tests\CommandTests\show_message\invalid_missing_expression.arq" "P061" "parser"
+
+    $setTitleLiteralExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\set_title_to\valid_literal.arq", "--rebuild")
+    $setTitleLiteralAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_literal.ast") -Raw
+    $setTitleLiteralIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_literal.arqir") -Raw
+    Add-Check "M12_set_title_literal" ($setTitleLiteralExit -eq 0 -and $setTitleLiteralAst.Contains("SET_TITLE|Set Title Literal") -and $setTitleLiteralIr.Contains("CONST|id=str_0|type=text|value=Set Title Literal"))
+
+    $setTitleConcatExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\set_title_to\valid_concat_variable.arq", "--rebuild")
+    $setTitleConcatAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_concat_variable.ast") -Raw
+    Add-Check "M12_set_title_concat_if_supported" ($setTitleConcatExit -eq 0 -and $setTitleConcatAst.Contains("SET_TITLE|Hello, Sqweek"))
+
+    Run-M12-InvalidCase "M12_set_title_missing_to" ".\Tests\CommandTests\set_title_to\invalid_missing_to.arq" "P051" "parser"
+    Run-M12-InvalidCase "M12_set_title_missing_expression" ".\Tests\CommandTests\set_title_to\invalid_missing_expression.arq" "P052" "parser"
+    Run-M12-InvalidCase "M12_set_title_unknown_variable" ".\Tests\CommandTests\set_title_to\invalid_unknown_variable.arq" "S010" "semantic"
+
+    $oldExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\hello_m10.arq", "--rebuild")
+    $oldAst = Get-Content (Join-Path $RepoRoot "Build\AST\hello_m10.ast") -Raw
+    Add-Check "M12_old_title_still_works" ($oldExit -eq 0 -and $oldAst.Contains("TITLE|Arqen Byte Zero") -and -not $oldAst.Contains("SET_TITLE|"))
+    Add-Check "M12_old_message_text_still_works" ($oldExit -eq 0 -and $oldAst.Contains("MESSAGE|Hello, Sqweek") -and -not $oldAst.Contains("SHOW_MESSAGE|"))
+    Add-Check "M12_exit_still_works" ($oldExit -eq 0 -and $oldAst.Contains("EXIT|0"))
+
+    $blendExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\blend_mix_to_code\valid_code_0.arq", "--rebuild")
+    $blendAst = Get-Content (Join-Path $RepoRoot "Build\AST\valid_code_0.ast") -Raw
+    Add-Check "M12_blend_still_works" ($blendExit -eq 0 -and $blendAst.Contains("BLEND_MIX_TO_CODE|0"))
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -691,6 +771,8 @@ Run-M10N-Tests
 Run-M10O-Tests
 
 Run-M11-Tests
+
+Run-M12-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

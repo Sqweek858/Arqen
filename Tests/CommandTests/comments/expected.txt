@@ -1,0 +1,4 @@
+valid_full_line_comment.arq|0|MESSAGE|Full comment works
+valid_trailing_comment.arq|0|MESSAGE|Trailing comment works
+valid_comment_inside_string.arq|0|MESSAGE|not // a comment inside string
+invalid_single_slash.arq|1|ERROR|L001|lex

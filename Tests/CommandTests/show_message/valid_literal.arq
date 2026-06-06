@@ -1,0 +1,7 @@
+program "ShowLiteral"
+
+title "Show Literal"
+show message "Show literal works"
+blend mix to code 0
+
+end program "ShowLiteral"

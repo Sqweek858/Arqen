@@ -1,0 +1,5 @@
+program "SetTitleBadTo"
+set title "Bad"
+message text "Bad"
+exit 0
+end program "SetTitleBadTo"

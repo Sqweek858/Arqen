@@ -1,0 +1,5 @@
+program "SetTitleBadUnknown"
+set title to missingName
+message text "Bad"
+exit 0
+end program "SetTitleBadUnknown"
