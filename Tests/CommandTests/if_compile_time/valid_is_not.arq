@@ -1,0 +1,14 @@
+program "IfNot"
+
+let name be "Sqweek"
+
+set title to "M13 If"
+if name is not "Bob"
+show message "not bob"
+else
+show message "bob"
+end if
+
+blend mix to code 0
+
+end program "IfNot"

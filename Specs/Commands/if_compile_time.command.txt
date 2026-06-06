@@ -1,0 +1,11 @@
+COMMAND_ID|if_compile_time
+CANONICAL|if <comparison-expression> ... else ... end if
+CATEGORY|control
+TOKENS|KEYWORD(if) COMPARISON KEYWORD(else) KEYWORD(end) KEYWORD(if)
+AST_NODE|IfCompileTime
+SEMANTIC|condition must be a compile-time comparison bool
+IR|compile-time branch folding
+BACKEND|none
+VALID_TEST|Tests\CommandTests\if_compile_time\valid_if_true_branch.arq
+INVALID_TEST|Tests\CommandTests\if_compile_time\invalid_if_no_condition.arq;Tests\CommandTests\if_compile_time\invalid_if_missing_end_if.arq;Tests\CommandTests\if_compile_time\invalid_if_type_mismatch.arq
+STATUS|stable

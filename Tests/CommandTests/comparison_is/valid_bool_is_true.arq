@@ -1,0 +1,13 @@
+program "CompareBoolTrue"
+
+let active be true
+
+title "M13 Compare"
+if active is true
+show message "bool true"
+else
+show message "bool false"
+end if
+blend mix to code 0
+
+end program "CompareBoolTrue"

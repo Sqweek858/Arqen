@@ -1,0 +1,9 @@
+program "IfNoCondition"
+
+title "M13 If"
+if
+show message "bad"
+end if
+blend mix to code 0
+
+end program "IfNoCondition"

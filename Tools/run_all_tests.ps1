@@ -19,8 +19,8 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M12B_")) { "M12B" } elseif ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
-    $resultName = if ($Name.StartsWith("M12B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
+    $group = if ($Name.StartsWith("M13_")) { "M13" } elseif ($Name.StartsWith("M12B_")) { "M12B" } elseif ($Name.StartsWith("M12_")) { "M12" } elseif ($Name.StartsWith("M11_")) { "M11" } elseif ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M13_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M12B_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M12_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M11_")) { $Name.Substring(4) } elseif ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
         $script:StructuredResults += "PASS|$group|$resultName"
@@ -803,6 +803,98 @@ function Run-M12B-Tests {
     Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
 }
 
+function Run-M13-ValidCase {
+    param(
+        [string]$CheckName,
+        [string]$SourcePath,
+        [string]$SelectedText,
+        [string]$RejectedText = "",
+        [switch]$RunUi
+    )
+
+    $stem = [System.IO.Path]::GetFileNameWithoutExtension($SourcePath)
+    $exit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($SourcePath, "--rebuild")
+    $exe = Join-Path $RepoRoot "Build\EXE\$stem.exe"
+    $astPath = Join-Path $RepoRoot "Build\AST\$stem.ast"
+    $irPath = Join-Path $RepoRoot "Build\IR\$stem.arqir"
+    $diag = Join-Path $RepoRoot "Build\Diagnostics\$stem.all_errors.txt"
+    $ast = if (Test-Path $astPath) { Get-Content $astPath -Raw } else { "" }
+    $ir = if (Test-Path $irPath) { Get-Content $irPath -Raw } else { "" }
+    $irLines = @($ir -split "\r?\n")
+    $diagOk = (Manifest-Has $diag "ERROR_COUNT|0")
+    $selectedOk = $ast.Contains("MESSAGE|$SelectedText") -and ($irLines -contains "CONST|id=str_1|type=text|value=$SelectedText")
+    $rejectedOk = ([string]::IsNullOrWhiteSpace($RejectedText) -or (-not ($irLines -contains "CONST|id=str_1|type=text|value=$RejectedText")))
+    $flowOk = $ast.Contains("IF_COMPILE_TIME|") -and $ast.Contains("IF_BRANCH_SELECTED|")
+    $uiOk = $true
+
+    if ($RunUi) {
+        $ui = Invoke-UiExe -Dir (Join-Path $RepoRoot "Build\EXE") -Exe ".\$stem.exe" -Titles @("M13 If", "M13 Compare", $SelectedText)
+        $uiOk = $ui.Skipped -or ($ui.Exit -eq 0 -and $ui.Activated -and -not $ui.TimedOut)
+    }
+
+    Add-Check $CheckName ($exit -eq 0 -and (Test-Path $exe) -and $diagOk -and $selectedOk -and $rejectedOk -and $flowOk -and $uiOk)
+}
+
+function Run-M13-InvalidCase {
+    param(
+        [string]$CheckName,
+        [string]$SourcePath,
+        [string]$WantCode,
+        [string]$WantStage
+    )
+
+    $stem = [System.IO.Path]::GetFileNameWithoutExtension($SourcePath)
+    $exe = Join-Path $RepoRoot "Build\EXE\$stem.exe"
+    Remove-Item $exe -Force -ErrorAction SilentlyContinue
+
+    $exit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($SourcePath, "--rebuild")
+    $diag = Join-Path $RepoRoot "Build\Diagnostics\$stem.all_errors.txt"
+    $manifest = Join-Path $RepoRoot "Build\Manifests\$stem.build.txt"
+    $diagText = if (Test-Path $diag) { Get-Content $diag -Raw } else { "" }
+    $manifestText = if (Test-Path $manifest) { Get-Content $manifest -Raw } else { "" }
+    $count = Diagnostic-ErrorCount $diag
+    $backendSkipped = $manifestText.Contains("STAGES_SKIPPED|") -and $manifestText.Contains("backend")
+
+    Add-Check $CheckName ($exit -ne 0 -and -not (Test-Path $exe) -and $count -gt 0 -and $diagText.Contains($WantCode) -and $diagText.Contains($WantStage) -and $backendSkipped)
+}
+
+function Run-M13-Tests {
+    Write-Host ""
+    Write-Host "M13 comparison and compile-time if tests"
+
+    Run-M13-ValidCase "M13_comparison_int_is_true" ".\Tests\CommandTests\comparison_is\valid_int_is_true.arq" "int true" "int false"
+    Run-M13-ValidCase "M13_comparison_text_is_true" ".\Tests\CommandTests\comparison_is\valid_text_is_true.arq" "text true" "text false"
+    Run-M13-ValidCase "M13_comparison_bool_is_true" ".\Tests\CommandTests\comparison_is\valid_bool_is_true.arq" "bool true" "bool false"
+    Run-M13-ValidCase "M13_comparison_is_not" ".\Tests\CommandTests\comparison_is\valid_is_not_true.arq" "is not true" "is not false"
+    Run-M13-InvalidCase "M13_comparison_type_mismatch" ".\Tests\CommandTests\comparison_is\invalid_type_mismatch_int_text.arq" "S021" "semantic"
+    Run-M13-InvalidCase "M13_comparison_unknown_variable" ".\Tests\CommandTests\comparison_is\invalid_unknown_variable.arq" "S020" "semantic"
+
+    Run-M13-ValidCase "M13_if_true_branch" ".\Tests\CommandTests\if_compile_time\valid_if_true_branch.arq" "true branch" "false branch"
+    Run-M13-ValidCase "M13_if_false_else_branch" ".\Tests\CommandTests\if_compile_time\valid_if_false_else_branch.arq" "false branch" "true branch"
+    Run-M13-ValidCase "M13_if_without_else_false" ".\Tests\CommandTests\if_compile_time\valid_if_without_else_false.arq" "after if" "should not appear"
+    Run-M13-ValidCase "M13_if_text_comparison" ".\Tests\CommandTests\if_compile_time\valid_text_comparison.arq" "name ok" "name bad"
+    Run-M13-ValidCase "M13_if_is_not" ".\Tests\CommandTests\if_compile_time\valid_is_not.arq" "not bob" "bob"
+    Run-M13-InvalidCase "M13_if_missing_condition" ".\Tests\CommandTests\if_compile_time\invalid_if_no_condition.arq" "P053" "parser"
+    Run-M13-InvalidCase "M13_if_non_bool_condition" ".\Tests\CommandTests\if_compile_time\invalid_if_non_bool_condition.arq" "P052" "parser"
+    Run-M13-InvalidCase "M13_if_missing_end_if" ".\Tests\CommandTests\if_compile_time\invalid_if_missing_end_if.arq" "P057" "parser"
+    Run-M13-InvalidCase "M13_if_else_without_if" ".\Tests\CommandTests\if_compile_time\invalid_if_else_without_if.arq" "P055" "parser"
+    Run-M13-InvalidCase "M13_if_type_mismatch" ".\Tests\CommandTests\if_compile_time\invalid_if_type_mismatch.arq" "S021" "semantic"
+    Run-M13-InvalidCase "M13_if_unknown_variable" ".\Tests\CommandTests\if_compile_time\invalid_if_unknown_variable.arq" "S020" "semantic"
+    Run-M13-InvalidCase "M13_if_nested_if_if_not_supported" ".\Tests\CommandTests\if_compile_time\invalid_if_nested_if_if_not_supported.arq" "P054" "parser"
+
+    $oldHello = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\hello_m10.arq", "--rebuild")
+    $oldComfort = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\comfort_m12.arq", "--rebuild")
+    $oldBlend = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\blend_m11.arq", "--rebuild")
+    Add-Check "M13_old_commands_still_work" ($oldHello -eq 0 -and $oldComfort -eq 0 -and $oldBlend -eq 0)
+
+    $cacheExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\if_compile_time\valid_if_true_branch.arq")
+    $cacheManifest = Join-Path $RepoRoot "Build\Manifests\valid_if_true_branch.build.txt"
+    Add-Check "M13_cache_still_works_if_present" ($cacheExit -eq 0 -and (Manifest-Has $cacheManifest "CACHE_STATUS|"))
+
+    $diagPath = Join-Path $RepoRoot "Build\Diagnostics\invalid_if_type_mismatch.all_errors.txt"
+    Add-Check "M13_diagnostics_still_work" ((Diagnostic-ErrorCount $diagPath) -gt 0 -and (Manifest-Has $diagPath "S021"))
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -898,6 +990,8 @@ Run-M11-Tests
 Run-M12-Tests
 
 Run-M12B-Tests
+
+Run-M13-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

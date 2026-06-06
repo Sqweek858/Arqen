@@ -1,0 +1,8 @@
+program "IfElseWithoutIf"
+
+title "M13 If"
+else
+show message "bad"
+blend mix to code 0
+
+end program "IfElseWithoutIf"

@@ -3,7 +3,8 @@ using System.Text;
 record Token(string Type, string Value, int Line, int Column);
 record VarInfo(string Type, string Value);
 record ExprResult(string Type, string Value, string Repr);
-record AstModel(string Program, List<(string Name, string Type, string Value)> Vars, string Title, string TitleExpr, string TitleCommand, string Message, string MessageExpr, string MessageCommand, int ExitCode, string FinalCommand);
+record CompareResult(bool Value, string Repr);
+record AstModel(string Program, List<(string Name, string Type, string Value)> Vars, string Title, string TitleExpr, string TitleCommand, string Message, string MessageExpr, string MessageCommand, int ExitCode, string FinalCommand, List<string> Flow);
 
 sealed class CompileError : Exception
 {
@@ -328,7 +329,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -375,6 +376,8 @@ static class Program
         yield return $"PROGRAM|{Esc(ast.Program)}";
         foreach (var v in ast.Vars)
             yield return $"LET|{Esc(v.Name)}|{Esc(v.Type)}|{Esc(v.Value)}";
+        foreach (var line in ast.Flow)
+            yield return line;
         if (ast.TitleCommand == "set_title_to")
             yield return $"SET_TITLE|{Esc(ast.Title)}";
         yield return $"TITLE|{Esc(ast.Title)}";
@@ -618,7 +621,17 @@ static class Program
         readonly List<Token> _tokens;
         readonly Dictionary<string, VarInfo> _vars = new(StringComparer.Ordinal);
         readonly List<(string Name, string Type, string Value)> _varList = new();
+        readonly List<string> _flow = new();
         int _pos;
+        string? _title;
+        string _titleExpr = "";
+        string _titleCommand = "";
+        string? _message;
+        string _messageExpr = "";
+        string _messageCommand = "";
+        string _finalCommand = "";
+        int _exitCode = 0;
+        int _ifDepth = 0;
 
         public Parser(List<Token> tokens)
         {
@@ -633,24 +646,17 @@ static class Program
             ExpectLine();
 
             SkipNewlines();
-            while (IsKeyword("let"))
+            while (!CurrentIs("EOF") && !IsEndProgram())
             {
-                ParseLet();
+                ParseStatement(apply: true, inIf: false);
                 SkipNewlines();
             }
 
-            var title = ParseTitleCommand();
-
-            SkipNewlines();
-            var message = ParseMessageCommand();
-
-            SkipNewlines();
-            var finalCommand = "";
-            if (IsKeyword("exit"))
-                finalCommand = ParseExit();
-            else if (IsKeyword("blend"))
-                finalCommand = ParseBlendMixToCode();
-            else
+            if (_title == null)
+                throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected title command.");
+            if (_message == null)
+                throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected message command.");
+            if (_finalCommand == "")
                 throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected final command.");
 
             SkipNewlines();
@@ -663,7 +669,123 @@ static class Program
             SkipNewlines();
             Expect("EOF", "end of file");
 
-            return new AstModel(program, _varList, title.Value, title.Repr, title.Command, message.Value, message.Repr, message.Command, 0, finalCommand);
+            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow);
+        }
+
+        void ParseStatement(bool apply, bool inIf)
+        {
+            SkipNewlines();
+
+            if (CurrentIs("EOF"))
+                throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected statement.");
+
+            if (IsKeyword("let"))
+            {
+                if (inIf)
+                    throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "let declarations inside compile-time if are not supported in M13.");
+                ParseLet();
+                return;
+            }
+
+            if (IsKeyword("title") || IsKeyword("set"))
+            {
+                var title = IsKeyword("title") ? ParseTitleCommand() : ParseSetTitleTo();
+                if (apply)
+                {
+                    _title = title.Value;
+                    _titleExpr = title.Repr;
+                    _titleCommand = title.Command;
+                }
+                return;
+            }
+
+            if (IsKeyword("message") || IsKeyword("show"))
+            {
+                var message = IsKeyword("message") ? ParseMessageCommand() : ParseShowMessage();
+                if (apply)
+                {
+                    _message = message.Value;
+                    _messageExpr = message.Repr;
+                    _messageCommand = message.Command;
+                }
+                return;
+            }
+
+            if (IsKeyword("exit"))
+            {
+                ParseExit();
+                if (apply)
+                    _finalCommand = "exit";
+                return;
+            }
+
+            if (IsKeyword("blend"))
+            {
+                ParseBlendMixToCode();
+                if (apply)
+                    _finalCommand = "blend_mix_to_code";
+                return;
+            }
+
+            if (IsKeyword("if"))
+            {
+                if (inIf || _ifDepth > 0)
+                    throw new CompileError("PARSE", "P054", Current.Line, Current.Column, "Nested if statements are not supported in M13.");
+                ParseCompileTimeIf(apply);
+                return;
+            }
+
+            if (IsKeyword("else"))
+                throw new CompileError("PARSE", "P055", Current.Line, Current.Column, "Unexpected else without matching if.");
+
+            if (IsKeyword("end") && PeekKeyword("if"))
+                throw new CompileError("PARSE", "P056", Current.Line, Current.Column, "Unexpected end if without matching if.");
+
+            throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected statement.");
+        }
+
+        void ParseCompileTimeIf(bool apply)
+        {
+            ExpectKeyword("if");
+            if (CurrentIs("NEWLINE") || CurrentIs("EOF"))
+                throw new CompileError("PARSE", "P053", Current.Line, Current.Column, "Expected condition after \"if\".");
+
+            var condition = ParseComparison();
+            ExpectLine();
+            _flow.Add($"IF_COMPILE_TIME|condition={Esc(condition.Repr)}|value={condition.Value.ToString().ToLowerInvariant()}");
+
+            _ifDepth++;
+            SkipNewlines();
+            while (!CurrentIs("EOF") && !IsKeyword("else") && !IsKeyword("end"))
+            {
+                ParseStatement(apply && condition.Value, inIf: true);
+                SkipNewlines();
+            }
+
+            var sawElse = false;
+            if (IsKeyword("else"))
+            {
+                sawElse = true;
+                ExpectKeyword("else");
+                ExpectLine();
+                SkipNewlines();
+                while (!CurrentIs("EOF") && !IsKeyword("end"))
+                {
+                    ParseStatement(apply && !condition.Value, inIf: true);
+                    SkipNewlines();
+                }
+            }
+
+            if (!IsEndIf())
+                throw new CompileError("PARSE", "P057", Current.Line, Current.Column, "Expected end if.");
+
+            ExpectKeyword("end");
+            ExpectKeyword("if");
+            ExpectLine();
+            _ifDepth--;
+
+            var selected = condition.Value ? "then" : (sawElse ? "else" : "none");
+            _flow.Add($"IF_BRANCH_SELECTED|{selected}");
         }
 
         CommandExpr ParseTitleCommand()
@@ -802,6 +924,68 @@ static class Program
             ExpectLine();
         }
 
+        CompareResult ParseComparison()
+        {
+            var left = ParseComparisonOperand("P052", "Expected comparison left operand.");
+            if (!IsKeyword("is"))
+                throw new CompileError("PARSE", "P052", Current.Line, Current.Column, "Invalid comparison expression. Expected \"is\".");
+            ExpectKeyword("is");
+
+            var isNot = false;
+            if (IsKeyword("not"))
+            {
+                isNot = true;
+                ExpectKeyword("not");
+            }
+
+            if (CurrentIs("NEWLINE") || CurrentIs("EOF"))
+            {
+                var code = isNot ? "P051" : "P050";
+                var text = isNot ? "Expected right operand after \"is not\"." : "Expected right operand after \"is\".";
+                throw new CompileError("PARSE", code, Current.Line, Current.Column, text);
+            }
+
+            var right = ParseComparisonOperand(isNot ? "P051" : "P050", isNot ? "Expected right operand after \"is not\"." : "Expected right operand after \"is\".");
+            if (left.Type != right.Type)
+                throw new CompileError("SEMANTIC", "S021", Current.Line, Current.Column, $"Comparison type mismatch: {left.Type} and {right.Type}.");
+
+            var equal = string.Equals(left.Value, right.Value, StringComparison.Ordinal);
+            var value = isNot ? !equal : equal;
+            var op = isNot ? "COMPARE_IS_NOT" : "COMPARE_IS";
+            return new CompareResult(value, $"{op}|left={left.Repr}|right={right.Repr}");
+        }
+
+        ExprResult ParseComparisonOperand(string code, string message)
+        {
+            if (CurrentIs("STRING"))
+            {
+                var t = Advance();
+                return new ExprResult("text", t.Value, $"str(\"{t.Value}\")");
+            }
+
+            if (CurrentIs("INT"))
+            {
+                var t = Advance();
+                return new ExprResult("int", t.Value, $"int({t.Value})");
+            }
+
+            if (CurrentIs("BOOL"))
+            {
+                var t = Advance();
+                return new ExprResult("bool", t.Value, $"bool({t.Value})");
+            }
+
+            if (CurrentIs("IDENT"))
+            {
+                var t = Advance();
+                if (!_vars.TryGetValue(t.Value, out var info))
+                    throw new CompileError("SEMANTIC", "S020", t.Line, t.Column, $"Unknown variable \"{t.Value}\" in comparison.");
+                return new ExprResult(info.Type, info.Value, $"var({t.Value})");
+            }
+
+            throw new CompileError("PARSE", code, Current.Line, Current.Column, message);
+        }
+
         record CommandExpr(string Value, string Repr, string Command);
 
         ExprResult ParseExpression(string context, string missingCode, string missingMessage)
@@ -919,6 +1103,14 @@ static class Program
         {
             while (CurrentIs("NEWLINE"))
                 Advance();
+        }
+
+        bool IsEndProgram() => IsKeyword("end") && PeekKeyword("program");
+        bool IsEndIf() => IsKeyword("end") && PeekKeyword("if");
+        bool PeekKeyword(string value)
+        {
+            var next = _pos + 1;
+            return next < _tokens.Count && _tokens[next].Type == "KEYWORD" && _tokens[next].Value == value;
         }
 
         bool IsKeyword(string value) => Current.Type == "KEYWORD" && Current.Value == value;

@@ -1,0 +1,13 @@
+program "CompareIsNot"
+
+let name be "Sqweek"
+
+title "M13 Compare"
+if name is not "Bob"
+show message "is not true"
+else
+show message "is not false"
+end if
+blend mix to code 0
+
+end program "CompareIsNot"
