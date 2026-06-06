@@ -1,0 +1,4 @@
+program Hello
+message text "Hello from M4D"
+exit 0
+

@@ -1,0 +1,6 @@
+Program:
+    name: Hello
+    title: Arqen Byte Zero
+    message: Hello from Arqen
+    exit_code: 0
+Semantic: OK

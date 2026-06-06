@@ -1,0 +1,19 @@
+Program:
+    name: Hello
+    title: Arqen Byte Zero
+    message: Hello, Sqweek
+    exit_code: 0
+Semantic: OK
+
+Variables:
+    name: text = Sqweek
+    number: int = 0
+    active: bool = true
+
+Message:
+    expression:
+        BinaryPlus:
+            left:
+                StringLiteral: Hello, 
+            right:
+                VariableRef: name

@@ -1,0 +1,13 @@
+Program:
+    name: Hello
+
+Variables:
+    name: text = Sqweek
+    number: int = 0
+    active: bool = true
+
+title: Arqen Byte Zero
+message: Hello from M9
+exit_code: 0
+
+Semantic: OK

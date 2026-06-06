@@ -1,0 +1,4 @@
+program Hello:
+    show message "Hello from Arqen"
+    exit 0
+

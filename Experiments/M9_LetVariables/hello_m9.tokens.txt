@@ -1,0 +1,28 @@
+KEYWORD(program) line 1 col 1
+STRING(Hello) line 1 col 9
+NEWLINE line 1
+KEYWORD(let) line 2 col 1
+IDENT(name) line 2 col 5
+KEYWORD(be) line 2 col 10
+STRING(Sqweek) line 2 col 13
+NEWLINE line 2
+KEYWORD(let) line 3 col 1
+IDENT(number) line 3 col 5
+KEYWORD(be) line 3 col 12
+INT(0) line 3 col 15
+NEWLINE line 3
+KEYWORD(title) line 4 col 1
+STRING(Arqen Byte Zero) line 4 col 7
+NEWLINE line 4
+KEYWORD(message) line 5 col 1
+KEYWORD(text) line 5 col 9
+STRING(Hello from Arqen) line 5 col 14
+NEWLINE line 5
+KEYWORD(exit) line 6 col 1
+INT(0) line 6 col 6
+NEWLINE line 6
+KEYWORD(end) line 7 col 1
+KEYWORD(program) line 7 col 5
+STRING(Hello) line 7 col 13
+NEWLINE line 7
+EOF

@@ -1,0 +1,14 @@
+Program:
+    name: Hello
+    Let:
+        name: name
+        type: text
+        value: Sqweek
+    Let:
+        name: number
+        type: int
+        value: 0
+    title: Arqen Byte Zero
+    message: Hello from Arqen
+    exit_code: 0
+Semantic: OK

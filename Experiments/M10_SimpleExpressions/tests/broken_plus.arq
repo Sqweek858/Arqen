@@ -1,0 +1,11 @@
+program "Hello"
+
+let name be "Sqweek"
+let number be 0
+let active be true
+
+title "Arqen Byte Zero"
+message text "Hello" +
+exit 0
+
+end program "Hello"

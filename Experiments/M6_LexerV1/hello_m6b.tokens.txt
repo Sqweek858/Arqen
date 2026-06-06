@@ -1,0 +1,10 @@
+KEYWORD program
+IDENT Hello
+KEYWORD title
+STRING Arqen Byte Zero
+KEYWORD message
+KEYWORD text
+STRING Hello from Arqen
+KEYWORD exit
+INT 0
+EOF

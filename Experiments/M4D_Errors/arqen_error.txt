@@ -1,0 +1,5 @@
+Error A005:
+Missing required field: exit
+
+Expected:
+exit 0

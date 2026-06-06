@@ -1,0 +1,5 @@
+program Hello
+message title "Arqen Byte Zero"
+message text "Hello from M4C"
+exit 0
+

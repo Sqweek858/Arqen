@@ -1,0 +1,4 @@
+program Hello
+message title "Arqen Byte Zero"
+exit 0
+

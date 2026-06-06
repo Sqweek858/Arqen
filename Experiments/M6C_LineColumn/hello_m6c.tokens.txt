@@ -1,0 +1,14 @@
+KEYWORD(program) line 1 col 1
+IDENT(Hello) line 1 col 9
+NEWLINE line 1
+KEYWORD(title) line 2 col 1
+STRING(Arqen Byte Zero) line 2 col 7
+NEWLINE line 2
+KEYWORD(message) line 3 col 1
+KEYWORD(text) line 3 col 9
+STRING(Hello from Arqen) line 3 col 14
+NEWLINE line 3
+KEYWORD(exit) line 4 col 1
+INT(0) line 4 col 6
+NEWLINE line 4
+EOF

@@ -1,0 +1,2 @@
+Error L004 at line 1, column 9:
+Unexpected control character.
