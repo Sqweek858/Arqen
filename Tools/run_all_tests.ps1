@@ -19,8 +19,8 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
-    $resultName = if ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
+    $group = if ($Name.StartsWith("M10O_")) { "M10O" } elseif ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M10O_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
         $script:StructuredResults += "PASS|$group|$resultName"
@@ -334,6 +334,23 @@ function Manifest-Has {
     return (Get-Content $Path -Raw).Contains($Needle)
 }
 
+function Manifest-Value {
+    param(
+        [string]$Path,
+        [string]$Key
+    )
+
+    if (-not (Test-Path $Path)) {
+        return ""
+    }
+    foreach ($line in Get-Content $Path) {
+        if ($line.StartsWith("$Key|")) {
+            return $line.Substring($Key.Length + 1)
+        }
+    }
+    return ""
+}
+
 function Run-M10JK-Tests {
     Write-Host ""
     Write-Host "M10JK build/backend hardening tests"
@@ -342,7 +359,7 @@ function Run-M10JK-Tests {
     $backendTests = Join-Path $RepoRoot "Tests\Backend\WindowsX64PE"
     Add-Check "M10JK_DRIVER_EXISTS" (Test-Path $driver)
 
-    $sampleExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\hello_m10.arq")
+    $sampleExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\hello_m10.arq", "--rebuild")
     $sampleExe = Join-Path $RepoRoot "Build\EXE\hello_m10.exe"
     $sampleManifest = Join-Path $RepoRoot "Build\Manifests\hello_m10.build.txt"
     $sampleLexStage = Join-Path $RepoRoot "Build\Manifests\hello_m10.lex.stage.txt"
@@ -480,6 +497,52 @@ function Run-M10N-Tests {
     Add-Check "M10N_backend_error_aggregated" ($backendExit -ne 0 -and -not (Test-Path $backendExe) -and (Manifest-Has $backendDiag "B003|backend") -and (Manifest-Has $backendManifest "FAILED_STAGE|backend"))
 }
 
+function Run-M10O-Tests {
+    Write-Host ""
+    Write-Host "M10O build cache tests"
+
+    $cacheRoot = Join-Path $RepoRoot "Build\Cache"
+    $cleanExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @("--clean-cache")
+    $cacheItems = @(Get-ChildItem $cacheRoot -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne ".gitkeep" })
+    Add-Check "M10O_cache_clean_flag" ($cleanExit -eq 0 -and $cacheItems.Count -eq 0)
+
+    $validInput = ".\Tests\Cache\cache_valid.arq"
+    $validStem = "cache_valid"
+    $validManifest = Join-Path $RepoRoot "Build\Manifests\$validStem.build.txt"
+    $validDiag = Join-Path $RepoRoot "Build\Diagnostics\$validStem.all_errors.txt"
+    $validExe = Join-Path $RepoRoot "Build\EXE\$validStem.exe"
+
+    $firstExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($validInput)
+    $firstCachePath = Manifest-Value $validManifest "CACHE_PATH"
+    Add-Check "M10O_cache_miss_first_build" ($firstExit -eq 0 -and (Test-Path $validExe) -and ((Manifest-Has $validManifest "CACHE_STATUS|store") -or (Manifest-Has $validManifest "CACHE_STATUS|miss")) -and (Test-Path (Join-Path $RepoRoot $firstCachePath)) -and (Manifest-Has $validDiag "ERROR_COUNT|0"))
+
+    $secondExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($validInput)
+    Add-Check "M10O_cache_hit_second_build" ($secondExit -eq 0 -and (Manifest-Has $validManifest "CACHE_STATUS|hit") -and (Test-Path $validExe) -and (Test-Pe-Signature $validExe) -and (Manifest-Has $validDiag "ERROR_COUNT|0"))
+    Add-Check "M10O_cache_hit_no_stage_rerun" ((Manifest-Has $validManifest "STAGES_SKIPPED|lexer,parser,semantic,ir,codegen,backend") -and (Manifest-Has $validManifest "CACHE_STATUS|hit"))
+
+    $invalidExe = Join-Path $RepoRoot "Build\EXE\cache_invalid.exe"
+    Remove-Item $invalidExe -Force -ErrorAction SilentlyContinue
+    $invalidExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Cache\cache_invalid.arq")
+    $invalidManifest = Join-Path $RepoRoot "Build\Manifests\cache_invalid.build.txt"
+    $invalidDiag = Join-Path $RepoRoot "Build\Diagnostics\cache_invalid.all_errors.txt"
+    Add-Check "M10O_cache_invalid_source_no_artifact" ($invalidExit -ne 0 -and -not (Test-Path $invalidExe) -and (Manifest-Has $invalidDiag "S010|semantic") -and (Manifest-Has $invalidManifest "STATUS|failure") -and -not (Manifest-Has $invalidManifest "CACHE_STATUS|hit"))
+
+    $rebuildExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($validInput, "--rebuild")
+    Add-Check "M10O_cache_rebuild_flag" ($rebuildExit -eq 0 -and (Manifest-Has $validManifest "CACHE_STATUS|store") -and (Manifest-Has $validManifest "CACHE_REASON|rebuild") -and (Test-Path $validExe))
+
+    $noCacheExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($validInput, "--no-cache")
+    Add-Check "M10O_cache_no_cache_flag" ($noCacheExit -eq 0 -and (Manifest-Has $validManifest "CACHE_STATUS|bypass") -and (Manifest-Has $validManifest "CACHE_REASON|no-cache") -and (Test-Path $validExe))
+
+    $customExe = Join-Path $RepoRoot "Build\EXE\cache_custom.exe"
+    Remove-Item $customExe -Force -ErrorAction SilentlyContinue
+    $customExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @($validInput, "-o", ".\Build\EXE\cache_custom.exe")
+    Add-Check "M10O_cache_custom_output" ($customExit -eq 0 -and (Manifest-Has $validManifest "CACHE_STATUS|hit") -and (Manifest-Has $validManifest "ARTIFACT_PATH|Build/EXE/cache_custom.exe") -and (Test-Path $customExe) -and (Test-Pe-Signature $customExe))
+
+    $backendOnlyExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @("--backend-only", ".\Build\IR\hello_m10.arqir", "-o", ".\Build\EXE\hello_m10_from_ir.exe")
+    $backendOnlyManifest = Join-Path $RepoRoot "Build\Manifests\hello_m10.build.txt"
+    Add-Check "M10O_cache_backend_only_bypass" ($backendOnlyExit -eq 0 -and (Manifest-Has $backendOnlyManifest "CACHE_STATUS|bypass") -and (Manifest-Has $backendOnlyManifest "CACHE_REASON|backend-only") -and (Test-Path (Join-Path $RepoRoot "Build\EXE\hello_m10_from_ir.exe")))
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -567,6 +630,8 @@ Run-M10JK-Tests
 Run-M10L-Tests
 
 Run-M10N-Tests
+
+Run-M10O-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

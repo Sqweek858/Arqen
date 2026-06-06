@@ -9,6 +9,10 @@ $HelperPath = Join-Path $RepoRoot "Tools\BackendCommon\WindowsX64PE.psm1"
 Import-Module $HelperPath -Force
 
 $backendOnly = $false
+$noCache = $false
+$rebuild = $false
+$cleanCache = $false
+$cacheInfo = $false
 $inputArg = $null
 $outputArg = $null
 $templateArg = Join-Path $RepoRoot "Experiments\M10_SimpleExpressions\template_messagebox_m8.exe"
@@ -16,6 +20,14 @@ $templateArg = Join-Path $RepoRoot "Experiments\M10_SimpleExpressions\template_m
 for ($i = 0; $i -lt $args.Count; $i++) {
     if ($args[$i] -eq "--backend-only") {
         $backendOnly = $true
+    } elseif ($args[$i] -eq "--no-cache") {
+        $noCache = $true
+    } elseif ($args[$i] -eq "--rebuild") {
+        $rebuild = $true
+    } elseif ($args[$i] -eq "--clean-cache") {
+        $cleanCache = $true
+    } elseif ($args[$i] -eq "--cache-info") {
+        $cacheInfo = $true
     } elseif ($args[$i] -eq "-o") {
         if (($i + 1) -ge $args.Count) {
             Write-Host "Error: -o requires an output path."
@@ -38,9 +50,18 @@ for ($i = 0; $i -lt $args.Count; $i++) {
     }
 }
 
+if ($cleanCache) {
+    $cacheRoot = Join-Path $RepoRoot "Build\Cache"
+    New-Item -ItemType Directory -Force -Path $cacheRoot | Out-Null
+    Get-ChildItem $cacheRoot -Force | Where-Object { $_.Name -ne ".gitkeep" } | Remove-Item -Recurse -Force
+    Write-Host "[CACHE] CLEAN -> Build/Cache"
+    exit 0
+}
+
 if ($null -eq $inputArg) {
     Write-Host "Usage: arqc_m10jk.ps1 <input.arq> [-o output.exe]"
     Write-Host "       arqc_m10jk.ps1 --backend-only <input.arqir> [-o output.exe]"
+    Write-Host "       arqc_m10jk.ps1 --clean-cache"
     exit 2
 }
 
@@ -122,6 +143,17 @@ $layoutPath = Join-Path $RepoRoot "Backends\WindowsX64PE\Config\pe_layout_v0.txt
 $importsPath = Join-Path $RepoRoot "Backends\WindowsX64PE\Config\import_registry_v0.txt"
 $capabilitiesPath = Join-Path $RepoRoot "Backends\WindowsX64PE\Config\capabilities_v0.txt"
 $templatePath = AbsPath $templateArg
+$cacheSchemaVersion = "0"
+$cacheTarget = $BackendName
+$cacheEnabled = $true
+$cacheStatus = "miss"
+$cacheReason = ""
+$cacheKey = ""
+$cachePath = ""
+$cacheRecordPath = ""
+$cacheArtifactPath = ""
+$cacheDiagnosticsPath = ""
+$cacheBuildManifestPath = ""
 $buildId = (Get-Date).ToUniversalTime().ToString("yyyyMMddHHmmssfff")
 $logLines = New-Object System.Collections.Generic.List[string]
 $diagnostics = New-Object System.Collections.Generic.List[object]
@@ -342,6 +374,196 @@ function Add-SourceDiagnostics {
     }
 }
 
+function Get-StringSha256 {
+    param([string]$Text)
+
+    $sha = [Security.Cryptography.SHA256]::Create()
+    $bytes = [Text.Encoding]::UTF8.GetBytes($Text)
+    $hash = $sha.ComputeHash($bytes)
+    return (($hash | ForEach-Object { $_.ToString("x2") }) -join "")
+}
+
+function Get-FileHashOrEmpty {
+    param([string]$Path)
+
+    if ([string]::IsNullOrWhiteSpace($Path) -or -not (Test-Path $Path)) {
+        return ""
+    }
+    return Get-ArqFileSha256 $Path
+}
+
+function Get-DirectoryContentHash {
+    param(
+        [string]$Path,
+        [string]$Filter = "*.txt"
+    )
+
+    if (-not (Test-Path $Path)) {
+        return ""
+    }
+
+    $lines = @()
+    foreach ($file in Get-ChildItem $Path -Filter $Filter -File -Recurse | Sort-Object FullName) {
+        $lines += "$(RelPath $file.FullName)=$(Get-ArqFileSha256 $file.FullName)"
+    }
+    return Get-StringSha256 ($lines -join "`n")
+}
+
+function Initialize-CacheState {
+    $script:cacheKeyInputLines = @(
+        "CACHE_SCHEMA_VERSION|$cacheSchemaVersion",
+        "SOURCE_HASH|$(Get-ArqFileSha256 $inputPath)",
+        "COMPILER_VERSION|$CompilerVersion",
+        "DRIVER_HASH|$(Get-FileHashOrEmpty (Join-Path $RepoRoot 'Tools\arqc_m10jk.ps1'))",
+        "M10G_HASH|$(Get-FileHashOrEmpty (Join-Path $RepoRoot 'Tools\arqc_m10g.exe'))",
+        "M10JK_HASH|$(Get-FileHashOrEmpty (Join-Path $RepoRoot 'Tools\arqc_m10jk.ps1'))",
+        "BACKEND_HELPER_HASH|$(Get-FileHashOrEmpty (Join-Path $RepoRoot 'Tools\BackendCommon\WindowsX64PE.psm1'))",
+        "BACKEND_CONFIG_HASH|$(Get-DirectoryContentHash (Join-Path $RepoRoot 'Backends\WindowsX64PE\Config') '*.txt')",
+        "TEMPLATE_HASH|$(Get-FileHashOrEmpty $templatePath)",
+        "COMMAND_SPECS_HASH|$(Get-DirectoryContentHash (Join-Path $RepoRoot 'Specs\Commands') '*.command.txt')",
+        "TARGET|$cacheTarget"
+    )
+    $script:cacheKey = Get-StringSha256 ($script:cacheKeyInputLines -join "`n")
+    $script:cachePath = Join-Path $cacheDir $script:cacheKey
+    $script:cacheRecordPath = Join-Path $script:cachePath "cache_record.txt"
+    $script:cacheArtifactPath = Join-Path $script:cachePath "artifact.exe"
+    $script:cacheDiagnosticsPath = Join-Path $script:cachePath "diagnostics.txt"
+    $script:cacheBuildManifestPath = Join-Path $script:cachePath "build_manifest.txt"
+}
+
+function Write-CacheInfo {
+    Write-Host "CACHE_KEY|$cacheKey"
+    foreach ($line in $script:cacheKeyInputLines) {
+        Write-Host $line
+    }
+    Write-Host "CACHE_PATH|$(RelPath $cachePath)"
+    Write-Host "CACHE_EXISTS|$(if (Test-Path $cacheRecordPath) { 'true' } else { 'false' })"
+}
+
+function Test-CacheHit {
+    if (-not (Test-Path $cacheRecordPath)) {
+        $script:cacheReason = "no-entry"
+        return $false
+    }
+    if (-not (Test-Path $cacheArtifactPath) -or (Get-Item $cacheArtifactPath).Length -le 0) {
+        $script:cacheReason = "missing-artifact"
+        return $false
+    }
+    if (-not (Test-Path $cacheDiagnosticsPath)) {
+        $script:cacheReason = "missing-diagnostics"
+        return $false
+    }
+
+    $record = Get-Content $cacheRecordPath -Raw
+    if (-not $record.Contains("CACHE_KEY|$cacheKey") -or -not $record.Contains("STATUS|success")) {
+        $script:cacheReason = "record-mismatch"
+        return $false
+    }
+
+    $diag = Get-Content $cacheDiagnosticsPath -Raw
+    if (-not $diag.Contains("ERROR_COUNT|0") -or -not $diag.Contains("STATUS|success")) {
+        $script:cacheReason = "diagnostics-not-success"
+        return $false
+    }
+
+    $check = Test-ArqPeArtifact $cacheArtifactPath $importsPath
+    if (-not $check.Ok) {
+        $script:cacheReason = "artifact-invalid-$($check.Code)"
+        return $false
+    }
+
+    $script:cacheReason = "valid-entry"
+    return $true
+}
+
+function Write-ArtifactIndex {
+    param([string]$CacheState)
+
+    Write-Lines $artifactIndexPath @(
+        "ARTIFACT|$(RelPath $artifactPath)|source=$(RelPath $inputPath)|backend=$BackendName|status=pass|cache=$CacheState",
+        "CACHE|$CacheState|$(RelPath $artifactPath)|key=$cacheKey"
+    )
+}
+
+function Restore-CacheHit {
+    $artifactDir = Split-Path -Parent $artifactPath
+    if (-not [string]::IsNullOrWhiteSpace($artifactDir)) {
+        New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
+    }
+
+    Copy-Item $cacheArtifactPath $artifactPath -Force
+    Copy-Item $cacheDiagnosticsPath $allDiagnosticsPath -Force
+
+    $finalCheck = Test-ArqPeArtifact $artifactPath $importsPath
+    if (-not $finalCheck.Ok) {
+        $script:cacheStatus = "miss"
+        $script:cacheReason = "restored-artifact-invalid-$($finalCheck.Code)"
+        return $false
+    }
+
+    foreach ($stage in @("lexer", "parser", "semantic", "ir", "backend")) {
+        $stageState[$stage].Status = "skipped"
+        $stageState[$stage].Notes = "cache-hit"
+    }
+    $stageState["codegen"].Status = "skipped"
+    $stageState["codegen"].Notes = "cache-hit"
+    $script:cacheStatus = "hit"
+    $script:cacheReason = "valid-entry"
+    Write-AllStageManifests
+    Write-BuildManifest "success" "" ""
+    Write-Lines $logPath $logLines.ToArray()
+    Write-ArtifactIndex "hit"
+    return $true
+}
+
+function Store-CacheEntry {
+    if ($noCache -or $backendOnly) {
+        return
+    }
+    if (-not (Test-Path $artifactPath) -or (Get-Item $artifactPath).Length -le 0) {
+        return
+    }
+    if (-not (Test-Path $allDiagnosticsPath) -or -not (Get-Content $allDiagnosticsPath -Raw).Contains("ERROR_COUNT|0")) {
+        return
+    }
+
+    $check = Test-ArqPeArtifact $artifactPath $importsPath
+    if (-not $check.Ok) {
+        return
+    }
+
+    New-Item -ItemType Directory -Force -Path $cachePath | Out-Null
+    Copy-Item $artifactPath $cacheArtifactPath -Force
+    Copy-Item $allDiagnosticsPath $cacheDiagnosticsPath -Force
+    if (Test-Path $buildManifestPath) { Copy-Item $buildManifestPath $cacheBuildManifestPath -Force }
+    if (Test-Path $sourceCopyPath) { Copy-Item $sourceCopyPath (Join-Path $cachePath "source.arq") -Force }
+    if (Test-Path $tokenPath) { Copy-Item $tokenPath (Join-Path $cachePath "tokens.txt") -Force }
+    if (Test-Path $astPath) { Copy-Item $astPath (Join-Path $cachePath "ast.txt") -Force }
+    if (Test-Path $semanticPath) { Copy-Item $semanticPath (Join-Path $cachePath "semantic.txt") -Force }
+    if (Test-Path $irPath) { Copy-Item $irPath (Join-Path $cachePath "ir.arqir") -Force }
+
+    $record = @(
+        "CACHE_SCHEMA_VERSION|$cacheSchemaVersion",
+        "CACHE_KEY|$cacheKey",
+        "CACHE_STATUS|stored",
+        "SOURCE_PATH|$(RelPath $inputPath)",
+        "SOURCE_HASH|$(Get-ArqFileSha256 $inputPath)",
+        "COMPILER_VERSION|$CompilerVersion",
+        "DRIVER_HASH|$(($script:cacheKeyInputLines | Where-Object { $_.StartsWith('DRIVER_HASH|') }).Split('|')[1])",
+        "BACKEND_HASH|$(($script:cacheKeyInputLines | Where-Object { $_.StartsWith('BACKEND_HELPER_HASH|') }).Split('|')[1])",
+        "BACKEND_CONFIG_HASH|$(($script:cacheKeyInputLines | Where-Object { $_.StartsWith('BACKEND_CONFIG_HASH|') }).Split('|')[1])",
+        "TEMPLATE_HASH|$(($script:cacheKeyInputLines | Where-Object { $_.StartsWith('TEMPLATE_HASH|') }).Split('|')[1])",
+        "COMMAND_SPECS_HASH|$(($script:cacheKeyInputLines | Where-Object { $_.StartsWith('COMMAND_SPECS_HASH|') }).Split('|')[1])",
+        "TARGET|$cacheTarget",
+        "ARTIFACT_PATH|$(RelPath $cacheArtifactPath)",
+        "DIAGNOSTICS_PATH|$(RelPath $cacheDiagnosticsPath)",
+        "STORED_AT|$((Get-Date).ToUniversalTime().ToString('o'))",
+        "STATUS|success"
+    )
+    Write-Lines $cacheRecordPath $record
+    Log-Line "[CACHE] STORE -> $(RelPath $cachePath)"
+}
+
 function Stage-Input {
     param([string]$Stage)
     switch ($Stage) {
@@ -429,6 +651,12 @@ function Write-BuildManifest {
         "STAGES_SKIPPED|$($skipped -join ',')",
         "DIAGNOSTICS_PATH|$(RelPath $allDiagnosticsPath)",
         "ERROR_COUNT|$($diagnostics.Count)",
+        "CACHE_ENABLED|$cacheEnabled",
+        "CACHE_SCHEMA_VERSION|$cacheSchemaVersion",
+        "CACHE_KEY|$cacheKey",
+        "CACHE_STATUS|$cacheStatus",
+        "CACHE_PATH|$(RelPath $cachePath)",
+        "CACHE_REASON|$cacheReason",
         "ERROR_PATH|$(RelPath $ErrorPath)",
         "LOG_PATH|$(RelPath $logPath)"
     )
@@ -500,24 +728,30 @@ function Promote-Artifact {
 }
 
 foreach ($old in Get-ChildItem $errorDir -Filter "$stem.*.error.txt" -ErrorAction SilentlyContinue) {
-    Remove-Item $old.FullName -Force
+    Remove-Item $old.FullName -Force -ErrorAction SilentlyContinue
 }
 foreach ($dir in Get-ChildItem $diagnosticsRoot -Directory -ErrorAction SilentlyContinue) {
     foreach ($old in Get-ChildItem $dir.FullName -Filter "$stem.*.diagnostic.txt" -ErrorAction SilentlyContinue) {
-        Remove-Item $old.FullName -Force
+        Remove-Item $old.FullName -Force -ErrorAction SilentlyContinue
     }
 }
 foreach ($old in Get-ChildItem $manifestDir -Filter "$stem.*.stage.txt" -ErrorAction SilentlyContinue) {
-    Remove-Item $old.FullName -Force
+    Remove-Item $old.FullName -Force -ErrorAction SilentlyContinue
 }
 Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
 Remove-Item $allDiagnosticsPath, $lexDiagnosticsPath -Force -ErrorAction SilentlyContinue
 
 Copy-Item $inputPath $sourceCopyPath -Force
 Log-Line "[M10JK] BUILD_ID $buildId"
+Initialize-CacheState
+if ($cacheInfo) {
+    Write-CacheInfo
+}
 
 Add-SourceDiagnostics
 if ($diagnostics.Count -gt 0) {
+    $cacheStatus = "bypass"
+    $cacheReason = "diagnostics_error"
     $earlyStage = Get-EarliestDiagnosticStage
     $earlyCode = Get-FirstDiagnosticCodeForStage $earlyStage
     $stageState[$earlyStage].Status = "fail"
@@ -528,6 +762,32 @@ if ($diagnostics.Count -gt 0) {
     Log-Line "[M10JK] FAIL $earlyStage $earlyCode"
     Set-Failure $earlyStage $earlyCode $allDiagnosticsPath "unified-diagnostics-gate"
     exit 1
+}
+
+if ($backendOnly) {
+    $cacheStatus = "bypass"
+    $cacheReason = "backend-only"
+    Log-Line "[CACHE] BYPASS backend-only"
+} elseif ($noCache) {
+    $cacheStatus = "bypass"
+    $cacheReason = "no-cache"
+    Log-Line "[CACHE] BYPASS no-cache"
+} elseif ($rebuild) {
+    $cacheStatus = "miss"
+    $cacheReason = "rebuild"
+    Log-Line "[CACHE] MISS rebuild"
+} elseif (Test-CacheHit) {
+    Log-Line "[CACHE] HIT"
+    if (Restore-CacheHit) {
+        Log-Line "[BUILD] SKIP"
+        Log-Line "[ARTIFACT] $(RelPath $artifactPath)"
+        Write-Lines $logPath $logLines.ToArray()
+        exit 0
+    }
+    Log-Line "[CACHE] MISS $cacheReason"
+} else {
+    $cacheStatus = "miss"
+    Log-Line "[CACHE] MISS $cacheReason"
 }
 
 $templateCheck = Test-ArqPeTemplate $templatePath $layoutPath $importsPath
@@ -681,11 +941,22 @@ if ($sameStemErrors.Count -gt 0) {
 
 Write-AllStageManifests
 Write-AllDiagnostics "success"
+if ($noCache) {
+    $cacheStatus = "bypass"
+    $cacheReason = "no-cache"
+} elseif ($backendOnly) {
+    $cacheStatus = "bypass"
+    $cacheReason = "backend-only"
+} else {
+    $cacheStatus = "store"
+    if ([string]::IsNullOrWhiteSpace($cacheReason) -or $cacheReason -eq "valid-entry") {
+        $cacheReason = if ($rebuild) { "rebuild" } else { "stored-success" }
+    }
+}
 Write-BuildManifest "success" "" ""
 Write-Lines $logPath $logLines.ToArray()
-Write-Lines $artifactIndexPath @(
-    "ARTIFACT|$(RelPath $artifactPath)|source=$(RelPath $inputPath)|backend=$BackendName|status=pass"
-)
+Write-ArtifactIndex $cacheStatus
+Store-CacheEntry
 
 Log-Line "[M10JK] PASS -> $(RelPath $artifactPath)"
 Write-Lines $logPath $logLines.ToArray()
