@@ -1,0 +1,13 @@
+program "Playground"
+
+let userName be "Sqweek"
+let projectName be "Arqen"
+let greeting be "Hello"
+let number be 0
+let active be true
+
+tile "Arqen Playground"
+message text greeting + ",  + userName + " from " + projectName
+exit
+
+end program "Playground

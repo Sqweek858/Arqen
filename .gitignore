@@ -16,6 +16,7 @@
 /Build/Diagnostics/Semantic/*
 /Build/Diagnostics/IR/*
 /Build/Diagnostics/Backend/*
+/Build/Diagnostics/*.txt
 !/Build/Tokens/.gitkeep
 !/Build/AST/.gitkeep
 !/Build/Sources/.gitkeep

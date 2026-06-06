@@ -19,8 +19,8 @@ function Add-Check {
     )
 
     $script:Total += 1
-    $group = if ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
-    $resultName = if ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
+    $group = if ($Name.StartsWith("M10N_")) { "M10N" } elseif ($Name.StartsWith("M10L_")) { "M10L" } elseif ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
+    $resultName = if ($Name.StartsWith("M10N_")) { $Name.Substring(5) } elseif ($Name.StartsWith("M10L_")) { $Name.Substring(5) } else { $Name }
     if ($Pass) {
         $script:Passed += 1
         $script:StructuredResults += "PASS|$group|$resultName"
@@ -380,7 +380,8 @@ function Run-M10JK-Tests {
     $longExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Backend\WindowsX64PE\invalid_too_long_string.arq")
     $longManifest = Join-Path $RepoRoot "Build\Manifests\invalid_too_long_string.build.txt"
     $longError = Join-Path $RepoRoot "Build\Errors\invalid_too_long_string.backend.error.txt"
-    Add-Check "M10JK_TOO_LONG_STRING" ($longExit -ne 0 -and -not (Test-Path $longExe) -and (Manifest-Has $longManifest "FAILED_STAGE|backend") -and (Manifest-Has $longManifest "ERROR_PATH|Build/Errors/invalid_too_long_string.backend.error.txt") -and (Manifest-Has $longError "B003"))
+    $longAllErrors = Join-Path $RepoRoot "Build\Diagnostics\invalid_too_long_string.all_errors.txt"
+    Add-Check "M10JK_TOO_LONG_STRING" ($longExit -ne 0 -and -not (Test-Path $longExe) -and (Manifest-Has $longManifest "FAILED_STAGE|backend") -and (Manifest-Has $longManifest "ERROR_PATH|Build/Diagnostics/invalid_too_long_string.all_errors.txt") -and (Manifest-Has $longAllErrors "B003"))
 
     $unsupportedExe = Join-Path $RepoRoot "Build\EXE\invalid_unsupported_action.exe"
     Remove-Item $unsupportedExe -Force -ErrorAction SilentlyContinue
@@ -428,6 +429,55 @@ function Run-M10L-Tests {
     $statusOut = Join-Path $generated "command_status.txt"
     $statusText = if (Test-Path $statusOut) { Get-Content $statusOut -Raw } else { "" }
     Add-Check "M10L_command_status_generation" ($statusExit -eq 0 -and $statusText.Contains("COMMAND|message_text|spec=yes|tests=yes|lexer=yes|parser=yes|ast=yes|semantic=yes|ir=yes|backend=yes|status=stable") -and $statusText.Contains("COMMAND|BlendMixToCode|spec=draft|tests=draft|lexer=no|parser=no|ast=no|semantic=no|ir=no|backend=no|status=planned"))
+}
+
+function Diagnostic-ErrorCount {
+    param([string]$Path)
+
+    if (-not (Test-Path $Path)) {
+        return -1
+    }
+    foreach ($line in Get-Content $Path) {
+        if ($line.StartsWith("ERROR_COUNT|")) {
+            return [int]($line.Split("|")[1])
+        }
+    }
+    return -1
+}
+
+function Run-M10N-Tests {
+    Write-Host ""
+    Write-Host "M10N unified diagnostics tests"
+
+    $validExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\hello_m10.arq")
+    $validDiag = Join-Path $RepoRoot "Build\Diagnostics\hello_m10.all_errors.txt"
+    $validManifest = Join-Path $RepoRoot "Build\Manifests\hello_m10.build.txt"
+    Add-Check "M10N_valid_zero_diagnostics" ($validExit -eq 0 -and (Manifest-Has $validDiag "STATUS|success") -and (Manifest-Has $validDiag "ERROR_COUNT|0") -and (Manifest-Has $validManifest "DIAGNOSTICS_PATH|Build/Diagnostics/hello_m10.all_errors.txt") -and (Manifest-Has $validManifest "ERROR_COUNT|0"))
+
+    $fourExe = Join-Path $RepoRoot "Build\EXE\four_errors_playground.exe"
+    Remove-Item $fourExe -Force -ErrorAction SilentlyContinue
+    $fourExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Diagnostics\four_errors_playground.arq")
+    $fourDiag = Join-Path $RepoRoot "Build\Diagnostics\four_errors_playground.all_errors.txt"
+    $fourManifest = Join-Path $RepoRoot "Build\Manifests\four_errors_playground.build.txt"
+    $fourText = if (Test-Path $fourDiag) { Get-Content $fourDiag -Raw } else { "" }
+    $fourCount = Diagnostic-ErrorCount $fourDiag
+    $fourHasAll = $fourText.Contains("P020|lint") -and $fourText.Contains('Expected keyword "title", got "tile".') -and $fourText.Contains("P030|lint") -and $fourText.Contains('Expected exit code after "exit".') -and (($fourText.Split("L002|lint").Count - 1) -ge 2)
+    Add-Check "M10N_four_errors_detected" ($fourExit -ne 0 -and $fourCount -ge 4 -and $fourHasAll)
+    Add-Check "M10N_four_errors_no_exe" (-not (Test-Path $fourExe) -and (Manifest-Has $fourManifest "STATUS|failure") -and (Manifest-Has $fourManifest "STAGES_SKIPPED|parser,semantic,ir,codegen,backend"))
+
+    $semanticExe = Join-Path $RepoRoot "Build\EXE\unknown_variable_diagnostic.exe"
+    Remove-Item $semanticExe -Force -ErrorAction SilentlyContinue
+    $semanticExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Diagnostics\unknown_variable_diagnostic.arq")
+    $semanticDiag = Join-Path $RepoRoot "Build\Diagnostics\unknown_variable_diagnostic.all_errors.txt"
+    $semanticManifest = Join-Path $RepoRoot "Build\Manifests\unknown_variable_diagnostic.build.txt"
+    Add-Check "M10N_semantic_error_aggregated" ($semanticExit -ne 0 -and -not (Test-Path $semanticExe) -and (Manifest-Has $semanticDiag "S010|semantic") -and (Manifest-Has $semanticManifest "FAILED_STAGE|semantic") -and (Manifest-Has $semanticManifest "STAGES_SKIPPED|ir,codegen,backend"))
+
+    $backendExe = Join-Path $RepoRoot "Build\EXE\invalid_too_long_string.exe"
+    Remove-Item $backendExe -Force -ErrorAction SilentlyContinue
+    $backendExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Backend\WindowsX64PE\invalid_too_long_string.arq")
+    $backendDiag = Join-Path $RepoRoot "Build\Diagnostics\invalid_too_long_string.all_errors.txt"
+    $backendManifest = Join-Path $RepoRoot "Build\Manifests\invalid_too_long_string.build.txt"
+    Add-Check "M10N_backend_error_aggregated" ($backendExit -ne 0 -and -not (Test-Path $backendExe) -and (Manifest-Has $backendDiag "B003|backend") -and (Manifest-Has $backendManifest "FAILED_STAGE|backend"))
 }
 
 Write-Host "=== Smoke tests ==="
@@ -515,6 +565,8 @@ Run-M10I-Backend-Tests
 Run-M10JK-Tests
 
 Run-M10L-Tests
+
+Run-M10N-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

@@ -124,11 +124,12 @@ $capabilitiesPath = Join-Path $RepoRoot "Backends\WindowsX64PE\Config\capabiliti
 $templatePath = AbsPath $templateArg
 $buildId = (Get-Date).ToUniversalTime().ToString("yyyyMMddHHmmssfff")
 $logLines = New-Object System.Collections.Generic.List[string]
+$diagnostics = New-Object System.Collections.Generic.List[object]
 $stageState = @{}
 $stageOrder = @("lexer", "parser", "semantic", "ir", "codegen", "backend")
 
 foreach ($stage in $stageOrder) {
-    $stageState[$stage] = [pscustomobject]@{
+$stageState[$stage] = [pscustomobject]@{
         Status = "skipped"
         ExitCode = ""
         ErrorCode = ""
@@ -137,10 +138,208 @@ foreach ($stage in $stageOrder) {
     }
 }
 
+$allDiagnosticsPath = Join-Path $diagnosticsRoot "$stem.all_errors.txt"
+$lexDiagnosticsPath = Join-Path $diagnosticsRoot "$stem.lex.diagnostics.txt"
+
 function Log-Line {
     param([string]$Line)
     Write-Host $Line
     $script:logLines.Add($Line) | Out-Null
+}
+
+function Add-Diagnostic {
+    param(
+        [string]$Code,
+        [string]$Stage,
+        [int]$Line,
+        [int]$Column,
+        [string]$Message
+    )
+
+    $key = "$Code|$Stage|$Line|$Column|$Message"
+    foreach ($diag in $diagnostics) {
+        if ($diag.Key -eq $key) {
+            return
+        }
+    }
+    $diagnostics.Add([pscustomobject]@{
+        Key = $key
+        Code = $Code
+        Stage = $Stage
+        Line = $Line
+        Column = $Column
+        Message = $Message
+    }) | Out-Null
+}
+
+function Diagnostic-Line {
+    param($Diag)
+
+    return "$($Diag.Code)|$($Diag.Stage)|line=$($Diag.Line)|column=$($Diag.Column)|$($Diag.Message)"
+}
+
+function Write-AllDiagnostics {
+    param([string]$Status)
+
+    $lines = @(
+        "DIAGNOSTICS|$(RelPath $inputPath)",
+        "STATUS|$Status",
+        "ERROR_COUNT|$($diagnostics.Count)"
+    )
+    foreach ($diag in $diagnostics) {
+        $lines += Diagnostic-Line $diag
+    }
+    $lines += "END"
+    Write-Lines $allDiagnosticsPath $lines
+
+    $lexLines = @()
+    foreach ($diag in $diagnostics) {
+        if ($diag.Stage -eq "lexer" -or $diag.Code.StartsWith("L")) {
+            $lexLines += Diagnostic-Line $diag
+        }
+    }
+    if ($lexLines.Count -gt 0) {
+        Write-Lines $lexDiagnosticsPath $lexLines
+    } else {
+        Remove-Item $lexDiagnosticsPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Get-DiagnosticStageCount {
+    param([string]$Stage)
+
+    $count = 0
+    foreach ($diag in $diagnostics) {
+        if ($diag.Stage -eq $Stage) {
+            $count += 1
+        } elseif ($Stage -eq "lexer" -and $diag.Code.StartsWith("L")) {
+            $count += 1
+        } elseif ($Stage -eq "parser" -and $diag.Stage -eq "lint" -and $diag.Code.StartsWith("P")) {
+            $count += 1
+        }
+    }
+    return $count
+}
+
+function Get-EarliestDiagnosticStage {
+    $hasLexer = $false
+    $hasParser = $false
+    $hasSemantic = $false
+    $hasBackend = $false
+    foreach ($diag in $diagnostics) {
+        if ($diag.Stage -eq "lexer" -or $diag.Code.StartsWith("L")) { $hasLexer = $true }
+        elseif ($diag.Stage -eq "parser" -or $diag.Stage -eq "lint" -or $diag.Code.StartsWith("P")) { $hasParser = $true }
+        elseif ($diag.Stage -eq "semantic" -or $diag.Code.StartsWith("S")) { $hasSemantic = $true }
+        elseif ($diag.Stage -eq "backend" -or $diag.Code.StartsWith("B")) { $hasBackend = $true }
+    }
+    if ($hasLexer) { return "lexer" }
+    if ($hasParser) { return "parser" }
+    if ($hasSemantic) { return "semantic" }
+    if ($hasBackend) { return "backend" }
+    return ""
+}
+
+function Get-FirstDiagnosticCodeForStage {
+    param([string]$Stage)
+
+    foreach ($diag in $diagnostics) {
+        if ($Stage -eq "lexer" -and ($diag.Stage -eq "lexer" -or $diag.Code.StartsWith("L"))) { return $diag.Code }
+        if ($Stage -eq "parser" -and ($diag.Stage -eq "parser" -or $diag.Stage -eq "lint" -or $diag.Code.StartsWith("P"))) { return $diag.Code }
+        if ($Stage -eq "semantic" -and ($diag.Stage -eq "semantic" -or $diag.Code.StartsWith("S"))) { return $diag.Code }
+        if ($Stage -eq "backend" -and ($diag.Stage -eq "backend" -or $diag.Code.StartsWith("B"))) { return $diag.Code }
+    }
+    return ""
+}
+
+function Add-ErrorFileDiagnostic {
+    param(
+        [string]$Stage,
+        [string]$Path,
+        [string]$FallbackCode,
+        [string]$FallbackMessage
+    )
+
+    if (-not (Test-Path $Path)) {
+        Add-Diagnostic $FallbackCode $Stage 0 0 $FallbackMessage
+        return
+    }
+
+    $text = Get-Content $Path -Raw
+    $line = 0
+    $column = 0
+    $code = $FallbackCode
+    $message = $FallbackMessage
+
+    if ($text -match 'Error\s+([A-Z][0-9]+)(?:\s+at\s+line\s+([0-9]+),\s+column\s+([0-9]+))?:\s*[\r\n]+(.+)') {
+        $code = $matches[1]
+        if ($matches[2]) { $line = [int]$matches[2] }
+        if ($matches[3]) { $column = [int]$matches[3] }
+        $message = $matches[4].Trim()
+    } elseif ($text -match 'Error\s+([A-Z][0-9]+):\s*[\r\n]+(.+)') {
+        $code = $matches[1]
+        $message = $matches[2].Trim()
+    }
+
+    Add-Diagnostic $code $Stage $line $column $message
+}
+
+function Add-SourceDiagnostics {
+    if ($backendOnly -or -not $inputPath.EndsWith(".arq", [StringComparison]::OrdinalIgnoreCase)) {
+        return
+    }
+
+    $knownStarts = @("program", "end", "let", "title", "message", "exit")
+    $lines = Get-Content $inputPath
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $lineNo = $i + 1
+        $line = [string]$lines[$i]
+        $trimmed = $line.Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmed)) {
+            continue
+        }
+
+        for ($c = 0; $c -lt $line.Length; $c++) {
+            $codePoint = [int][char]$line[$c]
+            if ($codePoint -lt 32 -and $line[$c] -ne "`t") {
+                Add-Diagnostic "L004" "lexer" $lineNo ($c + 1) "Unexpected control character."
+            }
+        }
+
+        if ($trimmed.StartsWith("@")) {
+            $col = $line.IndexOf("@") + 1
+            Add-Diagnostic "L001" "lexer" $lineNo $col "Unknown character '@'."
+        }
+
+        $wordMatch = [regex]::Match($trimmed, '^([A-Za-z_][A-Za-z0-9_]*)')
+        $firstWord = if ($wordMatch.Success) { $wordMatch.Groups[1].Value } else { "" }
+        if ($firstWord -eq "tile") {
+            Add-Diagnostic "P020" "lint" $lineNo 1 'Expected keyword "title", got "tile".'
+        } elseif ($firstWord -ne "" -and ($knownStarts -notcontains $firstWord)) {
+            Add-Diagnostic "P021" "lint" $lineNo 1 "Unknown top-level statement `"$firstWord`"."
+        }
+
+        if ($trimmed -eq "exit") {
+            Add-Diagnostic "P030" "lint" $lineNo 1 'Expected exit code after "exit".'
+        } elseif ($trimmed -match '^exit\s+([^0-9\s]\S*)') {
+            Add-Diagnostic "L003" "lexer" $lineNo ($line.IndexOf($matches[1]) + 1) "Invalid integer."
+        }
+
+        $openQuote = 0
+        $quoteOpen = $false
+        for ($c = 0; $c -lt $line.Length; $c++) {
+            if ($line[$c] -eq '"') {
+                if (-not $quoteOpen) {
+                    $quoteOpen = $true
+                    $openQuote = $c + 1
+                } else {
+                    $quoteOpen = $false
+                }
+            }
+        }
+        if ($quoteOpen) {
+            Add-Diagnostic "L002" "lint" $lineNo $openQuote "Unterminated string."
+        }
+    }
 }
 
 function Stage-Input {
@@ -185,6 +384,7 @@ function Write-StageManifest {
         "EXIT_CODE|$($state.ExitCode)",
         "ERROR_CODE|$($state.ErrorCode)",
         "ERROR_FILE|$(RelPath $state.ErrorFile)",
+        "DIAGNOSTIC_COUNT|$(Get-DiagnosticStageCount $Stage)",
         "NOTES|$($state.Notes)"
     )
 }
@@ -227,6 +427,8 @@ function Write-BuildManifest {
         "FAILED_STAGE|$FailedStage",
         "STAGES_RUN|$($run -join ',')",
         "STAGES_SKIPPED|$($skipped -join ',')",
+        "DIAGNOSTICS_PATH|$(RelPath $allDiagnosticsPath)",
+        "ERROR_COUNT|$($diagnostics.Count)",
         "ERROR_PATH|$(RelPath $ErrorPath)",
         "LOG_PATH|$(RelPath $logPath)"
     )
@@ -243,6 +445,7 @@ function Write-BackendError {
     )
     Write-Lines $diag $lines
     Write-Lines $err $lines
+    Add-Diagnostic $Code "backend" 0 0 $Message
     return $err
 }
 
@@ -254,8 +457,9 @@ function Set-Failure {
     $stageState[$Stage].ErrorCode = $Code
     $stageState[$Stage].ErrorFile = $ErrorPath
     $stageState[$Stage].Notes = $Notes
+    Write-AllDiagnostics "failed"
     Write-AllStageManifests
-    Write-BuildManifest "failure" $Stage $ErrorPath
+    Write-BuildManifest "failure" $Stage $allDiagnosticsPath
     Write-Lines $logPath $logLines.ToArray()
 }
 
@@ -307,9 +511,24 @@ foreach ($old in Get-ChildItem $manifestDir -Filter "$stem.*.stage.txt" -ErrorAc
     Remove-Item $old.FullName -Force
 }
 Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+Remove-Item $allDiagnosticsPath, $lexDiagnosticsPath -Force -ErrorAction SilentlyContinue
 
 Copy-Item $inputPath $sourceCopyPath -Force
 Log-Line "[M10JK] BUILD_ID $buildId"
+
+Add-SourceDiagnostics
+if ($diagnostics.Count -gt 0) {
+    $earlyStage = Get-EarliestDiagnosticStage
+    $earlyCode = Get-FirstDiagnosticCodeForStage $earlyStage
+    $stageState[$earlyStage].Status = "fail"
+    $stageState[$earlyStage].ExitCode = "1"
+    $stageState[$earlyStage].ErrorCode = $earlyCode
+    $stageState[$earlyStage].ErrorFile = $allDiagnosticsPath
+    $stageState[$earlyStage].Notes = "unified-diagnostics-gate"
+    Log-Line "[M10JK] FAIL $earlyStage $earlyCode"
+    Set-Failure $earlyStage $earlyCode $allDiagnosticsPath "unified-diagnostics-gate"
+    exit 1
+}
 
 $templateCheck = Test-ArqPeTemplate $templatePath $layoutPath $importsPath
 if (-not $templateCheck.Ok) {
@@ -400,18 +619,20 @@ if ($exitCode -ne 0) {
         $capCheck = Test-ArqBackendCapabilities $irPath $capabilitiesPath
         if (-not $capCheck.Ok) {
             $failedCode = $capCheck.Code
-            $reportedError = Write-BackendError $capCheck.Code $capCheck.Message
+        $reportedError = Write-BackendError $capCheck.Code $capCheck.Message
         } else {
             $rdataCheck = Test-ArqRDataPlan $irPath $layoutPath
             if (-not $rdataCheck.Ok) {
                 $failedCode = $rdataCheck.Code
-                $reportedError = Write-BackendError $rdataCheck.Code $rdataCheck.Message
+        $reportedError = Write-BackendError $rdataCheck.Code $rdataCheck.Message
             }
         }
     }
 
     if ([string]::IsNullOrWhiteSpace($reportedError) -or -not (Test-Path $reportedError)) {
         $reportedError = Write-BackendError $failedCode "stage failed"
+    } else {
+        Add-ErrorFileDiagnostic $failedStage $reportedError $failedCode "stage failed"
     }
 
     Log-Line "[M10JK] FAIL $failedStage $failedCode"
@@ -459,6 +680,7 @@ if ($sameStemErrors.Count -gt 0) {
 }
 
 Write-AllStageManifests
+Write-AllDiagnostics "success"
 Write-BuildManifest "success" "" ""
 Write-Lines $logPath $logLines.ToArray()
 Write-Lines $artifactIndexPath @(
