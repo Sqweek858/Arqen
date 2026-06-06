@@ -412,3 +412,34 @@ Tiny: yes.
 Fragile: yes.
 Worth continuing: absolutely.
 ```
+
+## M10G Addendum
+
+M10G has now upgraded the workflow from manual stages to a single driver:
+
+```powershell
+.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq
+```
+
+Current output:
+
+```text
+Build\Tokens\hello_m10.tokens
+Build\AST\hello_m10.ast
+Build\EXE\hello_m10.exe
+Build\Logs\hello_m10.build.log
+```
+
+M10G also added:
+
+- stable token format: `TYPE|VALUE|LINE|COLUMN`
+- stable AST format: `NODE|FIELD|...`
+- arbitrary M10 variable names
+- stage-specific errors under `Build\Errors`
+- test harness coverage through `Tools\run_all_tests.ps1`
+
+Latest verification:
+
+```text
+Total: 39/39 passed
+```

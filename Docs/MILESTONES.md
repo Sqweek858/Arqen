@@ -821,3 +821,79 @@ Known limitations:
 - token dump migration is documented but not implemented
 - single `arqc` driver is planned but not implemented
 - Codex emitters remain temporary bootstrap tooling
+
+## M10G - Core Pipeline Upgrade
+
+Status: PASSED
+
+Goal:
+
+- Provide a single driver workflow.
+- Keep M10 language behavior unchanged.
+- Add stable token and AST formats for the new driver path.
+- Add predictable `Build` folder output.
+- Support arbitrary variable names in the M10 grammar.
+
+Command:
+
+```powershell
+.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq
+```
+
+Output:
+
+```text
+Build\Tokens\hello_m10.tokens
+Build\AST\hello_m10.ast
+Build\EXE\hello_m10.exe
+Build\Logs\hello_m10.build.log
+```
+
+Stage result:
+
+```text
+[LEX] PASS -> Build\Tokens\hello_m10.tokens
+[PARSE] PASS -> syntax OK
+[SEMANTIC] PASS -> Build\AST\hello_m10.ast
+[CODEGEN] PASS -> Build\EXE\hello_m10.exe
+[BUILD] PASS
+```
+
+Stable token format:
+
+```text
+TYPE|VALUE|LINE|COLUMN
+```
+
+Stable AST format:
+
+```text
+PROGRAM|Hello
+LET|name|text|Sqweek
+TITLE|Arqen Byte Zero
+MESSAGE|Hello, Sqweek
+MESSAGE_EXPR|plus(str("Hello, "),var(name))
+EXIT|0
+SEMANTIC|OK
+```
+
+Pass/fail:
+
+```text
+Tools\run_all_tests.ps1 -> Total: 39/39 passed
+M10G arbitrary variables -> PASS
+M10G error routing -> PASS
+M10 legacy smoke -> PASS
+```
+
+Experiment:
+
+- `Experiments\M10G_CorePipelineUpgrade\EXPERIMENT_LOG.md`
+
+Known limitations:
+
+- driver is a bootstrap .NET tool, not final self-hosted compiler
+- generated PE still uses the M8 MessageBox template
+- no new language syntax was added
+- `let` values are still literals only
+- `message text` remains the only expression-enabled field

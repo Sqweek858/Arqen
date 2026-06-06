@@ -76,7 +76,26 @@ Do not reuse P012 for another expression error without renaming one side.
 
 | Code | Stage | Meaning | Example |
 | --- | --- | --- | --- |
-| C001 | M8/M10 codegen | Invalid AST for current codegen | missing expected `title`, `message`, or `exit_code` |
+| C001 | M8/M10/M10G codegen | Invalid AST or codegen input for current codegen | missing expected `title`, `message`, or `exit_code`; string too long for PE template |
+
+## M10G Error Routing
+
+M10G writes stage-specific error files:
+
+```text
+Build\Errors\<name>.lex.error.txt
+Build\Errors\<name>.parse.error.txt
+Build\Errors\<name>.semantic.error.txt
+Build\Errors\<name>.codegen.error.txt
+```
+
+Examples:
+
+```text
+unknown_variable.semantic.error.txt -> S010
+duplicate_variable.semantic.error.txt -> S001
+broken_plus.parse.error.txt -> P011
+```
 
 ## Notes
 

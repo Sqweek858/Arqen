@@ -1,13 +1,13 @@
 # Single `arqc` Driver Plan
 
-Status: plan only
+Status: implemented in M10G as `Tools\arqc_m10g.exe`
 
-Do not implement this until approved as a separate milestone.
+M10G implemented the first single-driver workflow without adding language syntax.
 
-Suggested milestone:
+Completed milestone:
 
 ```text
-M10G_SingleDriver
+M10G_CorePipelineUpgrade
 ```
 
 ## Goal
@@ -24,6 +24,12 @@ Desired future command:
 
 ```text
 arqc hello.arq
+```
+
+Current M10G command:
+
+```powershell
+.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq
 ```
 
 Expected output:
@@ -87,19 +93,23 @@ The driver should:
 - Running sub-tools requires either process creation or merging stages.
 - A full merge may be too much before generic parser work.
 
-## Safer M10G Approach
+## Implemented M10G Approach
 
-For first single-driver milestone:
+Current:
 
 ```text
-arqc_m10g.exe hello_m10.arq
+arqc_m10g.exe Samples\hello_m10.arq
 ```
 
-Allowed shortcut:
+Implemented:
 
-- copy input to the current fixed `m10.arq`
-- run equivalent stage logic internally or emit fixed temp files
-- produce `hello_m10.exe`
+- accepts an input `.arq` path
+- supports `-o custom.exe`
+- writes stable tokens to `Build\Tokens`
+- writes stable AST to `Build\AST`
+- writes output exe to `Build\EXE`
+- writes errors to `Build\Errors`
+- writes logs to `Build\Logs`
 
 Not allowed in M10G:
 
@@ -111,8 +121,8 @@ Not allowed in M10G:
 ## Pass Criteria
 
 ```text
-arqc_m10g.exe Samples\hello_m10.arq
--> Samples\hello_m10.exe
+Tools\arqc_m10g.exe Samples\hello_m10.arq
+-> Build\EXE\hello_m10.exe
 -> MessageBoxW title "Arqen Byte Zero"
 -> MessageBoxW text "Hello, Sqweek"
 -> exit 0

@@ -18,6 +18,7 @@ unknown     not enough evidence yet
 
 | File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `arqc_m10g.exe` | `Tools` | M10G | compiler stage | Single driver: lexes, parses, checks semantics, and generates exe | any M10 `.arq` file | `Build\Tokens`, `Build\AST`, `Build\EXE`, `Build\Errors`, `Build\Logs` | `.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq` | yes | no | known-good | Bootstrap .NET tool; normal current workflow |
 | `arq_lexer_m10_tokens.exe` | `Experiments\M10_SimpleExpressions` | M10 | compiler stage | Lexes M10 source | `m10.arq` | `m10.tokens.txt` | `.\arq_lexer_m10_tokens.exe` | yes | no | known-good | Latest lexer artifact |
 | `arq_parser_m10.exe` | `Experiments\M10_SimpleExpressions` | M10 | compiler stage | Parses M10 token dump and folds message expression | `m10.tokens.txt` | `m10.ast.txt` or `arqen_m10_error.txt` | `.\arq_parser_m10.exe` | yes | no | known-good | Target-shaped but passing |
 | `arqc_m10.exe` | `Experiments\M10_SimpleExpressions` | M10 | compiler stage | Generates MessageBox PE from AST | `m10.ast.txt`, `template_messagebox_m8.exe` | `m10.exe` | `.\arqc_m10.exe` | yes | no | known-good | Fixed-path bootstrap codegen |
@@ -91,9 +92,9 @@ C:\Users\Sqweek\Documents\Arqen\Codex
 If you only want the latest working pipeline, use:
 
 ```powershell
-cd C:\Users\Sqweek\Documents\Arqen\Arqen\Experiments\M10_SimpleExpressions
-.\arq_lexer_m10_tokens.exe
-.\arq_parser_m10.exe
-.\arqc_m10.exe
-.\m10.exe
+cd C:\Users\Sqweek\Documents\Arqen\Arqen
+.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq
+.\Build\EXE\hello_m10.exe
 ```
+
+The old M10 manual stages remain available for debugging.

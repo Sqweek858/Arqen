@@ -1,6 +1,6 @@
 # Token Dump Format
 
-Status: bootstrap contract
+Status: bootstrap contract, implemented by M10G driver
 
 ## Purpose
 
@@ -60,9 +60,9 @@ Current bool note:
 true is currently emitted as KEYWORD(true), not BOOL(true).
 ```
 
-## Stable Target Format
+## Stable M10G Format
 
-Future lexer/parser tools should move toward this stable format:
+M10G emits this stable format:
 
 ```text
 TYPE|VALUE|LINE|COLUMN
@@ -78,7 +78,7 @@ PLUS|+|8|24
 INT|0|9|6
 BOOL|true|5|15
 NEWLINE||1|14
-EOF|||12|1
+EOF||12|1
 ```
 
 ## Stable Format Rules
@@ -87,10 +87,25 @@ EOF|||12|1
 - Exactly four fields per token line.
 - Empty value is represented as an empty field.
 - Empty line/column is allowed only for legacy EOF, but future EOF should carry a location.
-- Values containing `|`, CR, or LF are forbidden for now.
+- Values escape `\`, `|`, CR, and LF.
 - Strings are stored without surrounding quotes.
-- Escape support is not implemented yet.
 - Line and column are decimal integers, 1-based.
+
+Escapes:
+
+```text
+\\ = literal backslash
+\p = literal |
+\r = carriage return
+\n = line feed
+```
+
+Current M10G boolean token:
+
+```text
+BOOL|true|5|15
+BOOL|false|5|15
+```
 
 ## Parser Contract
 
@@ -111,13 +126,14 @@ find "KEYWORD(message) line"
 
 ## Migration TODO
 
-M10F documents the stable target format but does not rewrite the parser.
+M10G implements the stable format in the single driver path.
+
+The older M10 manual lexer still emits the historical human format.
 
 Suggested future milestone:
 
 ```text
 M10R_GenericParser:
-lexer emits TYPE|VALUE|LINE|COLUMN
-parser consumes stable token fields
+manual lexer/parser tools migrate to TYPE|VALUE|LINE|COLUMN
 old human format becomes debug-only
 ```

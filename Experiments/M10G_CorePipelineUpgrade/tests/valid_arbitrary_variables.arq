@@ -1,0 +1,10 @@
+program "Hello"
+
+let userName be "Sqweek"
+let greeting be "Hello"
+
+title "Arqen Byte Zero"
+message text greeting + ", " + userName
+exit 0
+
+end program "Hello"

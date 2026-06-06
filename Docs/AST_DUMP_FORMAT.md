@@ -1,6 +1,6 @@
 # AST Dump Format
 
-Status: bootstrap contract
+Status: bootstrap contract, stable M10G format implemented
 
 ## Purpose
 
@@ -130,3 +130,42 @@ parser builds generalized AST records
 AST dump remains debug output
 codegen consumes structured AST fields
 ```
+
+## Stable M10G AST Format
+
+M10G emits and consumes a stable line format:
+
+```text
+NODE|FIELD|FIELD...
+```
+
+Example:
+
+```text
+PROGRAM|Hello
+LET|userName|text|Sqweek
+LET|greeting|text|Hello
+TITLE|Arqen Byte Zero
+MESSAGE|Hello, Sqweek
+MESSAGE_EXPR|plus(plus(var(greeting),str(", ")),var(userName))
+EXIT|0
+SEMANTIC|OK
+```
+
+M10G codegen consumes:
+
+- `TITLE`
+- `MESSAGE`
+- `EXIT`
+- `SEMANTIC`
+
+M10G escaping matches the token dump escaping:
+
+```text
+\\ = literal backslash
+\p = literal |
+\r = carriage return
+\n = line feed
+```
+
+Older manual M8/M10 codegen still consumes the historical human-readable AST shape.

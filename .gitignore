@@ -1,0 +1,13 @@
+/Build/Tokens/*
+/Build/AST/*
+/Build/EXE/*
+/Build/Errors/*
+/Build/Logs/*
+!/Build/Tokens/.gitkeep
+!/Build/AST/.gitkeep
+!/Build/EXE/.gitkeep
+!/Build/Errors/.gitkeep
+!/Build/Logs/.gitkeep
+/Tools/M10GDriver/bin/
+/Tools/M10GDriver/obj/
+/Tools/M10GDriver/publish/

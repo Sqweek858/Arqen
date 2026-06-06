@@ -24,16 +24,12 @@ end program "Hello"
 
 ## How To Compile Today
 
-M10 still uses fixed-path bootstrap tools, so copy the sample into the M10 experiment input:
+Current normal workflow:
 
 ```powershell
 cd C:\Users\Sqweek\Documents\Arqen\Arqen
-Copy-Item .\Samples\hello_m10.arq .\Experiments\M10_SimpleExpressions\m10.arq -Force
-cd .\Experiments\M10_SimpleExpressions
-.\arq_lexer_m10_tokens.exe
-.\arq_parser_m10.exe
-.\arqc_m10.exe
-.\m10.exe
+.\Tools\arqc_m10g.exe .\Samples\hello_m10.arq
+.\Build\EXE\hello_m10.exe
 ```
 
 Expected output:
@@ -46,8 +42,14 @@ Exit code: 0
 
 ## Current Limitations
 
-- No single `arqc hello_m10.arq` driver yet.
+- Current driver is `Tools\arqc_m10g.exe`, not final `arqc.exe`.
 - `let` values are literals only.
 - `message text` is the only expression-enabled field.
 - `+` supports text concatenation only.
 - No if/else, functions, loops, UI/window/style, or non-zero exit code support yet.
+
+Debug-only old M10 manual stages remain in:
+
+```text
+Experiments\M10_SimpleExpressions
+```

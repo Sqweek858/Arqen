@@ -148,6 +148,48 @@ function Run-M10-Fixtures {
     return ($ok -eq 6)
 }
 
+function Run-M10G-Driver-Tests {
+    $driver = Join-Path $RepoRoot "Tools\arqc_m10g.exe"
+    $tests = Join-Path $Experiments "M10G_CorePipelineUpgrade\tests"
+
+    $sampleExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10g.exe" @(".\Samples\hello_m10.arq")
+    Add-Check "M10G_DRIVER_SAMPLE" ($sampleExit -eq 0 -and (Test-Path (Join-Path $RepoRoot "Build\EXE\hello_m10.exe")))
+    Check-Ui "M10G_OUT" (Join-Path $RepoRoot "Build\EXE") ".\hello_m10.exe"
+
+    $cases = @(
+        @{ Name = "M10G_VALID_NAME"; File = "valid_name_concat.arq"; Want = "OK"; Message = "Hello, Sqweek" },
+        @{ Name = "M10G_VALID_STRING"; File = "valid_string_concat.arq"; Want = "OK"; Message = "Hello from M10" },
+        @{ Name = "M10G_ARBITRARY_VARS"; File = "valid_arbitrary_variables.arq"; Want = "OK"; Message = "Hello, Sqweek" },
+        @{ Name = "M10G_UNKNOWN_VAR"; File = "unknown_variable.arq"; Want = "S010"; Stage = "semantic" },
+        @{ Name = "M10G_DUPLICATE_VAR"; File = "duplicate_variable.arq"; Want = "S001"; Stage = "semantic" },
+        @{ Name = "M10G_BOOL_MISMATCH"; File = "type_mismatch_bool.arq"; Want = "S011"; Stage = "semantic" },
+        @{ Name = "M10G_MESSAGE_TEXT_TYPE"; File = "message_expects_text.arq"; Want = "S012"; Stage = "semantic" },
+        @{ Name = "M10G_BROKEN_PLUS"; File = "broken_plus.arq"; Want = "P011"; Stage = "parse" }
+    )
+
+    foreach ($case in $cases) {
+        $input = Join-Path $tests $case.File
+        $stem = [System.IO.Path]::GetFileNameWithoutExtension($input)
+        $exit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10g.exe" @($input)
+
+        if ($case.Want -eq "OK") {
+            $astPath = Join-Path $RepoRoot "Build\AST\$stem.ast"
+            $ast = ""
+            if (Test-Path $astPath) {
+                $ast = Get-Content $astPath -Raw
+            }
+            Add-Check $case.Name ($exit -eq 0 -and $ast.Contains("MESSAGE|$($case.Message)"))
+        } else {
+            $errPath = Join-Path $RepoRoot "Build\Errors\$stem.$($case.Stage).error.txt"
+            $err = ""
+            if (Test-Path $errPath) {
+                $err = Get-Content $errPath -Raw
+            }
+            Add-Check $case.Name ($exit -eq 1 -and $err.Contains("Error $($case.Want)"))
+        }
+    }
+}
+
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
 
@@ -222,6 +264,8 @@ if ($fixturesOk) {
     Write-Host "M10_FIXTURES FAIL"
     $script:Failures += "M10_FIXTURES"
 }
+
+Run-M10G-Driver-Tests
 
 Write-Host ""
 Write-Host ("Total: {0}/{1} passed" -f $script:Passed, $script:Total)
