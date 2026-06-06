@@ -1,0 +1,2 @@
+kernel32.dll|ExitProcess|required
+user32.dll|MessageBoxW|required

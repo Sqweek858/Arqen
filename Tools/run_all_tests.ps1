@@ -9,6 +9,7 @@ $Experiments = Join-Path $RepoRoot "Experiments"
 $script:Total = 0
 $script:Passed = 0
 $script:Failures = @()
+$script:StructuredResults = @()
 
 function Add-Check {
     param(
@@ -18,11 +19,14 @@ function Add-Check {
     )
 
     $script:Total += 1
+    $group = if ($Name.StartsWith("M10JK")) { "M10JK" } else { "REGRESSION" }
     if ($Pass) {
         $script:Passed += 1
+        $script:StructuredResults += "PASS|$group|$Name"
         Write-Host ("{0} PASS {1}" -f $Name, $Note)
     } else {
         $script:Failures += "$Name $Note"
+        $script:StructuredResults += "FAIL|$group|$Name|$Note"
         Write-Host ("{0} FAIL {1}" -f $Name, $Note)
     }
 }
@@ -68,7 +72,6 @@ function Invoke-UiExe {
             Start-Sleep -Milliseconds 100
             $ws.SendKeys("{ENTER}")
             $sentEnter = $true
-            break
         } else {
             foreach ($title in $Titles) {
                 if ($title.Length -lt 8) {
@@ -87,7 +90,6 @@ function Invoke-UiExe {
             $ws.SendKeys("{ENTER}")
             $sentEnter = $true
         }
-        if ($activated) { break }
     }
 
     $proc.WaitForExit(5000) | Out-Null
@@ -299,6 +301,101 @@ function Run-M10I-Backend-Tests {
     Check-Ui "M10I_BACKEND_OUT" (Join-Path $RepoRoot "Build\EXE") ".\hello_m10_from_ir.exe"
 }
 
+function Test-Pe-Signature {
+    param([string]$Path)
+
+    if (-not (Test-Path $Path)) {
+        return $false
+    }
+    $bytes = [IO.File]::ReadAllBytes($Path)
+    if ($bytes.Length -lt 0x100) {
+        return $false
+    }
+    if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) {
+        return $false
+    }
+    $pe = [BitConverter]::ToUInt32($bytes, 0x3C)
+    if (($pe + 4) -ge $bytes.Length) {
+        return $false
+    }
+    return ([BitConverter]::ToUInt32($bytes, $pe) -eq 0x00004550)
+}
+
+function Manifest-Has {
+    param(
+        [string]$Path,
+        [string]$Needle
+    )
+
+    if (-not (Test-Path $Path)) {
+        return $false
+    }
+    return (Get-Content $Path -Raw).Contains($Needle)
+}
+
+function Run-M10JK-Tests {
+    Write-Host ""
+    Write-Host "M10JK build/backend hardening tests"
+
+    $driver = Join-Path $RepoRoot "Tools\arqc_m10jk.ps1"
+    $backendTests = Join-Path $RepoRoot "Tests\Backend\WindowsX64PE"
+    Add-Check "M10JK_DRIVER_EXISTS" (Test-Path $driver)
+
+    $sampleExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Samples\hello_m10.arq")
+    $sampleExe = Join-Path $RepoRoot "Build\EXE\hello_m10.exe"
+    $sampleManifest = Join-Path $RepoRoot "Build\Manifests\hello_m10.build.txt"
+    $sampleLexStage = Join-Path $RepoRoot "Build\Manifests\hello_m10.lex.stage.txt"
+    $sampleParseStage = Join-Path $RepoRoot "Build\Manifests\hello_m10.parse.stage.txt"
+    $sampleBackendStage = Join-Path $RepoRoot "Build\Manifests\hello_m10.backend.stage.txt"
+    $sampleCodegenStage = Join-Path $RepoRoot "Build\Manifests\hello_m10.codegen.stage.txt"
+    $sampleArtifactIndex = Join-Path $RepoRoot "Build\artifact_index.txt"
+    Add-Check "M10JK_VALID_BUILD" ($sampleExit -eq 0 -and (Test-Path $sampleExe) -and (Test-Path $sampleManifest))
+    Add-Check "M10JK_VALID_MANIFEST" ((Manifest-Has $sampleManifest "STATUS|success") -and (Manifest-Has $sampleManifest "COMPILER_VERSION|0.10.0-bootstrap") -and (Manifest-Has $sampleManifest "SOURCE_HASH|"))
+    Add-Check "M10JK_STAGE_MANIFESTS" ((Test-Path $sampleLexStage) -and (Test-Path $sampleParseStage) -and (Test-Path $sampleBackendStage) -and (Test-Path $sampleCodegenStage) -and (Manifest-Has $sampleBackendStage "STATUS|pass") -and (Manifest-Has $sampleCodegenStage "STATUS|skipped"))
+    Add-Check "M10JK_PE_SIGNATURE" (Test-Pe-Signature $sampleExe)
+    Add-Check "M10JK_ARTIFACT_INDEX" ((Test-Path $sampleArtifactIndex) -and (Get-Content $sampleArtifactIndex -Raw).Contains("ARTIFACT|Build/EXE/hello_m10.exe"))
+    Check-Ui "M10JK_VALID_EXE" (Join-Path $RepoRoot "Build\EXE") ".\hello_m10.exe"
+
+    $unknownExe = Join-Path $RepoRoot "Build\EXE\invalid_unknown_variable.exe"
+    Remove-Item $unknownExe -Force -ErrorAction SilentlyContinue
+    $unknownExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Backend\WindowsX64PE\invalid_unknown_variable.arq")
+    $unknownManifest = Join-Path $RepoRoot "Build\Manifests\invalid_unknown_variable.build.txt"
+    Add-Check "M10JK_UNKNOWN_VARIABLE" ($unknownExit -ne 0 -and -not (Test-Path $unknownExe) -and (Manifest-Has $unknownManifest "STATUS|failure") -and (Manifest-Has $unknownManifest "FAILED_STAGE|semantic"))
+
+    $plusExe = Join-Path $RepoRoot "Build\EXE\invalid_broken_plus.exe"
+    Remove-Item $plusExe -Force -ErrorAction SilentlyContinue
+    $plusExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Backend\WindowsX64PE\invalid_broken_plus.arq")
+    $plusManifest = Join-Path $RepoRoot "Build\Manifests\invalid_broken_plus.build.txt"
+    Add-Check "M10JK_BROKEN_PLUS" ($plusExit -ne 0 -and -not (Test-Path $plusExe) -and (Manifest-Has $plusManifest "FAILED_STAGE|parser"))
+
+    $badCharExe = Join-Path $RepoRoot "Build\EXE\invalid_bad_char.exe"
+    Remove-Item $badCharExe -Force -ErrorAction SilentlyContinue
+    $badCharExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Backend\WindowsX64PE\invalid_bad_char.arq")
+    $badCharManifest = Join-Path $RepoRoot "Build\Manifests\invalid_bad_char.build.txt"
+    Add-Check "M10JK_BAD_CHAR" ($badCharExit -ne 0 -and -not (Test-Path $badCharExe) -and (Manifest-Has $badCharManifest "FAILED_STAGE|lexer"))
+
+    $longExe = Join-Path $RepoRoot "Build\EXE\invalid_too_long_string.exe"
+    Remove-Item $longExe -Force -ErrorAction SilentlyContinue
+    $longExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Backend\WindowsX64PE\invalid_too_long_string.arq")
+    $longManifest = Join-Path $RepoRoot "Build\Manifests\invalid_too_long_string.build.txt"
+    $longError = Join-Path $RepoRoot "Build\Errors\invalid_too_long_string.backend.error.txt"
+    Add-Check "M10JK_TOO_LONG_STRING" ($longExit -ne 0 -and -not (Test-Path $longExe) -and (Manifest-Has $longManifest "FAILED_STAGE|backend") -and (Manifest-Has $longManifest "ERROR_PATH|Build/Errors/invalid_too_long_string.backend.error.txt") -and (Manifest-Has $longError "B003"))
+
+    $unsupportedExe = Join-Path $RepoRoot "Build\EXE\invalid_unsupported_action.exe"
+    Remove-Item $unsupportedExe -Force -ErrorAction SilentlyContinue
+    $unsupportedExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @("--backend-only", ".\Tests\Backend\WindowsX64PE\invalid_unsupported_action.arqir", "-o", ".\Build\EXE\invalid_unsupported_action.exe")
+    $unsupportedManifest = Join-Path $RepoRoot "Build\Manifests\invalid_unsupported_action.build.txt"
+    $unsupportedError = Join-Path $RepoRoot "Build\Errors\invalid_unsupported_action.backend.error.txt"
+    Add-Check "M10JK_UNSUPPORTED_ACTION" ($unsupportedExit -ne 0 -and -not (Test-Path $unsupportedExe) -and (Manifest-Has $unsupportedManifest "FAILED_STAGE|backend") -and (Manifest-Has $unsupportedError "B001"))
+
+    $templateExe = Join-Path $RepoRoot "Build\EXE\valid_template_failure.exe"
+    Remove-Item $templateExe -Force -ErrorAction SilentlyContinue
+    $templateExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\Backend\WindowsX64PE\valid_template_failure.arq", "--template", ".\Backends\WindowsX64PE\Templates\missing_template.exe")
+    $templateManifest = Join-Path $RepoRoot "Build\Manifests\valid_template_failure.build.txt"
+    $templateError = Join-Path $RepoRoot "Build\Errors\valid_template_failure.backend.error.txt"
+    Add-Check "M10JK_TEMPLATE_FAILURE" ($templateExit -ne 0 -and -not (Test-Path $templateExe) -and (Manifest-Has $templateManifest "FAILED_STAGE|backend") -and (Manifest-Has $templateError "B002"))
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -381,11 +478,20 @@ Run-Command-Tests
 
 Run-M10I-Backend-Tests
 
+Run-M10JK-Tests
+
 Write-Host ""
 Write-Host "=== Regression summary ==="
 
 Write-Host ""
 Write-Host ("Total: {0}/{1} passed" -f $script:Passed, $script:Total)
+
+$testResultsPath = Join-Path $RepoRoot "Build\Logs\test_results.txt"
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $testResultsPath) | Out-Null
+$script:StructuredResults += "TOTAL|$script:Total"
+$script:StructuredResults += "PASSED|$script:Passed"
+$script:StructuredResults += "FAILED|$($script:Total - $script:Passed)"
+Set-Content -Path $testResultsPath -Value $script:StructuredResults -Encoding UTF8
 
 if ($script:Failures.Count -gt 0) {
     Write-Host "Failures:"

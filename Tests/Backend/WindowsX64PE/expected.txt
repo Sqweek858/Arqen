@@ -1,0 +1,6 @@
+valid_show_message_exit.arq|0|success|
+invalid_unknown_variable.arq|1|failure|semantic
+invalid_broken_plus.arq|1|failure|parser
+invalid_bad_char.arq|1|failure|lexer
+invalid_too_long_string.arq|1|failure|backend|B003
+invalid_unsupported_action.arqir|1|failure|backend|B001
