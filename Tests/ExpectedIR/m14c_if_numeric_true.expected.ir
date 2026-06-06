@@ -1,0 +1,4 @@
+RULE_ID|if_statement
+COMMAND_ID|if_compile_time
+EXPECT_CONTAINS|value=high
+EXPECT_NOT_CONTAINS|value=low

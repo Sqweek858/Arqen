@@ -1,0 +1,7 @@
+program "BadFloat"
+
+define float called "speed" be string "fast"
+
+blend mix to code 0
+
+end program "BadFloat"

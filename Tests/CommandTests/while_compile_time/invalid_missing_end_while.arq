@@ -1,0 +1,10 @@
+program "WhileMissingEnd"
+
+define int called "score" be 1
+
+while "score" > 0
+print "score"
+
+blend mix to code 0
+
+end program "WhileMissingEnd"

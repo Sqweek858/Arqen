@@ -1,0 +1,8 @@
+program "M14CConstRead"
+
+define const int called "MaxScore" be 10
+print "MaxScore"
+
+blend mix to code 0
+
+end program "M14CConstRead"

@@ -1,0 +1,16 @@
+program "LogicalOrNot"
+
+define int called "score" be 0
+define bool called "alive" be false
+
+if "score" > 0 or "alive" is false
+print string "at least one"
+end if
+
+if not "alive"
+print string "dead"
+end if
+
+blend mix to code 0
+
+end program "LogicalOrNot"

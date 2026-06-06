@@ -1,0 +1,8 @@
+program "DivisionByZero"
+
+define int called "score" be 1
+set "score" to 1 / 0
+
+blend mix to code 0
+
+end program "DivisionByZero"

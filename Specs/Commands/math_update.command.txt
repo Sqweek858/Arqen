@@ -1,0 +1,11 @@
+COMMAND_ID|math_update
+CANONICAL|add/remove/multiply/divide numeric expressions
+CATEGORY|mutation
+TOKENS|KEYWORD(add) KEYWORD(remove) KEYWORD(from) KEYWORD(multiply) KEYWORD(by) KEYWORD(divide) EXPRESSION STRING
+AST_NODE|MathUpdate
+SEMANTIC|updates existing non-const numeric symbol
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\math_update\valid_math_updates.arq
+INVALID_TEST|Tests\CommandTests\math_update\invalid_division_by_zero.arq
+STATUS|stable

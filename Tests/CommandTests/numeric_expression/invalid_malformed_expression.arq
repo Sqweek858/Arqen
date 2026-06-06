@@ -1,0 +1,8 @@
+program "MalformedExpression"
+
+define int called "score" be 0
+set "score" to 2 + * 3
+
+blend mix to code 0
+
+end program "MalformedExpression"

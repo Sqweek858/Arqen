@@ -1,0 +1,8 @@
+program "RenameConst"
+
+define const int called "MaxScore" be 10
+rename "MaxScore" to "Other"
+
+blend mix to code 0
+
+end program "RenameConst"

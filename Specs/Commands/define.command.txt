@@ -1,7 +1,7 @@
 COMMAND_ID|define
 CANONICAL|define <type> called "<name>" be <literal>
 CATEGORY|declaration
-TOKENS|KEYWORD(define) KEYWORD(string) KEYWORD(int) KEYWORD(bool) KEYWORD(var) KEYWORD(called) STRING KEYWORD(be) VALUE
+TOKENS|KEYWORD(define) KEYWORD(const) KEYWORD(string) KEYWORD(int) KEYWORD(float) KEYWORD(double) KEYWORD(bool) KEYWORD(var) KEYWORD(called) STRING KEYWORD(be) VALUE
 AST_NODE|Define
 SEMANTIC|creates typed compile-time symbol; reject duplicate names and invalid literal types
 IR|none

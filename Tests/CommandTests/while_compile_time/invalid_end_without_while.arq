@@ -1,0 +1,7 @@
+program "EndWithoutWhile"
+
+end while
+
+blend mix to code 0
+
+end program "EndWithoutWhile"

@@ -1,0 +1,12 @@
+program "M14CWhileCountdown"
+
+define int called "score" be 3
+
+while "score" > 0
+print "score"
+remove 1 from "score"
+end while
+
+blend mix to code 0
+
+end program "M14CWhileCountdown"

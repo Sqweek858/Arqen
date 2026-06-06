@@ -1,0 +1,8 @@
+program "M14CPrintSymbol"
+
+define string called "name" be string "Sqweek"
+print "name"
+
+blend mix to code 0
+
+end program "M14CPrintSymbol"

@@ -1,0 +1,11 @@
+COMMAND_ID|function
+CANONICAL|define function called "<name>"
+CATEGORY|control
+TOKENS|KEYWORD(define) KEYWORD(function) KEYWORD(called) STRING KEYWORD(call)
+AST_NODE|Function
+SEMANTIC|stores no-parameter function body and inlines it at call site
+IR|show_message.text
+BACKEND|WindowsX64PE.show_message
+VALID_TEST|Tests\CommandTests\function\valid_simple_function.arq
+INVALID_TEST|Tests\CommandTests\function\invalid_call_missing.arq;Tests\CommandTests\function\invalid_duplicate_function.arq
+STATUS|stable

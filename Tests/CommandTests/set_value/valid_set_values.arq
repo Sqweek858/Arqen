@@ -1,0 +1,17 @@
+program "SetValues"
+
+define string called "name" be string "Sqweek"
+define int called "score" be 0
+define bool called "alive" be true
+
+set "name" to string "Arqen"
+set "score" to 2 + 3 * 4
+set "alive" to false
+
+print "name"
+print "score"
+print "alive"
+
+blend mix to code 0
+
+end program "SetValues"

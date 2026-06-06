@@ -986,6 +986,49 @@ function Run-M14A-Tests {
     Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
 }
 
+function Run-M14C-Tests {
+    Write-Host ""
+    Write-Host "M14C usable canonical language slice tests"
+
+    $printExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\print\valid_print_values.arq", "--rebuild")
+    $printIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_print_values.arqir") -Raw
+    Add-Check "M14C_print_values" ($printExit -eq 0 -and $printIr.Contains("value=Hi\nSqweek\n10\ntrue"))
+
+    $setExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\set_value\valid_set_values.arq", "--rebuild")
+    $setIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_set_values.arqir") -Raw
+    Add-Check "M14C_set_values" ($setExit -eq 0 -and $setIr.Contains("value=Arqen\n14\nfalse"))
+
+    $numericExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\numeric_expression\valid_precedence.arq", "--rebuild")
+    $numericIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_precedence.arqir") -Raw
+    Add-Check "M14C_numeric_precedence" ($numericExit -eq 0 -and $numericIr.Contains("value=14\n20\n5\n8\n1"))
+
+    $whileExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\while_compile_time\valid_countdown.arq", "--rebuild")
+    $whileIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_countdown.arqir") -Raw
+    Add-Check "M14C_while_countdown" ($whileExit -eq 0 -and $whileIr.Contains("value=3\n2\n1"))
+
+    $functionExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\function\valid_simple_function.arq", "--rebuild")
+    $functionIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_simple_function.arqir") -Raw
+    Add-Check "M14C_function_call" ($functionExit -eq 0 -and $functionIr.Contains("value=Hello, Sqweek"))
+
+    Run-M13-InvalidCase "M14C_set_const_error" ".\Tests\CommandTests\set_value\invalid_set_const.arq" "S053" "semantic"
+    Run-M13-InvalidCase "M14C_while_guard_error" ".\Tests\CommandTests\while_compile_time\invalid_guard_exceeded.arq" "S047" "semantic"
+    Run-M13-InvalidCase "M14C_recursive_function_error" ".\Tests\CommandTests\function\invalid_recursive_call.arq" "S051" "semantic"
+    Run-M13-InvalidCase "M14C_division_by_zero_error" ".\Tests\CommandTests\numeric_expression\invalid_division_by_zero.arq" "S046" "semantic"
+    Run-M13-InvalidCase "M14C_rename_const_error" ".\Tests\CommandTests\rename\invalid_rename_const.arq" "S039" "semantic"
+
+    $expectedIrExit = Invoke-Stage $RepoRoot "powershell" @("-ExecutionPolicy", "Bypass", "-File", ".\Tools\verify_expected_ir.ps1")
+    $expectedIrText = Get-Content (Join-Path $RepoRoot "Build\Generated\expected_ir_validation.txt") -Raw
+    Add-Check "M14C_expected_ir" ($expectedIrExit -eq 0 -and $expectedIrText.Contains("PASS|m14c_print_string_literal|") -and $expectedIrText.Contains("PASS|m14c_while_countdown|") -and $expectedIrText.Contains("PASS|m14c_function_call|") -and $expectedIrText.Contains("PASS|m14c_parenthesized_expression|"))
+
+    $mapExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_statement_map.ps1"
+    $mapText = Get-Content (Join-Path $RepoRoot "Build\Generated\parser_statement_map.txt") -Raw
+    Add-Check "M14C_parser_statement_map" ($mapExit -eq 0 -and $mapText.Contains("RULE_ID|print_statement|") -and $mapText.Contains("RULE_ID|set_value_statement|") -and $mapText.Contains("RULE_ID|while_statement|") -and $mapText.Contains("RULE_ID|function_statement|"))
+
+    Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -1087,6 +1130,8 @@ Run-M13-Tests
 Run-M13B-Tests
 
 Run-M14A-Tests
+
+Run-M14C-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

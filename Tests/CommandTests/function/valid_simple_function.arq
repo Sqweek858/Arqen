@@ -1,0 +1,13 @@
+program "SimpleFunction"
+
+define string called "name" be string "Sqweek"
+
+define function called "greet"
+print string "Hello, " + "name"
+end function
+
+call function "greet"
+
+blend mix to code 0
+
+end program "SimpleFunction"

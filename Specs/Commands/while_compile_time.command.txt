@@ -1,0 +1,11 @@
+COMMAND_ID|while_compile_time
+CANONICAL|while <condition>
+CATEGORY|control
+TOKENS|KEYWORD(while) CONDITION
+AST_NODE|WhileCompileTime
+SEMANTIC|evaluates loop at compile time with an iteration guard
+IR|show_message.text
+BACKEND|WindowsX64PE.show_message
+VALID_TEST|Tests\CommandTests\while_compile_time\valid_countdown.arq
+INVALID_TEST|Tests\CommandTests\while_compile_time\invalid_missing_end_while.arq;Tests\CommandTests\while_compile_time\invalid_guard_exceeded.arq
+STATUS|stable

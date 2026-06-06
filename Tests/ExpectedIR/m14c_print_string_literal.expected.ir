@@ -1,0 +1,3 @@
+RULE_ID|print_statement
+COMMAND_ID|print
+EXPECT_CONTAINS|CONST|id=str_1|type=text|value=Hello

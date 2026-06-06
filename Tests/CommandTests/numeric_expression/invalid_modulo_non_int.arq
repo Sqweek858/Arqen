@@ -1,0 +1,8 @@
+program "ModuloNonInt"
+
+define float called "speed" be 4.5
+set "speed" to "speed" % 2
+
+blend mix to code 0
+
+end program "ModuloNonInt"

@@ -1,0 +1,23 @@
+program "NumericExpression"
+
+define int called "a" be 0
+define int called "b" be 0
+define int called "c" be 0
+define int called "d" be 0
+define int called "e" be 0
+
+set "a" to 2 + 3 * 4
+set "b" to (2 + 3) * 4
+set "c" to -5 + 10
+set "d" to 2 ^ 3
+set "e" to 10 % 3
+
+print "a"
+print "b"
+print "c"
+print "d"
+print "e"
+
+blend mix to code 0
+
+end program "NumericExpression"

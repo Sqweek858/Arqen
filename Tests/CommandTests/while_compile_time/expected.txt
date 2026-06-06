@@ -1,0 +1,5 @@
+valid_countdown.arq|0|MESSAGE|3\n2\n1
+invalid_missing_end_while.arq|1|ERROR|P080|parse
+invalid_end_without_while.arq|1|ERROR|P081|parse
+invalid_condition_missing_symbol.arq|1|ERROR|S036|semantic
+invalid_guard_exceeded.arq|1|ERROR|S047|semantic

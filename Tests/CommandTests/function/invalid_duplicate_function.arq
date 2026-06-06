@@ -1,0 +1,13 @@
+program "DuplicateFunction"
+
+define function called "greet"
+print string "one"
+end function
+
+define function called "greet"
+print string "two"
+end function
+
+blend mix to code 0
+
+end program "DuplicateFunction"

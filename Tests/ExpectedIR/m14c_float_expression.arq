@@ -1,0 +1,9 @@
+program "M14CFloatExpression"
+
+define float called "speed" be 4.5
+set "speed" to "speed" + 1.5
+print "speed"
+
+blend mix to code 0
+
+end program "M14CFloatExpression"

@@ -1,0 +1,8 @@
+program "SetIntToString"
+
+define int called "score" be 0
+set "score" to string "bad"
+
+blend mix to code 0
+
+end program "SetIntToString"

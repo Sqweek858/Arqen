@@ -1,0 +1,14 @@
+program "ConstAndDecimal"
+
+define const int called "MaxScore" be 10
+define const string called "GameName" be string "Arqen"
+define const bool called "DebugMode" be true
+define const float called "Gravity" be 9.81
+define const double called "TinyValue" be 0.00001
+
+print "MaxScore"
+print "TinyValue"
+
+blend mix to code 0
+
+end program "ConstAndDecimal"

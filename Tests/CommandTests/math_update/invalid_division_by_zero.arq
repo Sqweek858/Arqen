@@ -1,0 +1,8 @@
+program "MathUpdateDivisionZero"
+
+define int called "score" be 2
+divide "score" by 0
+
+blend mix to code 0
+
+end program "MathUpdateDivisionZero"

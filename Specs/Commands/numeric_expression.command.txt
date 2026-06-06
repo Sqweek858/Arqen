@@ -1,0 +1,11 @@
+COMMAND_ID|numeric_expression
+CANONICAL|numeric arithmetic expression
+CATEGORY|expression
+TOKENS|EXPRESSION
+AST_NODE|NumericExpression
+SEMANTIC|evaluates compile-time numeric expressions with precedence
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\numeric_expression\valid_precedence.arq
+INVALID_TEST|Tests\CommandTests\numeric_expression\invalid_malformed_expression.arq
+STATUS|stable

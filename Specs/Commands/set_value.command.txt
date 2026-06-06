@@ -1,0 +1,11 @@
+COMMAND_ID|set_value
+CANONICAL|set "<name>" to <expression>
+CATEGORY|mutation
+TOKENS|KEYWORD(set) STRING KEYWORD(to) EXPRESSION
+AST_NODE|SetValue
+SEMANTIC|updates existing non-const symbol after type compatibility check
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\set_value\valid_set_values.arq
+INVALID_TEST|Tests\CommandTests\set_value\invalid_set_const.arq;Tests\CommandTests\set_value\invalid_set_missing.arq
+STATUS|stable

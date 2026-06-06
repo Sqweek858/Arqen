@@ -1,0 +1,3 @@
+RULE_ID|while_statement
+COMMAND_ID|while_compile_time
+EXPECT_CONTAINS|value=3\n2\n1

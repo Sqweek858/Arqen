@@ -1,0 +1,3 @@
+valid_math_updates.arq|0|MESSAGE|4
+invalid_division_by_zero.arq|1|ERROR|S046|semantic
+invalid_const_update.arq|1|ERROR|S053|semantic

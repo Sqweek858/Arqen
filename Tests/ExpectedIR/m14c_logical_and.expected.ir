@@ -1,0 +1,3 @@
+RULE_ID|if_statement
+COMMAND_ID|logical_condition
+EXPECT_CONTAINS|value=ok

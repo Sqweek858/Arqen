@@ -1,0 +1,7 @@
+program "M14CPrintLiteral"
+
+print string "Hello"
+
+blend mix to code 0
+
+end program "M14CPrintLiteral"
