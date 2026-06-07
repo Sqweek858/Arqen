@@ -1395,9 +1395,36 @@ function Run-M18A-Tests {
     Add-Check "M18A_window_backend_only" ($windowBackendOnly -eq 0 -and (Test-Path $windowBackendExe) -and (Test-Pe-Signature $windowBackendExe))
 }
 
+
+function Run-M18B-Tests {
+    Write-Host ""
+    Write-Host "M18B compiler boundary / DX12 readiness tests"
+
+    $runtimeExit = Invoke-Stage $RepoRoot ".\Tools\generate_runtime_action_registry.ps1"
+    $runtimeText = Get-Content (Join-Path $RepoRoot "Build\Generated\runtime_action_registry.txt") -Raw
+    Add-Check "M18B_runtime_action_registry" ($runtimeExit -eq 0 -and $runtimeText.Contains("ACTION|window_create|capability=supported") -and $runtimeText.Contains("SUMMARY|actions=") -and $runtimeText.Contains("missingCapabilities=0"))
+
+    $irExit = Invoke-Stage $RepoRoot ".\Tools\validate_ir_contract.ps1"
+    $irText = Get-Content (Join-Path $RepoRoot "Build\Generated\ir_contract_validation.txt") -Raw
+    Add-Check "M18B_ir_contract" ($irExit -eq 0 -and $irText.Contains("PASS|ir_version_0_emitted") -and $irText.Contains("PASS|sample_dx12_ir_rejected"))
+
+    $cacheExit = Invoke-Stage $RepoRoot ".\Tools\validate_wrapper_cache_contract.ps1"
+    $cacheText = Get-Content (Join-Path $RepoRoot "Build\Generated\wrapper_cache_contract_validation.txt") -Raw
+    Add-Check "M18B_wrapper_cache_contract" ($cacheExit -eq 0 -and $cacheText.Contains("PASS|cache_key_backend_config_hash") -and $cacheText.Contains("PASS|cache_artifact_validation"))
+
+    $dx12Exit = Invoke-Stage $RepoRoot ".\Tools\validate_dx12_readiness.ps1"
+    $dx12Text = Get-Content (Join-Path $RepoRoot "Build\Generated\dx12_readiness_validation.txt") -Raw
+    Add-Check "M18B_dx12_readiness_gate" ($dx12Exit -eq 0 -and $dx12Text.Contains("PASS|dx12_reserved_unsupported_dx12") -and $dx12Text.Contains("PASS|runtime_contract_mentions_frame"))
+
+    $contractExit = Invoke-Stage $RepoRoot ".\Tools\validate_backend_contract_docs.ps1"
+    $contractText = Get-Content (Join-Path $RepoRoot "Build\Generated\backend_contract_docs_validation.txt") -Raw
+    Add-Check "M18B_backend_contract_docs" ($contractExit -eq 0 -and $contractText.Contains("PASS|backend_contract_window_current") -and $contractText.Contains("PASS|ir_contract_action_capability_rule"))
+}
+
 Run-M15D-Tests
 Run-M15E-Tests
 Run-M18A-Tests
+Run-M18B-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="
