@@ -1,0 +1,17 @@
+program "ProceduralRandomSeedReset"
+
+set random seed to 77
+
+define double called "first" be 0
+define double called "second" be 0
+
+set "first" to random between 0, 100
+set random seed to 77
+set "second" to random between 0, 100
+
+print "first"
+print "second"
+
+blend mix to code 0
+
+end program "ProceduralRandomSeedReset"

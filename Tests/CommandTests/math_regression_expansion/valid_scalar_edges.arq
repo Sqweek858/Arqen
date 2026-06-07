@@ -1,0 +1,17 @@
+program "RegressionScalarEdges"
+
+define double called "x" be 0
+set "x" to abs -5
+print "x"
+set "x" to clamp -10 between -2 and 2
+print "x"
+set "x" to max min 10, 3, 7
+print "x"
+set "x" to pow 2, 10
+print "x"
+set "x" to round 2.5
+print "x"
+
+blend mix to code 0
+
+end program "RegressionScalarEdges"

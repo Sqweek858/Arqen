@@ -1,0 +1,6 @@
+program "BadNoiseVec4"
+define double called "n" be 0
+set "n" to noise at [1, 2, 3, 4]
+print "n"
+blend mix to code 0
+end program "BadNoiseVec4"

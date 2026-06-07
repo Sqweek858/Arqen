@@ -1,0 +1,7 @@
+program "BadClosestMissingOn"
+define rect called "r" be rect [0, 0] size [1, 1]
+define vec2 called "p" be [0, 0]
+set "p" to closest point rect "r" to [2, 2]
+print "p"
+blend mix to code 0
+end program "BadClosestMissingOn"

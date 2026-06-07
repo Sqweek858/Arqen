@@ -1,0 +1,7 @@
+program "BadRectIntersectsMissing"
+define rect called "r" be rect [0, 0] size [1, 1]
+define bool called "b" be false
+set "b" to rect "r" "r"
+print "b"
+blend mix to code 0
+end program "BadRectIntersectsMissing"

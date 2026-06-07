@@ -1,0 +1,6 @@
+program "BadComplexZeroFromExpr"
+define complex called "z" be complex 1, 1
+set "z" to "z" / complex 0, 0
+print "z"
+blend mix to code 0
+end program "BadComplexZeroFromExpr"

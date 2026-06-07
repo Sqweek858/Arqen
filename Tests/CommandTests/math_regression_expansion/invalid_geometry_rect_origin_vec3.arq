@@ -1,0 +1,5 @@
+program "BadRectOriginVec3"
+define rect called "r" be rect [0, 0, 0] size [1, 1]
+print "r"
+blend mix to code 0
+end program "BadRectOriginVec3"

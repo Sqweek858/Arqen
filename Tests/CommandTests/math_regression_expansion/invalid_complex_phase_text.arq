@@ -1,0 +1,6 @@
+program "BadComplexPhaseText"
+define double called "x" be 0
+set "x" to phase string "bad"
+print "x"
+blend mix to code 0
+end program "BadComplexPhaseText"

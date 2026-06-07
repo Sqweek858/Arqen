@@ -1,0 +1,5 @@
+program "BadVectorTrailingComma"
+define vec2 called "v" be [1, ]
+print "v"
+blend mix to code 0
+end program "BadVectorTrailingComma"

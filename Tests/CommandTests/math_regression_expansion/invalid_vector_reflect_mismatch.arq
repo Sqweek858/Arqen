@@ -1,0 +1,6 @@
+program "BadReflectMismatch"
+define vec2 called "v" be [0, 0]
+set "v" to reflect [1, 0], [0, 1, 0]
+print "v"
+blend mix to code 0
+end program "BadReflectMismatch"

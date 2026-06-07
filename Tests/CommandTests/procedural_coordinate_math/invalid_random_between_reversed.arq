@@ -1,0 +1,6 @@
+program "BadRandomBetweenReversed"
+define double called "x" be 0
+set "x" to random between 10, 0
+print "x"
+blend mix to code 0
+end program "BadRandomBetweenReversed"

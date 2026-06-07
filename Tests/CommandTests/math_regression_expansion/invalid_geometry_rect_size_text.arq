@@ -1,0 +1,5 @@
+program "BadRectSizeText"
+define rect called "r" be rect [0, 0] size string "bad"
+print "r"
+blend mix to code 0
+end program "BadRectSizeText"

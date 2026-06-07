@@ -1,0 +1,6 @@
+program "BadSignedZero"
+define double called "x" be 0
+set "x" to signed angle from [0, 0] to [0, 1]
+print "x"
+blend mix to code 0
+end program "BadSignedZero"

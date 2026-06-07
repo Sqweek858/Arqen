@@ -1,0 +1,5 @@
+program "BadComplexImagText"
+define complex called "z" be complex 1, string "bad"
+print "z"
+blend mix to code 0
+end program "BadComplexImagText"

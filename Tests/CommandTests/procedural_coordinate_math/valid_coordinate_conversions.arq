@@ -1,0 +1,30 @@
+program "CoordinateConversions"
+
+define double called "x" be 0
+define vec2 called "v2" be [0, 0]
+define vec3 called "v3" be [0, 0, 0]
+
+set "x" to radians from degrees 180
+print "x"
+
+set "x" to degrees from radians 3.141592653589793
+print "x"
+
+set "v2" to polar radius 10 angle 90 deg
+print "v2"
+
+set "v3" to spherical radius 10 yaw 90 deg pitch 0 deg
+print "v3"
+
+set "x" to angle between [1, 0, 0], [0, 1, 0]
+print "x"
+
+set "x" to signed angle from [1, 0] to [0, 1]
+print "x"
+
+set "x" to signed angle from [0, 1] to [1, 0]
+print "x"
+
+blend mix to code 0
+
+end program "CoordinateConversions"

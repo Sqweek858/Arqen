@@ -1,0 +1,6 @@
+program "BadRandomIntDecimal"
+define int called "x" be 0
+set "x" to random int between 1.5, 4
+print "x"
+blend mix to code 0
+end program "BadRandomIntDecimal"

@@ -1,0 +1,16 @@
+program "ProceduralNoise"
+
+define double called "n" be 0
+
+set "n" to noise at [1, 2]
+print "n"
+
+set "n" to noise at [1.5, 2.25] seed 123
+print "n"
+
+set "n" to noise at [1, 2, 3] seed 7
+print "n"
+
+blend mix to code 0
+
+end program "ProceduralNoise"

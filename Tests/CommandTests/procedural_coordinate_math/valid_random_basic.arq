@@ -1,0 +1,20 @@
+program "ProceduralRandomBasic"
+
+set random seed to 12345
+
+define double called "a" be 0
+define int called "i" be 0
+define double called "b" be 0
+
+set "a" to random between 0, 1
+print "a"
+
+set "i" to random int between 1, 10
+print "i"
+
+set "b" to random between -1, 1
+print "b"
+
+blend mix to code 0
+
+end program "ProceduralRandomBasic"

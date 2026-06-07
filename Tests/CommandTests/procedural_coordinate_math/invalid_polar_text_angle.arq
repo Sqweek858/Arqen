@@ -1,0 +1,6 @@
+program "BadPolarAngle"
+define vec2 called "p" be [0, 0]
+set "p" to polar radius 1 angle string "bad"
+print "p"
+blend mix to code 0
+end program "BadPolarAngle"

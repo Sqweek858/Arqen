@@ -1,0 +1,6 @@
+program "BadRandomVector2MissingInside"
+define vec2 called "p" be [0, 0]
+set "p" to random vector2 circle radius 5
+print "p"
+blend mix to code 0
+end program "BadRandomVector2MissingInside"

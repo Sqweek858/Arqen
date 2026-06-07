@@ -1,0 +1,6 @@
+program "BadRandomVector3Radius"
+define vec3 called "p" be [0, 0, 0]
+set "p" to random vector3 inside sphere radius -1
+print "p"
+blend mix to code 0
+end program "BadRandomVector3Radius"

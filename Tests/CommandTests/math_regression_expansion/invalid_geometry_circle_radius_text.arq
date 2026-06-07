@@ -1,0 +1,5 @@
+program "BadCircleRadiusText"
+define circle called "c" be circle center [0, 0] radius string "bad"
+print "c"
+blend mix to code 0
+end program "BadCircleRadiusText"

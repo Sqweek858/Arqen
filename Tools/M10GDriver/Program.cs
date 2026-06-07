@@ -2057,6 +2057,7 @@ static class Program
         readonly HashSet<string> _shownWindows = new(StringComparer.Ordinal);
         readonly HashSet<string> _definedEvents = new(StringComparer.Ordinal);
         readonly List<StatementRule> _statementRules;
+        uint _randomState = 0x6D2B79F5u;
         bool _inEvent = false;
         int _pos;
         string? _title;
@@ -2082,6 +2083,7 @@ static class Program
                 new StatementRule(() => IsKeyword("define"), ParseCanonicalDefineStatement),
                 new StatementRule(() => IsKeyword("rename"), ParseRenameStatement),
                 new StatementRule(() => IsKeyword("print"), ParsePrintStatement),
+                new StatementRule(() => IsKeyword("set") && PeekWord("random") && PeekWord("seed", 2), ParseRandomSeedStatement),
                 new StatementRule(() => IsKeyword("title") || IsKeyword("set"), ParseTitleStatement),
                 new StatementRule(() => IsKeyword("message") || IsKeyword("show"), ParseMessageStatement),
                 new StatementRule(() => IsKeyword("write") || IsKeyword("load"), ParseFileIoStatement),
@@ -2357,6 +2359,28 @@ static class Program
                     _finalCommand = "exit";
                 }
             }
+        }
+
+        void ParseRandomSeedStatement(bool apply, bool inIf)
+        {
+            ExpectKeyword("set");
+            ExpectWord("random", "P180", "Expected random after set.");
+            ExpectWord("seed", "P181", "Expected seed after set random.");
+            ExpectKeyword("to");
+            var seed = ParseAddExpression(legacyQuotedStrings: false);
+            ExpectLine();
+
+            if (!apply)
+                return;
+
+            if (!IsNumeric(seed.Type))
+                throw new CompileError("SEMANTIC", "S180", Current.Line, Current.Column, "random seed must be numeric.");
+
+            var value = ToNumber(seed);
+            if (double.IsNaN(value) || double.IsInfinity(value) || Math.Abs(value - Math.Round(value)) > NumericEpsilon || value < 0 || value > uint.MaxValue)
+                throw new CompileError("SEMANTIC", "S180", Current.Line, Current.Column, "random seed must be a non-negative integer within uint range.");
+
+            _randomState = (uint)Math.Round(value);
         }
 
         void ParseTitleStatement(bool apply, bool inIf)
@@ -3797,6 +3821,54 @@ static class Program
             return t * t * t * (t * (t * 6 - 15) + 10);
         }
 
+        static double LerpDouble(double a, double b, double t) => a + (b - a) * t;
+
+        static double Fade01(double value) => SmootherStep01(value);
+
+        static void EnsureFinite(double value, Token token, string code, string message)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                throw new CompileError("SEMANTIC", code, token.Line, token.Column, message);
+        }
+
+        uint NextRandomUInt()
+        {
+            unchecked
+            {
+                _randomState = _randomState * 1664525u + 1013904223u;
+                return _randomState;
+            }
+        }
+
+        double NextRandomUnit() => NextRandomUInt() / 4294967296.0;
+
+        static uint NoiseHash(int x, int y, int z, uint seed)
+        {
+            unchecked
+            {
+                uint h = 2166136261u ^ seed;
+                h = (h ^ (uint)x) * 16777619u;
+                h = (h ^ (uint)y) * 16777619u;
+                h = (h ^ (uint)z) * 16777619u;
+                h ^= h >> 13;
+                h *= 1274126177u;
+                h ^= h >> 16;
+                return h;
+            }
+        }
+
+        static double NoiseHash01(int x, int y, int z, uint seed)
+            => NoiseHash(x, y, z, seed) / 4294967295.0;
+
+        static int CheckedFloorToInt(double value, Token token, string code, string name)
+        {
+            EnsureFinite(value, token, code, $"{name} coordinate must be finite.");
+            var floored = Math.Floor(value);
+            if (floored < int.MinValue || floored > int.MaxValue)
+                throw new CompileError("SEMANTIC", code, token.Line, token.Column, $"{name} coordinate is outside supported noise range.");
+            return (int)floored;
+        }
+
         static string FormatValue(ExprResult expr) => expr.Type == "bool" ? expr.Value.ToLowerInvariant() : expr.Value;
 
         ExprResult ApplyLogical(string op, ExprResult left, ExprResult right)
@@ -4248,6 +4320,258 @@ static class Program
             return new ExprResult("transform", FormatMatrix(matrix), $"compose_transform({position.Repr},{axis},{angle.Repr},{scale.Repr})");
         }
 
+        ExprResult ApplyRandomFunction(Token functionTok, bool legacyQuotedStrings)
+        {
+            if (CurrentWordIs("between"))
+            {
+                Advance();
+                var min = ParseAddExpression(legacyQuotedStrings);
+                Expect("COMMA", "comma between random range values");
+                var max = ParseAddExpression(legacyQuotedStrings);
+                if (!IsNumeric(min.Type) || !IsNumeric(max.Type))
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random between requires numeric range values.");
+                var lo = ToNumber(min);
+                var hi = ToNumber(max);
+                EnsureFinite(lo, functionTok, "S180", "random minimum must be finite.");
+                EnsureFinite(hi, functionTok, "S180", "random maximum must be finite.");
+                if (lo > hi)
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random minimum cannot be greater than maximum.");
+                var result = LerpDouble(lo, hi, NextRandomUnit());
+                return new ExprResult("double", FormatNumber(result, "double"), $"random_between({min.Repr},{max.Repr})");
+            }
+
+            if (CurrentWordIs("int"))
+            {
+                Advance();
+                ExpectWord("between", "P182", "Expected between after random int.");
+                var min = ParseAddExpression(legacyQuotedStrings);
+                Expect("COMMA", "comma between random int range values");
+                var max = ParseAddExpression(legacyQuotedStrings);
+                if (!IsNumeric(min.Type) || !IsNumeric(max.Type))
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random int between requires numeric range values.");
+                var lo = ToNumber(min);
+                var hi = ToNumber(max);
+                EnsureFinite(lo, functionTok, "S180", "random int minimum must be finite.");
+                EnsureFinite(hi, functionTok, "S180", "random int maximum must be finite.");
+                if (Math.Abs(lo - Math.Round(lo)) > NumericEpsilon || Math.Abs(hi - Math.Round(hi)) > NumericEpsilon)
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random int range values must be integers.");
+                var imin = (int)Math.Round(lo);
+                var imax = (int)Math.Round(hi);
+                if (imin > imax)
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random int minimum cannot be greater than maximum.");
+                var span = (long)imax - imin + 1L;
+                if (span <= 0)
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random int range is too large.");
+                var result = imin + (int)Math.Min(span - 1, Math.Floor(NextRandomUnit() * span));
+                return new ExprResult("int", result.ToString(CultureInfo.InvariantCulture), $"random_int({min.Repr},{max.Repr})");
+            }
+
+            if (CurrentWordIs("vector2") || CurrentWordIs("vec2"))
+            {
+                Advance();
+                ExpectWord("inside", "P183", "Expected inside after random vector2.");
+                ExpectWord("circle", "P184", "Expected circle after random vector2 inside.");
+                ExpectWord("radius", "P185", "Expected radius after random vector2 inside circle.");
+                var radius = ParseAddExpression(legacyQuotedStrings);
+                if (!IsNumeric(radius.Type))
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random vector2 radius must be numeric.");
+                var r = ToNumber(radius);
+                EnsureFinite(r, functionTok, "S180", "random vector2 radius must be finite.");
+                if (r < 0)
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random vector2 radius cannot be negative.");
+                var sampleRadius = r * Math.Sqrt(NextRandomUnit());
+                var theta = NextRandomUnit() * Math.PI * 2.0;
+                var result = new[] { Math.Cos(theta) * sampleRadius, Math.Sin(theta) * sampleRadius };
+                return new ExprResult("vec2", FormatVector(result), $"random_vec2_circle({radius.Repr})");
+            }
+
+            if (CurrentWordIs("vector3") || CurrentWordIs("vec3"))
+            {
+                Advance();
+                ExpectWord("inside", "P186", "Expected inside after random vector3.");
+                ExpectWord("sphere", "P187", "Expected sphere after random vector3 inside.");
+                ExpectWord("radius", "P188", "Expected radius after random vector3 inside sphere.");
+                var radius = ParseAddExpression(legacyQuotedStrings);
+                if (!IsNumeric(radius.Type))
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random vector3 radius must be numeric.");
+                var r = ToNumber(radius);
+                EnsureFinite(r, functionTok, "S180", "random vector3 radius must be finite.");
+                if (r < 0)
+                    throw new CompileError("SEMANTIC", "S180", functionTok.Line, functionTok.Column, "random vector3 radius cannot be negative.");
+                var u = NextRandomUnit();
+                var v = NextRandomUnit();
+                var w = NextRandomUnit();
+                var theta = 2.0 * Math.PI * u;
+                var z = 2.0 * v - 1.0;
+                var radial = r * Math.Pow(w, 1.0 / 3.0);
+                var xy = Math.Sqrt(Math.Max(0, 1.0 - z * z));
+                var result = new[] { radial * xy * Math.Cos(theta), radial * xy * Math.Sin(theta), radial * z };
+                return new ExprResult("vec3", FormatVector(result), $"random_vec3_sphere({radius.Repr})");
+            }
+
+            throw new CompileError("PARSE", "P182", Current.Line, Current.Column, "Expected between, int, vector2, or vector3 after random.");
+        }
+
+        ExprResult ApplyNoiseFunction(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("at", "P189", "Expected at after noise.");
+            var point = ParseAddExpression(legacyQuotedStrings);
+            uint seed = 0;
+            if (CurrentWordIs("seed"))
+            {
+                Advance();
+                var seedExpr = ParseAddExpression(legacyQuotedStrings);
+                if (!IsNumeric(seedExpr.Type))
+                    throw new CompileError("SEMANTIC", "S181", functionTok.Line, functionTok.Column, "noise seed must be numeric.");
+                var seedValue = ToNumber(seedExpr);
+                if (double.IsNaN(seedValue) || double.IsInfinity(seedValue) || Math.Abs(seedValue - Math.Round(seedValue)) > NumericEpsilon || seedValue < 0 || seedValue > uint.MaxValue)
+                    throw new CompileError("SEMANTIC", "S181", functionTok.Line, functionTok.Column, "noise seed must be a non-negative integer within uint range.");
+                seed = (uint)Math.Round(seedValue);
+            }
+
+            if (point.Type != "vec2" && point.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S181", functionTok.Line, functionTok.Column, "noise at requires vec2 or vec3 coordinates.");
+
+            var p = ToVector(point);
+            var result = p.Length == 2 ? ValueNoise2D(p[0], p[1], seed, functionTok) : ValueNoise3D(p[0], p[1], p[2], seed, functionTok);
+            return new ExprResult("double", FormatNumber(result, "double"), $"noise({point.Repr},seed={seed})");
+        }
+
+        static double ValueNoise2D(double x, double y, uint seed, Token token)
+        {
+            var x0 = CheckedFloorToInt(x, token, "S181", "noise");
+            var y0 = CheckedFloorToInt(y, token, "S181", "noise");
+            var tx = x - x0;
+            var ty = y - y0;
+            var fx = Fade01(tx);
+            var fy = Fade01(ty);
+            var n00 = NoiseHash01(x0, y0, 0, seed);
+            var n10 = NoiseHash01(x0 + 1, y0, 0, seed);
+            var n01 = NoiseHash01(x0, y0 + 1, 0, seed);
+            var n11 = NoiseHash01(x0 + 1, y0 + 1, 0, seed);
+            return LerpDouble(LerpDouble(n00, n10, fx), LerpDouble(n01, n11, fx), fy);
+        }
+
+        static double ValueNoise3D(double x, double y, double z, uint seed, Token token)
+        {
+            var x0 = CheckedFloorToInt(x, token, "S181", "noise");
+            var y0 = CheckedFloorToInt(y, token, "S181", "noise");
+            var z0 = CheckedFloorToInt(z, token, "S181", "noise");
+            var tx = x - x0;
+            var ty = y - y0;
+            var tz = z - z0;
+            var fx = Fade01(tx);
+            var fy = Fade01(ty);
+            var fz = Fade01(tz);
+            var x00 = LerpDouble(NoiseHash01(x0, y0, z0, seed), NoiseHash01(x0 + 1, y0, z0, seed), fx);
+            var x10 = LerpDouble(NoiseHash01(x0, y0 + 1, z0, seed), NoiseHash01(x0 + 1, y0 + 1, z0, seed), fx);
+            var x01 = LerpDouble(NoiseHash01(x0, y0, z0 + 1, seed), NoiseHash01(x0 + 1, y0, z0 + 1, seed), fx);
+            var x11 = LerpDouble(NoiseHash01(x0, y0 + 1, z0 + 1, seed), NoiseHash01(x0 + 1, y0 + 1, z0 + 1, seed), fx);
+            return LerpDouble(LerpDouble(x00, x10, fy), LerpDouble(x01, x11, fy), fz);
+        }
+
+        ExprResult ApplyRadiansFromDegrees(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("from", "P190", "Expected from after radians.");
+            ExpectWord("degrees", "P191", "Expected degrees after radians from.");
+            var value = ParseAddExpression(legacyQuotedStrings);
+            if (!IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "radians from degrees requires numeric degrees.");
+            var result = ToNumber(value) * Math.PI / 180.0;
+            return new ExprResult("double", FormatNumber(result, "double"), $"radians_from_degrees({value.Repr})");
+        }
+
+        ExprResult ApplyDegreesFromRadians(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("from", "P192", "Expected from after degrees.");
+            ExpectWord("radians", "P193", "Expected radians after degrees from.");
+            var value = ParseAddExpression(legacyQuotedStrings);
+            if (!IsNumeric(value.Type) && !IsAngle(value.Type))
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "degrees from radians requires numeric or angle radians.");
+            var result = ToNumber(value) * 180.0 / Math.PI;
+            return new ExprResult("double", FormatNumber(result, "double"), $"degrees_from_radians({value.Repr})");
+        }
+
+        ExprResult ApplyPolarFunction(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("radius", "P194", "Expected radius after polar.");
+            var radius = ParseAddExpression(legacyQuotedStrings);
+            ExpectWord("angle", "P195", "Expected angle in polar expression.");
+            var angle = ParseAddExpression(legacyQuotedStrings);
+            if (!IsNumeric(radius.Type))
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "polar radius must be numeric.");
+            if (!IsNumeric(angle.Type) && !IsAngle(angle.Type))
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "polar angle must be numeric or angle.");
+            var r = ToNumber(radius);
+            EnsureFinite(r, functionTok, "S182", "polar radius must be finite.");
+            if (r < 0)
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "polar radius cannot be negative.");
+            var a = ToNumber(angle);
+            return new ExprResult("vec2", FormatVector(new[] { r * Math.Cos(a), r * Math.Sin(a) }), $"polar({radius.Repr},{angle.Repr})");
+        }
+
+        ExprResult ApplySphericalFunction(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("radius", "P196", "Expected radius after spherical.");
+            var radius = ParseAddExpression(legacyQuotedStrings);
+            ExpectWord("yaw", "P197", "Expected yaw in spherical expression.");
+            var yaw = ParseAddExpression(legacyQuotedStrings);
+            ExpectWord("pitch", "P198", "Expected pitch in spherical expression.");
+            var pitch = ParseAddExpression(legacyQuotedStrings);
+            if (!IsNumeric(radius.Type))
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "spherical radius must be numeric.");
+            if ((!IsNumeric(yaw.Type) && !IsAngle(yaw.Type)) || (!IsNumeric(pitch.Type) && !IsAngle(pitch.Type)))
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "spherical yaw and pitch must be numeric or angle values.");
+            var r = ToNumber(radius);
+            EnsureFinite(r, functionTok, "S182", "spherical radius must be finite.");
+            if (r < 0)
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "spherical radius cannot be negative.");
+            var y = ToNumber(yaw);
+            var p = ToNumber(pitch);
+            var cp = Math.Cos(p);
+            var result = new[] { r * cp * Math.Cos(y), r * cp * Math.Sin(y), r * Math.Sin(p) };
+            return new ExprResult("vec3", FormatVector(result), $"spherical({radius.Repr},{yaw.Repr},{pitch.Repr})");
+        }
+
+        ExprResult ApplyAngleBetween(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("between", "P199", "Expected between after angle.");
+            var a = ParseAddExpression(legacyQuotedStrings);
+            Expect("COMMA", "comma between angle operands");
+            var b = ParseAddExpression(legacyQuotedStrings);
+            if (!IsVector(a.Type) || !IsVector(b.Type) || a.Type != b.Type)
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "angle between requires matching vector operands.");
+            var av = ToVector(a);
+            var bv = ToVector(b);
+            var al = Math.Sqrt(av.Sum(v => v * v));
+            var bl = Math.Sqrt(bv.Sum(v => v * v));
+            if (al < NumericEpsilon || bl < NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "angle between requires non-zero vectors.");
+            var dot = av.Select((v, i) => v * bv[i]).Sum() / (al * bl);
+            dot = Math.Min(Math.Max(dot, -1), 1);
+            return new ExprResult("double", FormatNumber(Math.Acos(dot), "double"), $"angle_between({a.Repr},{b.Repr})");
+        }
+
+        ExprResult ApplySignedAngle(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("angle", "P200", "Expected angle after signed.");
+            ExpectWord("from", "P201", "Expected from after signed angle.");
+            var from = ParseAddExpression(legacyQuotedStrings);
+            ExpectWord("to", "P202", "Expected to in signed angle expression.");
+            var to = ParseAddExpression(legacyQuotedStrings);
+            if (from.Type != "vec2" || to.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "signed angle requires vec2 operands.");
+            var a = ToVector(from);
+            var b = ToVector(to);
+            var al = Math.Sqrt(a.Sum(v => v * v));
+            var bl = Math.Sqrt(b.Sum(v => v * v));
+            if (al < NumericEpsilon || bl < NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S182", functionTok.Line, functionTok.Column, "signed angle requires non-zero vectors.");
+            var cross = a[0] * b[1] - a[1] * b[0];
+            var dot = a[0] * b[0] + a[1] * b[1];
+            return new ExprResult("double", FormatNumber(Math.Atan2(cross, dot), "double"), $"signed_angle({from.Repr},{to.Repr})");
+        }
+
         static bool IsScalarUnaryFunctionName(string value)
             => value is "abs" or "sqrt" or "floor" or "ceil" or "round" or "sin" or "cos" or "tan" or "log" or "log10" or "exp";
 
@@ -4264,7 +4588,7 @@ static class Program
             => value is "dot" or "cross";
 
         static bool IsAdvancedMathFunctionName(string value)
-            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "smootherstep" or "inverse" or "remap" or "clamped" or "lerp" or "ease" or "distance" or "reflect" or "project" or "clamp" or "translate" or "scale" or "rotate" or "matmul" or "compose" or "slerp" or "euler";
+            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "smootherstep" or "inverse" or "remap" or "clamped" or "lerp" or "ease" or "distance" or "reflect" or "project" or "clamp" or "translate" or "scale" or "rotate" or "matmul" or "compose" or "slerp" or "euler" or "random" or "noise" or "radians" or "degrees" or "polar" or "spherical" or "angle" or "signed";
 
         static bool IsComplexFunctionName(string value)
             => value is "real" or "imag" or "magnitude" or "phase";
@@ -4482,6 +4806,22 @@ static class Program
             var functionTok = Advance();
             switch (functionTok.Value)
             {
+                case "random":
+                    return ApplyRandomFunction(functionTok, legacyQuotedStrings);
+                case "noise":
+                    return ApplyNoiseFunction(functionTok, legacyQuotedStrings);
+                case "radians":
+                    return ApplyRadiansFromDegrees(functionTok, legacyQuotedStrings);
+                case "degrees":
+                    return ApplyDegreesFromRadians(functionTok, legacyQuotedStrings);
+                case "polar":
+                    return ApplyPolarFunction(functionTok, legacyQuotedStrings);
+                case "spherical":
+                    return ApplySphericalFunction(functionTok, legacyQuotedStrings);
+                case "angle":
+                    return ApplyAngleBetween(functionTok, legacyQuotedStrings);
+                case "signed":
+                    return ApplySignedAngle(functionTok, legacyQuotedStrings);
                 case "saturate":
                 case "sign":
                 case "fract":
@@ -5393,6 +5733,15 @@ if (CurrentIs("STRING"))
                 if (!(char.IsLetterOrDigit(value[i]) || value[i] == '_'))
                     return false;
             return true;
+        }
+
+        bool PeekWord(string value)
+            => PeekWord(value, 1);
+
+        bool PeekWord(string value, int offset)
+        {
+            var next = _pos + offset;
+            return next < _tokens.Count && (_tokens[next].Type == "KEYWORD" || _tokens[next].Type == "IDENT") && _tokens[next].Value == value;
         }
 
         bool PeekKeyword(string value)

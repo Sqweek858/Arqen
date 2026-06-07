@@ -1,0 +1,6 @@
+program "BadRemapTextOutput"
+define double called "x" be 0
+set "x" to remap 1 from 0, 10 to string "a", 1
+print "x"
+blend mix to code 0
+end program "BadRemapTextOutput"

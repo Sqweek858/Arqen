@@ -1,0 +1,6 @@
+program "BadClampTextValue"
+define double called "x" be 0
+set "x" to clamp string "a" between 0 and 1
+print "x"
+blend mix to code 0
+end program "BadClampTextValue"

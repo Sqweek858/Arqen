@@ -1,0 +1,11 @@
+COMMAND_ID|procedural_coordinate_math
+CANONICAL|deterministic random noise and coordinate conversion expressions
+CATEGORY|expression
+TOKENS|KEYWORD(set),IDENT(random),IDENT(noise),IDENT(polar),IDENT(spherical),IDENT(angle),IDENT(signed),INT,DECIMAL,COMMA,LBRACKET,RBRACKET
+AST_NODE|ProceduralCoordinateMathExpression
+SEMANTIC|evaluates deterministic random values, deterministic value noise, polar and spherical vectors, radians/degrees conversion, unsigned vector angle, and signed vec2 angle
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\procedural_coordinate_math\valid_random_basic.arq
+INVALID_TEST|Tests\CommandTests\procedural_coordinate_math\invalid_random_between_reversed.arq
+STATUS|experimental

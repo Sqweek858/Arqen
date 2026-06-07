@@ -1,0 +1,6 @@
+program "BadPowTextLeft"
+define double called "x" be 0
+set "x" to pow string "a", 2
+print "x"
+blend mix to code 0
+end program "BadPowTextLeft"

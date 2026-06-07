@@ -1,0 +1,6 @@
+program "BadEulerVec3"
+define vec3 called "v" be [0, 0, 0]
+set "v" to euler from quat [0, 0, 1]
+print "v"
+blend mix to code 0
+end program "BadEulerVec3"

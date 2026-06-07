@@ -1,0 +1,6 @@
+program "BadTranslateVec2"
+define mat4 called "m" be identity
+set "m" to translate [1, 2]
+print "m"
+blend mix to code 0
+end program "BadTranslateVec2"
