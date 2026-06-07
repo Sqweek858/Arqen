@@ -1,0 +1,8 @@
+program "BadInvalidAcosOut"
+
+define double called "x" be 0
+set "x" to acos -2
+
+blend mix to code 0
+
+end program "BadInvalidAcosOut"

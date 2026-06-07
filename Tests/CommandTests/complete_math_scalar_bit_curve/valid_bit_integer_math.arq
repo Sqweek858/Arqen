@@ -1,0 +1,27 @@
+program "BitIntegerMath"
+
+
+define int called "i" be 0
+
+set "i" to bit and 6, 3
+print "i"
+
+set "i" to bit or 4, 1
+print "i"
+
+set "i" to bit xor 6, 3
+print "i"
+
+set "i" to bit not 0
+print "i"
+
+set "i" to shift left 1 by 5
+print "i"
+
+set "i" to shift right 32 by 2
+print "i"
+
+
+blend mix to code 0
+
+end program "BitIntegerMath"

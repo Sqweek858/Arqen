@@ -1,0 +1,8 @@
+program "BadInvalidExp2Non"
+
+define double called "x" be 0
+set "x" to exp2 2000
+
+blend mix to code 0
+
+end program "BadInvalidExp2Non"

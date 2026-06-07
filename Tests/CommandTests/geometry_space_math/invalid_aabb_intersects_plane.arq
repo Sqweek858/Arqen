@@ -1,0 +1,10 @@
+program "BadInvalidAabbIntersects"
+
+define aabb called "b" be aabb center [0,0,0] size [1,1,1]
+define plane called "p" be plane normal [0,1,0] distance 0
+define bool called "hit" be false
+set "hit" to aabb "b" intersects "p"
+
+blend mix to code 0
+
+end program "BadInvalidAabbIntersects"

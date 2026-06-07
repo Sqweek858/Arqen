@@ -1,0 +1,8 @@
+program "BadInvalidComponentText"
+
+define double called "x" be 0
+set "x" to component sum string "bad"
+
+blend mix to code 0
+
+end program "BadInvalidComponentText"

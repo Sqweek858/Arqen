@@ -337,7 +337,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "quat" or "rect" or "circle" or "complex" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "quat" or "rect" or "circle" or "segment" or "line" or "ray" or "sphere" or "aabb" or "plane" or "complex" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -3031,7 +3031,7 @@ static class Program
                 ExpectKeyword("const");
             }
 
-            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "quat" or "rect" or "circle" or "complex" or "color" or "angle" or "var"))
+            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "quat" or "rect" or "circle" or "segment" or "line" or "ray" or "sphere" or "aabb" or "plane" or "complex" or "color" or "angle" or "var"))
                 throw new CompileError("PARSE", "P070", Current.Line, Current.Column, "Expected canonical type after \"define\".");
             var declaredType = Advance();
 
@@ -3170,6 +3170,24 @@ static class Program
             if (declaredType == "circle")
                 return ParseCircleLiteral();
 
+            if (declaredType == "segment")
+                return ParseSegmentLiteral();
+
+            if (declaredType == "line")
+                return ParseLineLiteral();
+
+            if (declaredType == "ray")
+                return ParseRayLiteral();
+
+            if (declaredType == "sphere")
+                return ParseSphereLiteral();
+
+            if (declaredType == "aabb")
+                return ParseAabbLiteral();
+
+            if (declaredType == "plane")
+                return ParsePlaneLiteral();
+
             if (declaredType == "complex")
                 return ParseComplexValueExpression();
 
@@ -3213,6 +3231,24 @@ static class Program
 
             if (CurrentWordIs("circle"))
                 return ParseCircleLiteral();
+
+            if (CurrentWordIs("segment"))
+                return ParseSegmentLiteral();
+
+            if (CurrentWordIs("line"))
+                return ParseLineLiteral();
+
+            if (CurrentWordIs("ray"))
+                return ParseRayLiteral();
+
+            if (CurrentWordIs("sphere"))
+                return ParseSphereLiteral();
+
+            if (CurrentWordIs("aabb"))
+                return ParseAabbLiteral();
+
+            if (CurrentWordIs("plane"))
+                return ParsePlaneLiteral();
 
             if (CurrentWordIs("complex"))
                 return ParseComplexLiteral();
@@ -3273,6 +3309,115 @@ static class Program
             if (r < 0)
                 throw new CompileError("SEMANTIC", "S163", Current.Line, Current.Column, "circle radius cannot be negative.");
             return new ExprResult("circle", FormatCircle(ToVector(center), r), $"circle({center.Repr},{radius.Repr})");
+        }
+
+
+        ExprResult ParseSegmentLiteral()
+        {
+            ExpectWord("segment", "P190", "Expected segment literal.");
+            ExpectWord("from", "P191", "Expected from in segment literal.");
+            var a = ParseAddExpression(legacyQuotedStrings: false);
+            if (a.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S190", Current.Line, Current.Column, "segment start must be vec2.");
+            ExpectWord("to", "P192", "Expected to in segment literal.");
+            var b = ParseAddExpression(legacyQuotedStrings: false);
+            if (b.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S190", Current.Line, Current.Column, "segment end must be vec2.");
+            var av = ToVector(a);
+            var bv = ToVector(b);
+            if (DistanceSquared(av, bv) < NumericEpsilon * NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S191", Current.Line, Current.Column, "segment endpoints cannot be equal.");
+            return new ExprResult("segment", FormatSegment(av, bv), $"segment({a.Repr},{b.Repr})");
+        }
+
+        ExprResult ParseLineLiteral()
+        {
+            ExpectWord("line", "P193", "Expected line literal.");
+            ExpectWord("from", "P194", "Expected from in line literal.");
+            var a = ParseAddExpression(legacyQuotedStrings: false);
+            if (a.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S192", Current.Line, Current.Column, "line start must be vec2.");
+            ExpectWord("to", "P195", "Expected to in line literal.");
+            var b = ParseAddExpression(legacyQuotedStrings: false);
+            if (b.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S192", Current.Line, Current.Column, "line end must be vec2.");
+            var av = ToVector(a);
+            var bv = ToVector(b);
+            if (DistanceSquared(av, bv) < NumericEpsilon * NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S193", Current.Line, Current.Column, "line points cannot be equal.");
+            return new ExprResult("line", FormatSegment(av, bv), $"line({a.Repr},{b.Repr})");
+        }
+
+        ExprResult ParseRayLiteral()
+        {
+            ExpectWord("ray", "P196", "Expected ray literal.");
+            ExpectWord("origin", "P197", "Expected origin in ray literal.");
+            var origin = ParseAddExpression(legacyQuotedStrings: false);
+            if (origin.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S194", Current.Line, Current.Column, "ray origin must be vec3.");
+            ExpectWord("direction", "P198", "Expected direction in ray literal.");
+            var direction = ParseAddExpression(legacyQuotedStrings: false);
+            if (direction.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S194", Current.Line, Current.Column, "ray direction must be vec3.");
+            var dir = ToVector(direction);
+            var len = VectorLength(dir);
+            if (len < NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S195", Current.Line, Current.Column, "ray direction cannot be zero.");
+            var normalized = dir.Select(v => v / len).ToArray();
+            return new ExprResult("ray", FormatRay(ToVector(origin), normalized), $"ray({origin.Repr},{direction.Repr})");
+        }
+
+        ExprResult ParseSphereLiteral()
+        {
+            ExpectWord("sphere", "P199", "Expected sphere literal.");
+            ExpectWord("center", "P200", "Expected center in sphere literal.");
+            var center = ParseAddExpression(legacyQuotedStrings: false);
+            if (center.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S196", Current.Line, Current.Column, "sphere center must be vec3.");
+            ExpectWord("radius", "P201", "Expected radius in sphere literal.");
+            var radius = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(radius.Type))
+                throw new CompileError("SEMANTIC", "S196", Current.Line, Current.Column, "sphere radius must be numeric.");
+            var r = ToNumber(radius);
+            if (r < 0)
+                throw new CompileError("SEMANTIC", "S197", Current.Line, Current.Column, "sphere radius cannot be negative.");
+            return new ExprResult("sphere", FormatSphere(ToVector(center), r), $"sphere({center.Repr},{radius.Repr})");
+        }
+
+        ExprResult ParseAabbLiteral()
+        {
+            ExpectWord("aabb", "P202", "Expected aabb literal.");
+            ExpectWord("center", "P203", "Expected center in aabb literal.");
+            var center = ParseAddExpression(legacyQuotedStrings: false);
+            if (center.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S198", Current.Line, Current.Column, "aabb center must be vec3.");
+            ExpectWord("size", "P204", "Expected size in aabb literal.");
+            var size = ParseAddExpression(legacyQuotedStrings: false);
+            if (size.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S198", Current.Line, Current.Column, "aabb size must be vec3.");
+            var sv = ToVector(size);
+            if (sv.Any(v => v < 0))
+                throw new CompileError("SEMANTIC", "S199", Current.Line, Current.Column, "aabb size cannot be negative.");
+            return new ExprResult("aabb", FormatAabb(ToVector(center), sv), $"aabb({center.Repr},{size.Repr})");
+        }
+
+        ExprResult ParsePlaneLiteral()
+        {
+            ExpectWord("plane", "P205", "Expected plane literal.");
+            ExpectWord("normal", "P206", "Expected normal in plane literal.");
+            var normal = ParseAddExpression(legacyQuotedStrings: false);
+            if (normal.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S200", Current.Line, Current.Column, "plane normal must be vec3.");
+            ExpectWord("distance", "P207", "Expected distance in plane literal.");
+            var distance = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(distance.Type))
+                throw new CompileError("SEMANTIC", "S200", Current.Line, Current.Column, "plane distance must be numeric.");
+            var n = ToVector(normal);
+            var len = VectorLength(n);
+            if (len < NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S201", Current.Line, Current.Column, "plane normal cannot be zero.");
+            var normalized = n.Select(v => v / len).ToArray();
+            return new ExprResult("plane", FormatPlane(normalized, ToNumber(distance) / len), $"plane({normal.Repr},{distance.Repr})");
         }
 
         ExprResult ParseComplexValueExpression()
@@ -3409,7 +3554,7 @@ static class Program
         static bool IsVector(string type) => type is "vec2" or "vec3" or "vec4";
         static bool IsMatrixType(string type) => type is "mat4" or "transform";
         static bool IsQuaternion(string type) => type == "quat";
-        static bool IsGeometryType(string type) => type is "rect" or "circle";
+        static bool IsGeometryType(string type) => type is "rect" or "circle" or "segment" or "line" or "ray" or "sphere" or "aabb" or "plane";
         static bool IsComplex(string type) => type == "complex";
         static bool IsColor(string type) => type == "color";
         static bool IsAngle(string type) => type == "angle";
@@ -3668,6 +3813,55 @@ static class Program
             var radius = double.Parse(inner[(split + 1)..], CultureInfo.InvariantCulture);
             return (center[0], center[1], radius);
         }
+
+
+        static string FormatSegment(double[] a, double[] b)
+            => FormatVector(new[] { a[0], a[1], b[0], b[1] });
+
+        static string FormatRay(double[] origin, double[] direction)
+            => FormatVector(new[] { origin[0], origin[1], origin[2], direction[0], direction[1], direction[2] });
+
+        static string FormatSphere(double[] center, double radius)
+            => FormatVector(new[] { center[0], center[1], center[2], radius });
+
+        static string FormatAabb(double[] center, double[] size)
+            => FormatVector(new[] { center[0], center[1], center[2], size[0], size[1], size[2] });
+
+        static string FormatPlane(double[] normal, double distance)
+            => FormatVector(new[] { normal[0], normal[1], normal[2], distance });
+
+        static (double X1, double Y1, double X2, double Y2) ToSegment(ExprResult expr)
+        {
+            var values = ParseBracketedDoubles(expr.Value, expr.Type, 4);
+            return (values[0], values[1], values[2], values[3]);
+        }
+
+        static (double OX, double OY, double OZ, double DX, double DY, double DZ) ToRay(ExprResult expr)
+        {
+            var values = ParseBracketedDoubles(expr.Value, "ray", 6);
+            return (values[0], values[1], values[2], values[3], values[4], values[5]);
+        }
+
+        static (double X, double Y, double Z, double R) ToSphere(ExprResult expr)
+        {
+            var values = ParseBracketedDoubles(expr.Value, "sphere", 4);
+            return (values[0], values[1], values[2], values[3]);
+        }
+
+        static (double X, double Y, double Z, double SX, double SY, double SZ) ToAabb(ExprResult expr)
+        {
+            var values = ParseBracketedDoubles(expr.Value, "aabb", 6);
+            return (values[0], values[1], values[2], values[3], values[4], values[5]);
+        }
+
+        static (double NX, double NY, double NZ, double D) ToPlane(ExprResult expr)
+        {
+            var values = ParseBracketedDoubles(expr.Value, "plane", 4);
+            return (values[0], values[1], values[2], values[3]);
+        }
+
+        static (double MinX, double MinY, double MinZ, double MaxX, double MaxY, double MaxZ) AabbBounds((double X, double Y, double Z, double SX, double SY, double SZ) box)
+            => (box.X - box.SX / 2, box.Y - box.SY / 2, box.Z - box.SZ / 2, box.X + box.SX / 2, box.Y + box.SY / 2, box.Z + box.SZ / 2);
 
         static (double R, double I) ToComplex(ExprResult expr)
         {
@@ -4011,12 +4205,24 @@ static class Program
                 "floor" => Math.Floor(n),
                 "ceil" => Math.Ceiling(n),
                 "round" => Math.Round(n, MidpointRounding.AwayFromZero),
+                "trunc" => Math.Truncate(n),
                 "sin" => Math.Sin(n),
                 "cos" => Math.Cos(n),
                 "tan" => Math.Tan(n),
+                "asin" => n < -1 || n > 1 ? throw new CompileError("SEMANTIC", "S095", functionTok.Line, functionTok.Column, "asin requires operand between -1 and 1.") : Math.Asin(n),
+                "acos" => n < -1 || n > 1 ? throw new CompileError("SEMANTIC", "S095", functionTok.Line, functionTok.Column, "acos requires operand between -1 and 1.") : Math.Acos(n),
+                "atan" => Math.Atan(n),
+                "sinh" => Math.Sinh(n),
+                "cosh" => Math.Cosh(n),
+                "tanh" => Math.Tanh(n),
+                "asinh" => Math.Asinh(n),
+                "acosh" => n < 1 ? throw new CompileError("SEMANTIC", "S095", functionTok.Line, functionTok.Column, "acosh requires operand greater than or equal to 1.") : Math.Acosh(n),
+                "atanh" => n <= -1 || n >= 1 ? throw new CompileError("SEMANTIC", "S095", functionTok.Line, functionTok.Column, "atanh requires operand between -1 and 1, exclusive.") : Math.Atanh(n),
                 "log" => n <= 0 ? throw new CompileError("SEMANTIC", "S092", functionTok.Line, functionTok.Column, "log requires an operand greater than 0.") : Math.Log(n),
                 "log10" => n <= 0 ? throw new CompileError("SEMANTIC", "S092", functionTok.Line, functionTok.Column, "log10 requires an operand greater than 0.") : Math.Log10(n),
+                "log2" => n <= 0 ? throw new CompileError("SEMANTIC", "S092", functionTok.Line, functionTok.Column, "log2 requires an operand greater than 0.") : Math.Log2(n),
                 "exp" => Math.Exp(n),
+                "exp2" => Math.Pow(2, n),
                 _ => throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"Unknown scalar math function \"{functionTok.Value}\"."),
             };
 
@@ -4035,11 +4241,12 @@ static class Program
                 "min" => Math.Min(l, r),
                 "max" => Math.Max(l, r),
                 "pow" => Math.Pow(l, r),
+                "atan2" => Math.Atan2(l, r),
                 _ => throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"Unknown scalar math function \"{functionTok.Value}\"."),
             };
 
             var type = PromoteNumericType(left.Type, right.Type, functionTok.Value);
-            if (functionTok.Value == "pow")
+            if (functionTok.Value is "pow" or "atan2")
                 type = "double";
             if (type == "int" && Math.Abs(result - Math.Round(result)) > 0.0000000001)
                 type = "double";
@@ -4240,6 +4447,198 @@ static class Program
                 return value;
             var result = vector.Select(component => component / len * limit).ToArray();
             return new ExprResult(value.Type, FormatVector(result), $"clamp_length({value.Repr},{max.Repr})");
+        }
+
+
+        static long ToInt64Strict(ExprResult expr, Token token, string code, string label)
+        {
+            if (expr.Type != "int")
+                throw new CompileError("SEMANTIC", code, token.Line, token.Column, $"{label} requires int operand.");
+            return long.Parse(expr.Value, CultureInfo.InvariantCulture);
+        }
+
+        ExprResult ApplyComponentFunction(Token functionTok, bool legacyQuotedStrings)
+        {
+            if (!CurrentWordIs("sum") && !CurrentWordIs("average") && !CurrentWordIs("min") && !CurrentWordIs("max") && !CurrentWordIs("product"))
+                throw new CompileError("PARSE", "P210", Current.Line, Current.Column, "Expected component sum, average, min, max, or product.");
+            var mode = Advance().Value;
+            var value = ParseUnaryExpression(legacyQuotedStrings);
+            if (!IsVector(value.Type))
+                throw new CompileError("SEMANTIC", "S210", functionTok.Line, functionTok.Column, "component aggregate requires vector operand.");
+            var v = ToVector(value);
+            var result = mode switch
+            {
+                "sum" => v.Sum(),
+                "average" => v.Average(),
+                "min" => v.Min(),
+                "max" => v.Max(),
+                "product" => v.Aggregate(1.0, (a, b) => a * b),
+                _ => throw new CompileError("SEMANTIC", "S210", functionTok.Line, functionTok.Column, "Unknown component aggregate.")
+            };
+            return new ExprResult("double", FormatNumber(result, "double"), $"component_{mode}({value.Repr})");
+        }
+
+        ExprResult ApplyBitFunction(Token functionTok, bool legacyQuotedStrings)
+        {
+            if (!CurrentWordIs("and") && !CurrentWordIs("or") && !CurrentWordIs("xor") && !CurrentWordIs("not"))
+                throw new CompileError("PARSE", "P211", Current.Line, Current.Column, "Expected bit and, bit or, bit xor, or bit not.");
+            var op = Advance().Value;
+            var left = ParseAddExpression(legacyQuotedStrings);
+            var l = ToInt64Strict(left, functionTok, "S211", "bit " + op);
+            long result;
+            if (op == "not")
+            {
+                result = ~l;
+            }
+            else
+            {
+                Expect("COMMA", "comma between bit operands");
+                var right = ParseAddExpression(legacyQuotedStrings);
+                var r = ToInt64Strict(right, functionTok, "S211", "bit " + op);
+                result = op switch
+                {
+                    "and" => l & r,
+                    "or" => l | r,
+                    "xor" => l ^ r,
+                    _ => throw new CompileError("SEMANTIC", "S211", functionTok.Line, functionTok.Column, "Unknown bit operation.")
+                };
+            }
+            return new ExprResult("int", result.ToString(CultureInfo.InvariantCulture), $"bit_{op}({left.Repr})");
+        }
+
+        ExprResult ApplyShiftFunction(Token functionTok, bool legacyQuotedStrings)
+        {
+            if (!CurrentWordIs("left") && !CurrentWordIs("right"))
+                throw new CompileError("PARSE", "P212", Current.Line, Current.Column, "Expected shift left or shift right.");
+            var dir = Advance().Value;
+            var value = ParseAddExpression(legacyQuotedStrings);
+            ExpectWord("by", "P213", "Expected by in shift expression.");
+            var amount = ParseAddExpression(legacyQuotedStrings);
+            var v = ToInt64Strict(value, functionTok, "S212", "shift");
+            var bits = ToInt64Strict(amount, functionTok, "S212", "shift amount");
+            if (bits < 0 || bits > 62)
+                throw new CompileError("SEMANTIC", "S212", functionTok.Line, functionTok.Column, "shift amount must be between 0 and 62.");
+            var result = dir == "left" ? v << (int)bits : v >> (int)bits;
+            return new ExprResult("int", result.ToString(CultureInfo.InvariantCulture), $"shift_{dir}({value.Repr},{amount.Repr})");
+        }
+
+        ExprResult ApplyGeometryDistance(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("from", "P214", "Expected from after distance.");
+            ExpectWord("point", "P215", "Expected point after distance from.");
+            var point = ParseAddExpression(legacyQuotedStrings);
+            if (point.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S213", functionTok.Line, functionTok.Column, "distance from point requires vec2 point.");
+            ExpectWord("to", "P216", "Expected to in geometry distance expression.");
+            if (!CurrentWordIs("line") && !CurrentWordIs("segment"))
+                throw new CompileError("PARSE", "P217", Current.Line, Current.Column, "Expected line or segment in geometry distance expression.");
+            var targetKind = Advance().Value;
+            var target = ParseAddExpression(legacyQuotedStrings);
+            var p = ToVector(point);
+            double result;
+            if (targetKind == "line")
+            {
+                if (target.Type != "line")
+                    throw new CompileError("SEMANTIC", "S213", functionTok.Line, functionTok.Column, "distance to line requires line operand.");
+                result = DistancePointToLine(p, ToSegment(target));
+            }
+            else
+            {
+                if (target.Type != "segment")
+                    throw new CompileError("SEMANTIC", "S213", functionTok.Line, functionTok.Column, "distance to segment requires segment operand.");
+                var closest = ClosestPointOnSegment(ToSegment(target), p);
+                result = Math.Sqrt(DistanceSquared(closest, p));
+            }
+            return new ExprResult("double", FormatNumber(result, "double"), $"distance_point_{targetKind}({point.Repr},{target.Repr})");
+        }
+
+        ExprResult ApplyBezierFunction(Token functionTok, string degree, bool legacyQuotedStrings)
+        {
+            ExpectWord("bezier", "P220", "Expected bezier after quadratic/cubic.");
+            if (!CurrentWordIs("point") && !CurrentWordIs("tangent"))
+                throw new CompileError("PARSE", "P221", Current.Line, Current.Column, "Expected point or tangent after bezier.");
+            var mode = Advance().Value;
+            var p0 = ParseAddExpression(legacyQuotedStrings);
+            Expect("COMMA", "comma between bezier points");
+            var p1 = ParseAddExpression(legacyQuotedStrings);
+            Expect("COMMA", "comma between bezier points");
+            var p2 = ParseAddExpression(legacyQuotedStrings);
+            ExprResult? p3 = null;
+            if (degree == "cubic")
+            {
+                Expect("COMMA", "comma between bezier points");
+                p3 = ParseAddExpression(legacyQuotedStrings);
+            }
+            ExpectWord("at", "P222", "Expected at in bezier expression.");
+            var tExpr = ParseAddExpression(legacyQuotedStrings);
+            if (!IsNumeric(tExpr.Type))
+                throw new CompileError("SEMANTIC", "S220", functionTok.Line, functionTok.Column, "bezier t must be numeric.");
+            var t = ToNumber(tExpr);
+            if (t < -NumericEpsilon || t > 1 + NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S220", functionTok.Line, functionTok.Column, "bezier t must be between 0 and 1.");
+            return degree == "quadratic"
+                ? ApplyQuadraticBezier(functionTok, mode, p0, p1, p2, Clamp01(t))
+                : ApplyCubicBezier(functionTok, mode, p0, p1, p2, p3!, Clamp01(t));
+        }
+
+        ExprResult ApplyCatmullFunction(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("point", "P223", "Expected point after catmull.");
+            var p0 = ParseAddExpression(legacyQuotedStrings);
+            Expect("COMMA", "comma between catmull points");
+            var p1 = ParseAddExpression(legacyQuotedStrings);
+            Expect("COMMA", "comma between catmull points");
+            var p2 = ParseAddExpression(legacyQuotedStrings);
+            Expect("COMMA", "comma between catmull points");
+            var p3 = ParseAddExpression(legacyQuotedStrings);
+            ExpectWord("at", "P224", "Expected at in catmull expression.");
+            var tExpr = ParseAddExpression(legacyQuotedStrings);
+            if (!IsNumeric(tExpr.Type))
+                throw new CompileError("SEMANTIC", "S221", functionTok.Line, functionTok.Column, "catmull t must be numeric.");
+            var t = ToNumber(tExpr);
+            if (t < -NumericEpsilon || t > 1 + NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S221", functionTok.Line, functionTok.Column, "catmull t must be between 0 and 1.");
+            ValidateCurveVectors(functionTok, p0, p1, p2, p3);
+            var a = ToVector(p0);
+            var b = ToVector(p1);
+            var c = ToVector(p2);
+            var d = ToVector(p3);
+            var t2 = t * t;
+            var t3 = t2 * t;
+            var result = a.Select((_, i) => 0.5 * ((2 * b[i]) + (-a[i] + c[i]) * t + (2 * a[i] - 5 * b[i] + 4 * c[i] - d[i]) * t2 + (-a[i] + 3 * b[i] - 3 * c[i] + d[i]) * t3)).ToArray();
+            return new ExprResult(p0.Type, FormatVector(result), $"catmull({p0.Repr},{p1.Repr},{p2.Repr},{p3.Repr})");
+        }
+
+        static void ValidateCurveVectors(Token token, params ExprResult[] points)
+        {
+            if (points.Any(p => !IsVector(p.Type)) || points.Any(p => p.Type != points[0].Type))
+                throw new CompileError("SEMANTIC", "S220", token.Line, token.Column, "curve points must be matching vectors.");
+        }
+
+        ExprResult ApplyQuadraticBezier(Token token, string mode, ExprResult p0, ExprResult p1, ExprResult p2, double t)
+        {
+            ValidateCurveVectors(token, p0, p1, p2);
+            var a = ToVector(p0);
+            var b = ToVector(p1);
+            var c = ToVector(p2);
+            double[] result = mode == "point"
+                ? a.Select((_, i) => (1 - t) * (1 - t) * a[i] + 2 * (1 - t) * t * b[i] + t * t * c[i]).ToArray()
+                : a.Select((_, i) => 2 * (1 - t) * (b[i] - a[i]) + 2 * t * (c[i] - b[i])).ToArray();
+            return new ExprResult(p0.Type, FormatVector(result), $"quadratic_bezier_{mode}({p0.Repr},{p1.Repr},{p2.Repr})");
+        }
+
+        ExprResult ApplyCubicBezier(Token token, string mode, ExprResult p0, ExprResult p1, ExprResult p2, ExprResult p3, double t)
+        {
+            ValidateCurveVectors(token, p0, p1, p2, p3);
+            var a = ToVector(p0);
+            var b = ToVector(p1);
+            var c = ToVector(p2);
+            var d = ToVector(p3);
+            var u = 1 - t;
+            double[] result = mode == "point"
+                ? a.Select((_, i) => u * u * u * a[i] + 3 * u * u * t * b[i] + 3 * u * t * t * c[i] + t * t * t * d[i]).ToArray()
+                : a.Select((_, i) => 3 * u * u * (b[i] - a[i]) + 6 * u * t * (c[i] - b[i]) + 3 * t * t * (d[i] - c[i])).ToArray();
+            return new ExprResult(p0.Type, FormatVector(result), $"cubic_bezier_{mode}({p0.Repr},{p1.Repr},{p2.Repr},{p3.Repr})");
         }
 
         ExprResult ApplyMatrixFunction(Token functionTok)
@@ -4573,10 +4972,10 @@ static class Program
         }
 
         static bool IsScalarUnaryFunctionName(string value)
-            => value is "abs" or "sqrt" or "floor" or "ceil" or "round" or "sin" or "cos" or "tan" or "log" or "log10" or "exp";
+            => value is "abs" or "sqrt" or "floor" or "ceil" or "round" or "trunc" or "sin" or "cos" or "tan" or "asin" or "acos" or "atan" or "sinh" or "cosh" or "tanh" or "asinh" or "acosh" or "atanh" or "log" or "log10" or "log2" or "exp" or "exp2";
 
         static bool IsScalarBinaryFunctionName(string value)
-            => value is "min" or "max" or "pow";
+            => value is "min" or "max" or "pow" or "atan2";
 
         static bool IsMathConstantName(string value)
             => value is "pi" or "e";
@@ -4588,13 +4987,13 @@ static class Program
             => value is "dot" or "cross";
 
         static bool IsAdvancedMathFunctionName(string value)
-            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "smootherstep" or "inverse" or "remap" or "clamped" or "lerp" or "ease" or "distance" or "reflect" or "project" or "clamp" or "translate" or "scale" or "rotate" or "matmul" or "compose" or "slerp" or "euler" or "random" or "noise" or "radians" or "degrees" or "polar" or "spherical" or "angle" or "signed";
+            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "smootherstep" or "inverse" or "remap" or "clamped" or "lerp" or "ease" or "distance" or "reflect" or "project" or "clamp" or "component" or "bit" or "shift" or "quadratic" or "cubic" or "catmull" or "translate" or "scale" or "rotate" or "matmul" or "compose" or "slerp" or "euler" or "random" or "noise" or "radians" or "degrees" or "polar" or "spherical" or "angle" or "signed";
 
         static bool IsComplexFunctionName(string value)
             => value is "real" or "imag" or "magnitude" or "phase";
 
         static bool IsGeometryFunctionName(string value)
-            => value is "point" or "rect" or "closest";
+            => value is "point" or "rect" or "closest" or "segment" or "ray" or "sphere" or "aabb";
 
         ExprResult ApplyVectorUnaryFunction(Token functionTok, ExprResult value)
         {
@@ -4709,6 +5108,10 @@ static class Program
             {
                 "point" => ApplyPointInside(functionTok, legacyQuotedStrings),
                 "rect" => ApplyRectIntersects(functionTok, legacyQuotedStrings),
+                "segment" => ApplySegmentIntersects(functionTok, legacyQuotedStrings),
+                "ray" => ApplyRayIntersects(functionTok, legacyQuotedStrings),
+                "sphere" => ApplySphereIntersects(functionTok, legacyQuotedStrings),
+                "aabb" => ApplyAabbIntersects(functionTok, legacyQuotedStrings),
                 "closest" => ApplyClosestPoint(functionTok, legacyQuotedStrings),
                 _ => throw new CompileError("SEMANTIC", "S160", functionTok.Line, functionTok.Column, $"Unknown geometry function {functionTok.Value}.")
             };
@@ -4738,10 +5141,76 @@ static class Program
                 throw new CompileError("SEMANTIC", "S165", functionTok.Line, functionTok.Column, "rect intersects requires rect operand.");
             ExpectWord("intersects", "P166", "Expected intersects in rect expression.");
             var right = ParseAddExpression(legacyQuotedStrings);
-            if (right.Type != "rect")
-                throw new CompileError("SEMANTIC", "S165", functionTok.Line, functionTok.Column, "rect intersects requires another rect.");
-            var hit = RectIntersects(ToRect(left), ToRect(right));
+            var hit = right.Type switch
+            {
+                "rect" => RectIntersects(ToRect(left), ToRect(right)),
+                "circle" => RectIntersectsCircle(ToRect(left), ToCircle(right)),
+                _ => throw new CompileError("SEMANTIC", "S165", functionTok.Line, functionTok.Column, "rect intersects requires rect or circle operand.")
+            };
             return new ExprResult("bool", hit.ToString().ToLowerInvariant(), $"rect_intersects({left.Repr},{right.Repr})");
+        }
+
+
+        ExprResult ApplySegmentIntersects(Token functionTok, bool legacyQuotedStrings)
+        {
+            var left = ParseAddExpression(legacyQuotedStrings);
+            if (left.Type != "segment")
+                throw new CompileError("SEMANTIC", "S202", functionTok.Line, functionTok.Column, "segment intersects requires segment operand.");
+            ExpectWord("intersects", "P208", "Expected intersects in segment expression.");
+            var right = ParseAddExpression(legacyQuotedStrings);
+            if (right.Type != "segment")
+                throw new CompileError("SEMANTIC", "S202", functionTok.Line, functionTok.Column, "segment intersects requires another segment.");
+            var hit = SegmentIntersectsSegment(ToSegment(left), ToSegment(right));
+            return new ExprResult("bool", hit.ToString().ToLowerInvariant(), $"segment_intersects({left.Repr},{right.Repr})");
+        }
+
+        ExprResult ApplyRayIntersects(Token functionTok, bool legacyQuotedStrings)
+        {
+            var ray = ParseAddExpression(legacyQuotedStrings);
+            if (ray.Type != "ray")
+                throw new CompileError("SEMANTIC", "S203", functionTok.Line, functionTok.Column, "ray intersects requires ray operand.");
+            ExpectWord("intersects", "P209", "Expected intersects in ray expression.");
+            var target = ParseAddExpression(legacyQuotedStrings);
+            var hit = target.Type switch
+            {
+                "sphere" => RayIntersectsSphere(ToRay(ray), ToSphere(target)),
+                "aabb" => RayIntersectsAabb(ToRay(ray), ToAabb(target)),
+                "plane" => RayIntersectsPlane(ToRay(ray), ToPlane(target)),
+                _ => throw new CompileError("SEMANTIC", "S203", functionTok.Line, functionTok.Column, "ray intersects requires sphere, aabb, or plane target.")
+            };
+            return new ExprResult("bool", hit.ToString().ToLowerInvariant(), $"ray_intersects({ray.Repr},{target.Repr})");
+        }
+
+        ExprResult ApplySphereIntersects(Token functionTok, bool legacyQuotedStrings)
+        {
+            var sphere = ParseAddExpression(legacyQuotedStrings);
+            if (sphere.Type != "sphere")
+                throw new CompileError("SEMANTIC", "S204", functionTok.Line, functionTok.Column, "sphere intersects requires sphere operand.");
+            ExpectWord("intersects", "P210", "Expected intersects in sphere expression.");
+            var target = ParseAddExpression(legacyQuotedStrings);
+            var hit = target.Type switch
+            {
+                "sphere" => SphereIntersectsSphere(ToSphere(sphere), ToSphere(target)),
+                "aabb" => SphereIntersectsAabb(ToSphere(sphere), ToAabb(target)),
+                _ => throw new CompileError("SEMANTIC", "S204", functionTok.Line, functionTok.Column, "sphere intersects requires sphere or aabb target.")
+            };
+            return new ExprResult("bool", hit.ToString().ToLowerInvariant(), $"sphere_intersects({sphere.Repr},{target.Repr})");
+        }
+
+        ExprResult ApplyAabbIntersects(Token functionTok, bool legacyQuotedStrings)
+        {
+            var box = ParseAddExpression(legacyQuotedStrings);
+            if (box.Type != "aabb")
+                throw new CompileError("SEMANTIC", "S205", functionTok.Line, functionTok.Column, "aabb intersects requires aabb operand.");
+            ExpectWord("intersects", "P211", "Expected intersects in aabb expression.");
+            var target = ParseAddExpression(legacyQuotedStrings);
+            var hit = target.Type switch
+            {
+                "aabb" => AabbIntersectsAabb(ToAabb(box), ToAabb(target)),
+                "sphere" => SphereIntersectsAabb(ToSphere(target), ToAabb(box)),
+                _ => throw new CompileError("SEMANTIC", "S205", functionTok.Line, functionTok.Column, "aabb intersects requires aabb or sphere target.")
+            };
+            return new ExprResult("bool", hit.ToString().ToLowerInvariant(), $"aabb_intersects({box.Repr},{target.Repr})");
         }
 
         ExprResult ApplyClosestPoint(Token functionTok, bool legacyQuotedStrings)
@@ -4772,7 +5241,43 @@ static class Program
                     throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point target must be vec2.");
                 return new ExprResult("vec2", FormatVector(ClosestPointOnCircle(ToCircle(circle), ToVector(point))), $"closest_circle({circle.Repr},{point.Repr})");
             }
-            throw new CompileError("PARSE", "P168", Current.Line, Current.Column, "Expected rect or circle after closest point on.");
+            if (CurrentWordIs("segment"))
+            {
+                Advance();
+                var segment = ParseAddExpression(legacyQuotedStrings);
+                if (segment.Type != "segment")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point on segment requires segment operand.");
+                ExpectWord("to", "P169", "Expected to in closest point expression.");
+                var point = ParseAddExpression(legacyQuotedStrings);
+                if (point.Type != "vec2")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point target must be vec2.");
+                return new ExprResult("vec2", FormatVector(ClosestPointOnSegment(ToSegment(segment), ToVector(point))), $"closest_segment({segment.Repr},{point.Repr})");
+            }
+            if (CurrentWordIs("sphere"))
+            {
+                Advance();
+                var sphere = ParseAddExpression(legacyQuotedStrings);
+                if (sphere.Type != "sphere")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point on sphere requires sphere operand.");
+                ExpectWord("to", "P169", "Expected to in closest point expression.");
+                var point = ParseAddExpression(legacyQuotedStrings);
+                if (point.Type != "vec3")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point target must be vec3.");
+                return new ExprResult("vec3", FormatVector(ClosestPointOnSphere(ToSphere(sphere), ToVector(point))), $"closest_sphere({sphere.Repr},{point.Repr})");
+            }
+            if (CurrentWordIs("aabb"))
+            {
+                Advance();
+                var box = ParseAddExpression(legacyQuotedStrings);
+                if (box.Type != "aabb")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point on aabb requires aabb operand.");
+                ExpectWord("to", "P169", "Expected to in closest point expression.");
+                var point = ParseAddExpression(legacyQuotedStrings);
+                if (point.Type != "vec3")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point target must be vec3.");
+                return new ExprResult("vec3", FormatVector(ClosestPointOnAabb(ToAabb(box), ToVector(point))), $"closest_aabb({box.Repr},{point.Repr})");
+            }
+            throw new CompileError("PARSE", "P168", Current.Line, Current.Column, "Expected rect, circle, segment, sphere, or aabb after closest point on.");
         }
 
         static bool PointInsideRect(double[] point, (double X, double Y, double W, double H) rect)
@@ -4799,6 +5304,165 @@ static class Program
             if (Math.Abs(len) < 0.0000000001)
                 return new[] { circle.X + circle.R, circle.Y };
             return new[] { circle.X + dx / len * circle.R, circle.Y + dy / len * circle.R };
+        }
+
+
+        static double VectorLength(double[] vector)
+            => Math.Sqrt(vector.Sum(v => v * v));
+
+        static double DistanceSquared(double[] a, double[] b)
+            => a.Select((component, index) => component - b[index]).Sum(delta => delta * delta);
+
+        static double Cross2(double ax, double ay, double bx, double by)
+            => ax * by - ay * bx;
+
+        static bool CircleIntersectsCircle((double X, double Y, double R) a, (double X, double Y, double R) b)
+        {
+            var dx = a.X - b.X;
+            var dy = a.Y - b.Y;
+            var r = a.R + b.R;
+            return dx * dx + dy * dy <= r * r + NumericEpsilon;
+        }
+
+        static bool RectIntersectsCircle((double X, double Y, double W, double H) rect, (double X, double Y, double R) circle)
+        {
+            var closest = ClosestPointOnRect(rect, new[] { circle.X, circle.Y });
+            var dx = closest[0] - circle.X;
+            var dy = closest[1] - circle.Y;
+            return dx * dx + dy * dy <= circle.R * circle.R + NumericEpsilon;
+        }
+
+        static bool SegmentIntersectsSegment((double X1, double Y1, double X2, double Y2) a, (double X1, double Y1, double X2, double Y2) b)
+        {
+            var ax = a.X2 - a.X1;
+            var ay = a.Y2 - a.Y1;
+            var bx = b.X2 - b.X1;
+            var by = b.Y2 - b.Y1;
+            var denom = Cross2(ax, ay, bx, by);
+            var cx = b.X1 - a.X1;
+            var cy = b.Y1 - a.Y1;
+            if (Math.Abs(denom) < NumericEpsilon)
+            {
+                if (Math.Abs(Cross2(cx, cy, ax, ay)) >= NumericEpsilon)
+                    return false;
+                var dotA = cx * ax + cy * ay;
+                var dotB = (b.X2 - a.X1) * ax + (b.Y2 - a.Y1) * ay;
+                var lenSq = ax * ax + ay * ay;
+                return Math.Max(0, Math.Min(dotA, dotB)) <= Math.Min(lenSq, Math.Max(dotA, dotB)) + NumericEpsilon;
+            }
+            var t = Cross2(cx, cy, bx, by) / denom;
+            var u = Cross2(cx, cy, ax, ay) / denom;
+            return t >= -NumericEpsilon && t <= 1 + NumericEpsilon && u >= -NumericEpsilon && u <= 1 + NumericEpsilon;
+        }
+
+        static double DistancePointToLine(double[] point, (double X1, double Y1, double X2, double Y2) line)
+        {
+            var dx = line.X2 - line.X1;
+            var dy = line.Y2 - line.Y1;
+            return Math.Abs(Cross2(point[0] - line.X1, point[1] - line.Y1, dx, dy)) / Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        static double[] ClosestPointOnSegment((double X1, double Y1, double X2, double Y2) segment, double[] point)
+        {
+            var dx = segment.X2 - segment.X1;
+            var dy = segment.Y2 - segment.Y1;
+            var lenSq = dx * dx + dy * dy;
+            var t = ((point[0] - segment.X1) * dx + (point[1] - segment.Y1) * dy) / lenSq;
+            t = Math.Min(Math.Max(t, 0), 1);
+            return new[] { segment.X1 + dx * t, segment.Y1 + dy * t };
+        }
+
+        static bool SphereIntersectsSphere((double X, double Y, double Z, double R) a, (double X, double Y, double Z, double R) b)
+        {
+            var dx = a.X - b.X;
+            var dy = a.Y - b.Y;
+            var dz = a.Z - b.Z;
+            var r = a.R + b.R;
+            return dx * dx + dy * dy + dz * dz <= r * r + NumericEpsilon;
+        }
+
+        static double[] ClosestPointOnAabb((double X, double Y, double Z, double SX, double SY, double SZ) box, double[] point)
+        {
+            var b = AabbBounds(box);
+            return new[]
+            {
+                Math.Min(Math.Max(point[0], b.MinX), b.MaxX),
+                Math.Min(Math.Max(point[1], b.MinY), b.MaxY),
+                Math.Min(Math.Max(point[2], b.MinZ), b.MaxZ)
+            };
+        }
+
+        static double[] ClosestPointOnSphere((double X, double Y, double Z, double R) sphere, double[] point)
+        {
+            var dx = point[0] - sphere.X;
+            var dy = point[1] - sphere.Y;
+            var dz = point[2] - sphere.Z;
+            var len = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+            if (len < NumericEpsilon)
+                return new[] { sphere.X + sphere.R, sphere.Y, sphere.Z };
+            return new[] { sphere.X + dx / len * sphere.R, sphere.Y + dy / len * sphere.R, sphere.Z + dz / len * sphere.R };
+        }
+
+        static bool AabbIntersectsAabb((double X, double Y, double Z, double SX, double SY, double SZ) a, (double X, double Y, double Z, double SX, double SY, double SZ) b)
+        {
+            var ab = AabbBounds(a);
+            var bb = AabbBounds(b);
+            return ab.MinX <= bb.MaxX && ab.MaxX >= bb.MinX &&
+                   ab.MinY <= bb.MaxY && ab.MaxY >= bb.MinY &&
+                   ab.MinZ <= bb.MaxZ && ab.MaxZ >= bb.MinZ;
+        }
+
+        static bool SphereIntersectsAabb((double X, double Y, double Z, double R) sphere, (double X, double Y, double Z, double SX, double SY, double SZ) box)
+        {
+            var closest = ClosestPointOnAabb(box, new[] { sphere.X, sphere.Y, sphere.Z });
+            var dx = closest[0] - sphere.X;
+            var dy = closest[1] - sphere.Y;
+            var dz = closest[2] - sphere.Z;
+            return dx * dx + dy * dy + dz * dz <= sphere.R * sphere.R + NumericEpsilon;
+        }
+
+        static bool RayIntersectsSphere((double OX, double OY, double OZ, double DX, double DY, double DZ) ray, (double X, double Y, double Z, double R) sphere)
+        {
+            var ox = ray.OX - sphere.X;
+            var oy = ray.OY - sphere.Y;
+            var oz = ray.OZ - sphere.Z;
+            var b = ox * ray.DX + oy * ray.DY + oz * ray.DZ;
+            var c = ox * ox + oy * oy + oz * oz - sphere.R * sphere.R;
+            if (c <= 0)
+                return true;
+            var disc = b * b - c;
+            return disc >= -NumericEpsilon && -b + Math.Sqrt(Math.Max(0, disc)) >= -NumericEpsilon;
+        }
+
+        static bool RayIntersectsPlane((double OX, double OY, double OZ, double DX, double DY, double DZ) ray, (double NX, double NY, double NZ, double D) plane)
+        {
+            var denom = plane.NX * ray.DX + plane.NY * ray.DY + plane.NZ * ray.DZ;
+            if (Math.Abs(denom) < NumericEpsilon)
+                return false;
+            var t = -(plane.NX * ray.OX + plane.NY * ray.OY + plane.NZ * ray.OZ + plane.D) / denom;
+            return t >= -NumericEpsilon;
+        }
+
+        static bool RayIntersectsAabb((double OX, double OY, double OZ, double DX, double DY, double DZ) ray, (double X, double Y, double Z, double SX, double SY, double SZ) box)
+        {
+            var b = AabbBounds(box);
+            var tMin = double.NegativeInfinity;
+            var tMax = double.PositiveInfinity;
+            bool Slab(double origin, double direction, double min, double max)
+            {
+                if (Math.Abs(direction) < NumericEpsilon)
+                    return origin >= min && origin <= max;
+                var t1 = (min - origin) / direction;
+                var t2 = (max - origin) / direction;
+                if (t1 > t2) (t1, t2) = (t2, t1);
+                tMin = Math.Max(tMin, t1);
+                tMax = Math.Min(tMax, t2);
+                return tMin <= tMax + NumericEpsilon;
+            }
+            return Slab(ray.OX, ray.DX, b.MinX, b.MaxX) &&
+                   Slab(ray.OY, ray.DY, b.MinY, b.MaxY) &&
+                   Slab(ray.OZ, ray.DZ, b.MinZ, b.MaxZ) &&
+                   tMax >= -NumericEpsilon;
         }
 
         ExprResult ParseAdvancedMathFunction(bool legacyQuotedStrings)
@@ -4940,6 +5604,8 @@ static class Program
                 }
                 case "distance":
                 {
+                    if (CurrentWordIs("from"))
+                        return ApplyGeometryDistance(functionTok, legacyQuotedStrings);
                     var a = ParseAddExpression(legacyQuotedStrings);
                     Expect("COMMA", "comma between distance arguments");
                     var b = ParseAddExpression(legacyQuotedStrings);
@@ -4971,6 +5637,18 @@ static class Program
                     }
                     return ParseScalarMathFunctionStartingWith(functionTok, legacyQuotedStrings);
                 }
+                case "component":
+                    return ApplyComponentFunction(functionTok, legacyQuotedStrings);
+                case "bit":
+                    return ApplyBitFunction(functionTok, legacyQuotedStrings);
+                case "shift":
+                    return ApplyShiftFunction(functionTok, legacyQuotedStrings);
+                case "quadratic":
+                    return ApplyBezierFunction(functionTok, "quadratic", legacyQuotedStrings);
+                case "cubic":
+                    return ApplyBezierFunction(functionTok, "cubic", legacyQuotedStrings);
+                case "catmull":
+                    return ApplyCatmullFunction(functionTok, legacyQuotedStrings);
                 case "slerp":
                 {
                     var a = ParseAddExpression(legacyQuotedStrings);
@@ -5611,6 +6289,24 @@ static class Program
 
             if (CurrentWordIs("circle"))
                 return ParseCircleLiteral();
+
+            if (CurrentWordIs("segment"))
+                return ParseSegmentLiteral();
+
+            if (CurrentWordIs("line"))
+                return ParseLineLiteral();
+
+            if (CurrentWordIs("ray"))
+                return ParseRayLiteral();
+
+            if (CurrentWordIs("sphere"))
+                return ParseSphereLiteral();
+
+            if (CurrentWordIs("aabb"))
+                return ParseAabbLiteral();
+
+            if (CurrentWordIs("plane"))
+                return ParsePlaneLiteral();
 
             if (CurrentIs("LPAREN"))
             {

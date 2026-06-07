@@ -1,0 +1,11 @@
+COMMAND_ID|complete_math_scalar_bit_curve
+CANONICAL|extended scalar hyperbolic inverse trig component aggregate bit shift and curve expressions
+CATEGORY|expression
+TOKENS|IDENT,KEYWORD(set),KEYWORD(to),COMMA,LBRACKET,RBRACKET,INT,DECIMAL
+AST_NODE|CompleteMathScalarBitCurveExpression
+SEMANTIC|evaluates inverse trig, hyperbolic math, log2/exp2/trunc, vector component aggregates, int bit/shift operations, quadratic/cubic bezier and catmull curve expressions
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\complete_math_scalar_bit_curve\valid_scalar_inverse_trig.arq
+INVALID_TEST|Tests\CommandTests\complete_math_scalar_bit_curve\invalid_asin_out_of_range.arq
+STATUS|experimental

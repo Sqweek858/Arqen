@@ -1,0 +1,7 @@
+program "BadInvalidLineEqual"
+
+define line called "l" be line from [1,1] to [1,1]
+
+blend mix to code 0
+
+end program "BadInvalidLineEqual"

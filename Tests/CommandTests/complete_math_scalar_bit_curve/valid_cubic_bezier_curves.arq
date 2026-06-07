@@ -1,0 +1,15 @@
+program "CubicBezierCurves"
+
+
+define vec2 called "p" be [0, 0]
+
+set "p" to cubic bezier point [0, 0], [0, 3], [4, 3], [4, 0] at 0.5
+print "p"
+
+set "p" to cubic bezier tangent [0, 0], [0, 3], [4, 3], [4, 0] at 0.5
+print "p"
+
+
+blend mix to code 0
+
+end program "CubicBezierCurves"

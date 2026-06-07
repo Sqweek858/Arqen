@@ -1,0 +1,7 @@
+program "BadInvalidSphereRadius"
+
+define sphere called "s" be sphere center [0,0,0] radius string "bad"
+
+blend mix to code 0
+
+end program "BadInvalidSphereRadius"

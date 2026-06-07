@@ -1,0 +1,8 @@
+program "BadInvalidQuadraticT"
+
+define vec2 called "p" be [0, 0]
+set "p" to quadratic bezier point [0,0], [1,1], [2,0] at 2
+
+blend mix to code 0
+
+end program "BadInvalidQuadraticT"

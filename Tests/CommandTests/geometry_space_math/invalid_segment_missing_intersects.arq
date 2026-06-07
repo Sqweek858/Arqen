@@ -1,0 +1,10 @@
+program "BadInvalidSegmentMissing"
+
+define segment called "a" be segment from [0,0] to [1,0]
+define segment called "b" be segment from [0,1] to [1,1]
+define bool called "hit" be false
+set "hit" to segment "a" crosses "b"
+
+blend mix to code 0
+
+end program "BadInvalidSegmentMissing"

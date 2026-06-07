@@ -1,0 +1,10 @@
+program "BadInvalidSphereIntersects"
+
+define sphere called "s" be sphere center [0,0,0] radius 1
+define plane called "p" be plane normal [0,1,0] distance 0
+define bool called "hit" be false
+set "hit" to sphere "s" intersects "p"
+
+blend mix to code 0
+
+end program "BadInvalidSphereIntersects"

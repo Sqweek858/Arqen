@@ -1,0 +1,9 @@
+program "BadInvalidClosestSphere"
+
+define sphere called "s" be sphere center [0,0,0] radius 1
+define vec3 called "p" be [0,0,0]
+set "p" to closest point on sphere "s" to [1,2]
+
+blend mix to code 0
+
+end program "BadInvalidClosestSphere"

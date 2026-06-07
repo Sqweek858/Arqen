@@ -1,0 +1,29 @@
+program "Geometry3DPrimitives"
+
+
+define ray called "r" be ray origin [0, 0, -10] direction [0, 0, 1]
+define sphere called "s" be sphere center [0, 0, 0] radius 2
+define aabb called "box" be aabb center [5, 0, 0] size [2, 2, 2]
+define plane called "floor" be plane normal [0, 0, 1] distance 0
+define bool called "hit" be false
+define vec3 called "p" be [0, 0, 0]
+
+set "hit" to ray "r" intersects "s"
+print "hit"
+
+set "hit" to ray "r" intersects "floor"
+print "hit"
+
+set "hit" to ray "r" intersects "box"
+print "hit"
+
+set "p" to closest point on sphere "s" to [5, 0, 0]
+print "p"
+
+set "p" to closest point on aabb "box" to [7, 3, 0]
+print "p"
+
+
+blend mix to code 0
+
+end program "Geometry3DPrimitives"

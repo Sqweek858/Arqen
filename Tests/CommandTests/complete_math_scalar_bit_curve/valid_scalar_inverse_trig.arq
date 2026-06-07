@@ -1,0 +1,21 @@
+program "ScalarInverseTrig"
+
+
+define double called "x" be 0
+
+set "x" to asin 1
+print "x"
+
+set "x" to acos -1
+print "x"
+
+set "x" to atan 1
+print "x"
+
+set "x" to atan2 1, 0
+print "x"
+
+
+blend mix to code 0
+
+end program "ScalarInverseTrig"

@@ -1,0 +1,30 @@
+program "Geometry3DIntersections"
+
+
+define sphere called "s1" be sphere center [0, 0, 0] radius 2
+define sphere called "s2" be sphere center [3, 0, 0] radius 2
+define sphere called "s3" be sphere center [5, 0, 0] radius 1
+define aabb called "b1" be aabb center [0, 0, 0] size [2, 2, 2]
+define aabb called "b2" be aabb center [1, 1, 1] size [2, 2, 2]
+define aabb called "b3" be aabb center [5, 0, 0] size [1, 1, 1]
+define bool called "hit" be false
+
+set "hit" to sphere "s1" intersects "s2"
+print "hit"
+
+set "hit" to sphere "s1" intersects "s3"
+print "hit"
+
+set "hit" to aabb "b1" intersects "b2"
+print "hit"
+
+set "hit" to aabb "b1" intersects "b3"
+print "hit"
+
+set "hit" to sphere "s1" intersects "b1"
+print "hit"
+
+
+blend mix to code 0
+
+end program "Geometry3DIntersections"

@@ -1,0 +1,9 @@
+program "BadInvalidClosestSegment"
+
+define segment called "s" be segment from [0,0] to [1,0]
+define vec2 called "p" be [0,0]
+set "p" to closest point on segment "s" to [1,2,3]
+
+blend mix to code 0
+
+end program "BadInvalidClosestSegment"

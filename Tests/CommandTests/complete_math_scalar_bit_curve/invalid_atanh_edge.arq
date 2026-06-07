@@ -1,0 +1,8 @@
+program "BadInvalidAtanhEdge"
+
+define double called "x" be 0
+set "x" to atanh 1
+
+blend mix to code 0
+
+end program "BadInvalidAtanhEdge"

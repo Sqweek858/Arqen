@@ -1,0 +1,7 @@
+program "BadInvalidAabbSize"
+
+define aabb called "b" be aabb center [0,0,0] size [1,1]
+
+blend mix to code 0
+
+end program "BadInvalidAabbSize"

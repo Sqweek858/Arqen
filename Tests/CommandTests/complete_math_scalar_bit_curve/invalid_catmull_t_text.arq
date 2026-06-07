@@ -1,0 +1,8 @@
+program "BadInvalidCatmullT"
+
+define vec2 called "p" be [0, 0]
+set "p" to catmull point [0,0], [1,1], [2,0], [3,0] at string "bad"
+
+blend mix to code 0
+
+end program "BadInvalidCatmullT"

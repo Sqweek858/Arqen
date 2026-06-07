@@ -1,0 +1,24 @@
+program "ScalarLogExpTrunc"
+
+
+define double called "x" be 0
+
+set "x" to log2 8
+print "x"
+
+set "x" to exp2 10
+print "x"
+
+set "x" to trunc -2.9
+print "x"
+
+set "x" to floor -2.1
+print "x"
+
+set "x" to ceil -2.9
+print "x"
+
+
+blend mix to code 0
+
+end program "ScalarLogExpTrunc"

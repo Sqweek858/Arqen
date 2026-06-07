@@ -1,0 +1,8 @@
+program "BadInvalidShiftNegative"
+
+define int called "i" be 0
+set "i" to shift left 1 by -1
+
+blend mix to code 0
+
+end program "BadInvalidShiftNegative"

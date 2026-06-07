@@ -1,0 +1,10 @@
+program "BadInvalidRayMissing"
+
+define ray called "r" be ray origin [0,0,0] direction [1,0,0]
+define sphere called "s" be sphere center [0,0,0] radius 1
+define bool called "hit" be false
+set "hit" to ray "r" hits "s"
+
+blend mix to code 0
+
+end program "BadInvalidRayMissing"
