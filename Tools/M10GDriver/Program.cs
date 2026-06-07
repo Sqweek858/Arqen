@@ -161,7 +161,8 @@ static class Program
             {
                 var backendManifestPath = Path.Combine(manifestDir, Path.GetFileNameWithoutExtension(outputPath) + ".manifest.txt");
                 BackendFromIr(repoRoot, inputPath, outputPath);
-                WriteManifest(backendManifestPath, Rel(repoRoot, outputPath), SourceFromIr(inputPath), Rel(repoRoot, inputPath), "WindowsX64PE_MessageBoxBackend", "windows-x64-pe", "success");
+                var backendInfo = BackendManifestInfo(inputPath);
+                WriteManifest(backendManifestPath, Rel(repoRoot, outputPath), SourceFromIr(inputPath), Rel(repoRoot, inputPath), backendInfo.Backend, "windows-x64-pe", "success", backendInfo.Actions);
                 Emit($"[BACKEND] PASS -> {Rel(repoRoot, outputPath)}");
                 Emit($"[ARTIFACT] PASS -> {Rel(repoRoot, backendManifestPath)}");
                 File.WriteAllLines(logPath, log, Encoding.UTF8);
@@ -208,7 +209,8 @@ static class Program
                 Emit($"[IR] PASS -> {Rel(repoRoot, irPath)}");
                 BackendFromIr(repoRoot, irPath, outputPath);
                 Emit($"[BACKEND] PASS -> {Rel(repoRoot, outputPath)}");
-                WriteManifest(manifestPath, Rel(repoRoot, outputPath), Rel(repoRoot, inputPath), Rel(repoRoot, irPath), "WindowsX64PE_MessageBoxBackend", "windows-x64-pe", "success");
+                var backendInfo = BackendManifestInfo(irPath);
+                WriteManifest(manifestPath, Rel(repoRoot, outputPath), Rel(repoRoot, inputPath), Rel(repoRoot, irPath), backendInfo.Backend, "windows-x64-pe", "success", backendInfo.Actions);
                 Emit($"[ARTIFACT] PASS -> {Rel(repoRoot, manifestPath)}");
             }
             catch (CompileError ex)
@@ -541,7 +543,10 @@ static class Program
         yield return IrConstLine("str_0", "text", ast.Title);
         yield return IrConstLine("str_1", "text", ast.Message);
         yield return IrConstLine("i32_0", "int", ast.ExitCode.ToString());
-        yield return IrActionLine("act_0", "show_message", "title=str_0|text=str_1");
+        if (ast.MessageCommand == "print")
+            yield return IrActionLine("act_0", "print_stdout", "text=str_1");
+        else
+            yield return IrActionLine("act_0", "show_message", "title=str_0|text=str_1");
         yield return IrActionLine("act_1", "exit", "code=i32_0");
         yield return "ENTRY|actions=act_0,act_1";
         yield return "END";
@@ -585,18 +590,9 @@ static class Program
         if (ir.Version != "0")
             throw new CompileError("BACKEND", "B001", 0, 0, "Unsupported ARQIR version.");
 
-        if (!ir.Actions.TryGetValue("act_0", out var show) ||
-            !show.TryGetValue("op", out var showOp) ||
-            showOp != "show_message")
-            throw new CompileError("BACKEND", "B001", 0, 0, "Missing supported show_message action.");
-
-        if (!show.TryGetValue("title", out var titleId) ||
-            !show.TryGetValue("text", out var textId) ||
-            !ir.Consts.TryGetValue(titleId, out var titleConst) ||
-            !ir.Consts.TryGetValue(textId, out var textConst) ||
-            titleConst.Type != "text" ||
-            textConst.Type != "text")
-            throw new CompileError("BACKEND", "B001", 0, 0, "Invalid show_message constants.");
+        if (!ir.Actions.TryGetValue("act_0", out var first) ||
+            !first.TryGetValue("op", out var firstOp))
+            throw new CompileError("BACKEND", "B001", 0, 0, "Missing supported first action.");
 
         if (!ir.Actions.TryGetValue("act_1", out var exit) ||
             !exit.TryGetValue("op", out var exitOp) ||
@@ -606,6 +602,34 @@ static class Program
             codeConst.Type != "int" ||
             codeConst.Value != "0")
             throw new CompileError("BACKEND", "B001", 0, 0, "Only exit code 0 is supported by this backend.");
+
+        if (firstOp == "print_stdout")
+        {
+            if (!first.TryGetValue("text", out var stdoutTextId) ||
+                !ir.Consts.TryGetValue(stdoutTextId, out var stdoutTextConst) ||
+                stdoutTextConst.Type != "text")
+                throw new CompileError("BACKEND", "B001", 0, 0, "Invalid print_stdout constants.");
+
+            var stdoutText = stdoutTextConst.Value;
+            if (stdoutText.Length > 0 && !stdoutText.EndsWith('\n'))
+                stdoutText += "\n";
+            var stdoutPe = BuildStdoutPe(stdoutText);
+            var stdoutTmpPath = outputPath + ".tmp";
+            File.WriteAllBytes(stdoutTmpPath, stdoutPe);
+            File.Move(stdoutTmpPath, outputPath, true);
+            return;
+        }
+
+        if (firstOp != "show_message")
+            throw new CompileError("BACKEND", "B001", 0, 0, $"Unsupported first action: {firstOp}.");
+
+        if (!first.TryGetValue("title", out var titleId) ||
+            !first.TryGetValue("text", out var textId) ||
+            !ir.Consts.TryGetValue(titleId, out var titleConst) ||
+            !ir.Consts.TryGetValue(textId, out var textConst) ||
+            titleConst.Type != "text" ||
+            textConst.Type != "text")
+            throw new CompileError("BACKEND", "B001", 0, 0, "Invalid show_message constants.");
 
         var templatePath = Path.Combine(repoRoot, "Experiments", "M10_SimpleExpressions", "template_messagebox_m8.exe");
         if (!File.Exists(templatePath))
@@ -618,6 +642,136 @@ static class Program
         var tmpPath = outputPath + ".tmp";
         File.WriteAllBytes(tmpPath, pe);
         File.Move(tmpPath, outputPath, true);
+    }
+
+    static byte[] BuildStdoutPe(string text)
+    {
+        const int sectionRaw = 0x200;
+        const int sectionRva = 0x1000;
+        const int sectionSize = 0x1000;
+        const int messageRva = 0x1500;
+        const int writtenRva = 0x1f00;
+        const int importRva = 0x1300;
+        const int iltRva = 0x1340;
+        const int iatRva = 0x1360;
+        const int dllNameRva = 0x1380;
+        const int maxMessageBytes = 0x900;
+
+        var messageBytes = Encoding.UTF8.GetBytes(text);
+        if (messageBytes.Length > maxMessageBytes)
+            throw new CompileError("BACKEND", "B004", 0, 0, $"stdout text too long for M15 stdout backend: {messageBytes.Length} bytes.");
+
+        var pe = new byte[sectionRaw + sectionSize];
+        WriteAscii(pe, 0, "MZ");
+        WriteUInt32(pe, 0x3c, 0x80);
+
+        var peOffset = 0x80;
+        WriteAscii(pe, peOffset, "PE\0\0");
+        var coff = peOffset + 4;
+        WriteUInt16(pe, coff, 0x8664);
+        WriteUInt16(pe, coff + 2, 1);
+        WriteUInt16(pe, coff + 16, 0xF0);
+        WriteUInt16(pe, coff + 18, 0x22);
+
+        var opt = coff + 20;
+        WriteUInt16(pe, opt, 0x20b);
+        pe[opt + 2] = 14;
+        WriteUInt32(pe, opt + 4, sectionSize);
+        WriteUInt32(pe, opt + 16, sectionRva);
+        WriteUInt32(pe, opt + 20, sectionRva);
+        WriteUInt64(pe, opt + 24, 0x140000000);
+        WriteUInt32(pe, opt + 32, 0x1000);
+        WriteUInt32(pe, opt + 36, 0x200);
+        WriteUInt16(pe, opt + 40, 6);
+        WriteUInt16(pe, opt + 48, 6);
+        WriteUInt32(pe, opt + 56, 0x2000);
+        WriteUInt32(pe, opt + 60, 0x200);
+        WriteUInt16(pe, opt + 68, 3);
+        WriteUInt64(pe, opt + 72, 0x100000);
+        WriteUInt64(pe, opt + 80, 0x1000);
+        WriteUInt64(pe, opt + 88, 0x100000);
+        WriteUInt64(pe, opt + 96, 0x1000);
+        WriteUInt32(pe, opt + 108, 16);
+        WriteUInt32(pe, opt + 120, importRva);
+        WriteUInt32(pe, opt + 124, 0x100);
+
+        var section = opt + 0xF0;
+        WriteAscii(pe, section, ".text\0\0\0");
+        WriteUInt32(pe, section + 8, sectionSize);
+        WriteUInt32(pe, section + 12, sectionRva);
+        WriteUInt32(pe, section + 16, sectionSize);
+        WriteUInt32(pe, section + 20, sectionRaw);
+        WriteUInt32(pe, section + 36, 0xE0000020);
+
+        var code = new List<byte>();
+        void Emit(params byte[] bytes) => code.AddRange(bytes);
+        void EmitUInt32(uint value) => code.AddRange(BitConverter.GetBytes(value));
+        void CallIat(int rva)
+        {
+            var nextRva = sectionRva + code.Count + 6;
+            Emit(0xff, 0x15);
+            EmitUInt32(unchecked((uint)(rva - nextRva)));
+        }
+        void Lea(byte[] prefix, int targetRva, int instructionLength)
+        {
+            var nextRva = sectionRva + code.Count + instructionLength;
+            Emit(prefix);
+            EmitUInt32(unchecked((uint)(targetRva - nextRva)));
+        }
+
+        Emit(0x48, 0x83, 0xec, 0x38);
+        Emit(0xB9, 0xF5, 0xFF, 0xFF, 0xFF);
+        CallIat(iatRva);
+        Emit(0x48, 0x89, 0xC1);
+        Lea(new byte[] { 0x48, 0x8D, 0x15 }, messageRva, 7);
+        Emit(0x41, 0xB8);
+        EmitUInt32((uint)messageBytes.Length);
+        Lea(new byte[] { 0x4C, 0x8D, 0x0D }, writtenRva, 7);
+        Emit(0x48, 0xC7, 0x44, 0x24, 0x20, 0, 0, 0, 0);
+        CallIat(iatRva + 8);
+        Emit(0x31, 0xC9);
+        CallIat(iatRva + 16);
+        code.CopyTo(pe, sectionRaw);
+
+        var importRaw = RvaToRaw(importRva);
+        WriteUInt32(pe, importRaw, iltRva);
+        WriteUInt32(pe, importRaw + 12, dllNameRva);
+        WriteUInt32(pe, importRaw + 16, iatRva);
+
+        AddImport(pe, iltRva, iatRva, 0, 0x13a0, "GetStdHandle");
+        AddImport(pe, iltRva, iatRva, 1, 0x13c0, "WriteFile");
+        AddImport(pe, iltRva, iatRva, 2, 0x13d8, "ExitProcess");
+        WriteAscii(pe, RvaToRaw(dllNameRva), "kernel32.dll\0");
+        Array.Copy(messageBytes, 0, pe, RvaToRaw(messageRva), messageBytes.Length);
+        return pe;
+
+        static int RvaToRaw(int rva) => sectionRaw + (rva - sectionRva);
+    }
+
+    static void AddImport(byte[] pe, int iltRva, int iatRva, int index, int nameRva, string name)
+    {
+        WriteUInt64(pe, RvaToRawLocal(iltRva) + index * 8, (ulong)nameRva);
+        WriteUInt64(pe, RvaToRawLocal(iatRva) + index * 8, (ulong)nameRva);
+        var raw = RvaToRawLocal(nameRva);
+        WriteUInt16(pe, raw, 0);
+        WriteAscii(pe, raw + 2, name + "\0");
+
+        static int RvaToRawLocal(int rva) => 0x200 + (rva - 0x1000);
+    }
+
+    static void WriteUInt16(byte[] bytes, int offset, ushort value)
+        => BitConverter.GetBytes(value).CopyTo(bytes, offset);
+
+    static void WriteUInt32(byte[] bytes, int offset, uint value)
+        => BitConverter.GetBytes(value).CopyTo(bytes, offset);
+
+    static void WriteUInt64(byte[] bytes, int offset, ulong value)
+        => BitConverter.GetBytes(value).CopyTo(bytes, offset);
+
+    static void WriteAscii(byte[] bytes, int offset, string value)
+    {
+        var encoded = Encoding.ASCII.GetBytes(value);
+        Array.Copy(encoded, 0, bytes, offset, encoded.Length);
     }
 
     record IrConst(string Type, string Value);
@@ -700,7 +854,17 @@ static class Program
         }
     }
 
-    static void WriteManifest(string manifestPath, string artifactPath, string sourcePath, string irPath, string backend, string target, string status)
+    static (string Backend, string Actions) BackendManifestInfo(string irPath)
+    {
+        var ir = ParseIr(irPath);
+        if (ir.Actions.TryGetValue("act_0", out var first) &&
+            first.TryGetValue("op", out var op) &&
+            op == "print_stdout")
+            return ("WindowsX64PE_StdoutBackend", "print_stdout,exit");
+        return ("WindowsX64PE_MessageBoxBackend", "show_message,exit");
+    }
+
+    static void WriteManifest(string manifestPath, string artifactPath, string sourcePath, string irPath, string backend, string target, string status, string actions)
     {
         var lines = new[]
         {
@@ -710,7 +874,7 @@ static class Program
             $"BACKEND|{backend}",
             $"TARGET|{target}",
             $"STATUS|{status}",
-            "ACTIONS|show_message,exit",
+            $"ACTIONS|{actions}",
             "EXIT_CODE|0",
             $"CREATED_AT|{DateTimeOffset.Now:O}"
         };

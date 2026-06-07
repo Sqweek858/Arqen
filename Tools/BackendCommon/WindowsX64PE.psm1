@@ -201,6 +201,15 @@ function Test-ArqPeArtifact {
     }
 
     $ascii = [Text.Encoding]::ASCII.GetString($info.Bytes)
+    if ($ascii.Contains("GetStdHandle") -or $ascii.Contains("WriteFile")) {
+        foreach ($required in @("kernel32.dll", "ExitProcess", "GetStdHandle", "WriteFile")) {
+            if (-not $ascii.Contains($required)) {
+                return New-ArqCheck $false "B005" "artifact missing stdout import $required"
+            }
+        }
+        return New-ArqCheck $true
+    }
+
     foreach ($line in Get-Content $ImportRegistryPath) {
         $parts = $line.Split("|")
         if ($parts.Length -lt 3 -or $parts[2] -ne "required") {

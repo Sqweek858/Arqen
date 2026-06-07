@@ -1,4 +1,5 @@
 show_message|supported
+print_stdout|supported
 exit|supported
 print|unsupported
 file_write|unsupported

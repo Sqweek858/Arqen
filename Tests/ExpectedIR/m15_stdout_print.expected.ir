@@ -1,0 +1,5 @@
+RULE_ID|print_statement
+COMMAND_ID|print
+EXPECT_CONTAINS|ACTION|id=act_0|op=print_stdout|text=str_1
+EXPECT_CONTAINS|CONST|id=str_1|type=text|value=Hello\nSqweek\n14\n4.5\ntrue
+EXPECT_NOT_CONTAINS|op=show_message

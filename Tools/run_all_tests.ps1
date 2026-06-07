@@ -1029,6 +1029,40 @@ function Run-M14C-Tests {
     Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
 }
 
+function Run-M15-Tests {
+    Write-Host ""
+    Write-Host "M15 real app layer stdout tests"
+
+    $stdoutExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\ExpectedIR\m15_stdout_print.arq", "--rebuild")
+    $stdoutIr = Get-Content (Join-Path $RepoRoot "Build\IR\m15_stdout_print.arqir") -Raw
+    $stdoutManifest = Get-Content (Join-Path $RepoRoot "Build\Manifests\m15_stdout_print.manifest.txt") -Raw
+    Add-Check "M15_stdout_ir" ($stdoutExit -eq 0 -and $stdoutIr.Contains("op=print_stdout") -and -not $stdoutIr.Contains("op=show_message"))
+    Add-Check "M15_stdout_manifest" ($stdoutManifest.Contains("BACKEND|WindowsX64PE_StdoutBackend") -and $stdoutManifest.Contains("ACTIONS|print_stdout,exit"))
+
+    $exePath = Join-Path $RepoRoot "Build\EXE\m15_stdout_print.exe"
+    $stdoutText = ""
+    $runExit = 1
+    if (Test-Path $exePath) {
+        Push-Location (Split-Path -Parent $exePath)
+        $stdoutText = (& ".\m15_stdout_print.exe") -join "`n"
+        $runExit = $LASTEXITCODE
+        Pop-Location
+    }
+    Add-Check "M15_stdout_runtime" ($runExit -eq 0 -and $stdoutText -eq "Hello`nSqweek`n14`n4.5`ntrue")
+
+    $expectedIrExit = Invoke-Stage $RepoRoot "powershell" @("-ExecutionPolicy", "Bypass", "-File", ".\Tools\verify_expected_ir.ps1")
+    $expectedIrText = Get-Content (Join-Path $RepoRoot "Build\Generated\expected_ir_validation.txt") -Raw
+    Add-Check "M15_expected_ir" ($expectedIrExit -eq 0 -and $expectedIrText.Contains("PASS|m15_stdout_print|"))
+
+    $mapExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_statement_map.ps1"
+    $mapText = Get-Content (Join-Path $RepoRoot "Build\Generated\parser_statement_map.txt") -Raw
+    Add-Check "M15_parser_statement_map" ($mapExit -eq 0 -and $mapText.Contains("RULE_ID|print_statement|"))
+
+    Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -1132,6 +1166,8 @@ Run-M13B-Tests
 Run-M14A-Tests
 
 Run-M14C-Tests
+
+Run-M15-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="
