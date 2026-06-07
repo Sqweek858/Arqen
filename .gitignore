@@ -39,3 +39,10 @@
 /Tools/M10GDriver/bin/
 /Tools/M10GDriver/obj/
 /Tools/M10GDriver/publish/
+# Local build/debug artifacts
+/Tools/publish/
+/Tools/*.pdb
+/Tools/**/*.pdb
+*.patch
+*.rej
+*.orig

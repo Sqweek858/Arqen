@@ -201,10 +201,25 @@ function Test-ArqPeArtifact {
     }
 
     $ascii = [Text.Encoding]::ASCII.GetString($info.Bytes)
-    if ($ascii.Contains("GetStdHandle") -or $ascii.Contains("WriteFile")) {
+
+    function Contains-AsciiImport {
+        param([string]$Needle)
+        return $ascii.IndexOf($Needle, [StringComparison]::OrdinalIgnoreCase) -ge 0
+    }
+
+    if ((Contains-AsciiImport "CreateWindowExW") -or (Contains-AsciiImport "RegisterClassW") -or (Contains-AsciiImport "GetMessageW")) {
+        foreach ($required in @("kernel32.dll", "ExitProcess", "GetModuleHandleW", "user32.dll", "RegisterClassW", "CreateWindowExW", "ShowWindow", "UpdateWindow", "GetMessageW", "TranslateMessage", "DispatchMessageW", "DefWindowProcW")) {
+            if (-not (Contains-AsciiImport $required)) {
+                return New-ArqCheck $false "B005" "artifact missing window import $required"
+            }
+        }
+        return New-ArqCheck $true
+    }
+
+    if ((Contains-AsciiImport "GetStdHandle") -or (Contains-AsciiImport "WriteFile")) {
         foreach ($required in @("kernel32.dll", "ExitProcess", "GetStdHandle", "WriteFile")) {
-            if (-not $ascii.Contains($required)) {
-                return New-ArqCheck $false "B005" "artifact missing stdout import $required"
+            if (-not (Contains-AsciiImport $required)) {
+                return New-ArqCheck $false "B005" "artifact missing stdout/file import $required"
             }
         }
         return New-ArqCheck $true
@@ -215,7 +230,7 @@ function Test-ArqPeArtifact {
         if ($parts.Length -lt 3 -or $parts[2] -ne "required") {
             continue
         }
-        if (-not $ascii.Contains($parts[0]) -or -not $ascii.Contains($parts[1])) {
+        if (-not (Contains-AsciiImport $parts[0]) -or -not (Contains-AsciiImport $parts[1])) {
             return New-ArqCheck $false "B005" "artifact missing import $($parts[0])!$($parts[1])"
         }
     }

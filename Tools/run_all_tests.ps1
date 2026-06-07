@@ -1361,8 +1361,43 @@ function Run-M15E-Tests {
     Add-Check "M15E_file_over_limit_fail" ($exitFile -ne 0)
 }
 
+
+function Run-M18A-Tests {
+    Write-Host ""
+    Write-Host "M18A repo/backend/tooling hygiene tests"
+
+    $repoExit = Invoke-Stage $RepoRoot ".\Tools\validate_repo_hygiene.ps1"
+    $repoText = Get-Content (Join-Path $RepoRoot "Build\Generated\repo_hygiene_validation.txt") -Raw
+    Add-Check "M18A_repo_hygiene" ($repoExit -eq 0 -and $repoText.Contains("PASS|gitattributes_cs") -and $repoText.Contains("PASS|gitignore_patch"))
+
+    $capExit = Invoke-Stage $RepoRoot ".\Tools\validate_backend_capabilities.ps1"
+    $capText = Get-Content (Join-Path $RepoRoot "Build\Generated\backend_capability_validation.txt") -Raw
+    Add-Check "M18A_backend_capabilities" ($capExit -eq 0 -and $capText.Contains("PASS|supported_window_create") -and $capText.Contains("PASS|artifact_check_window"))
+
+    $errExit = Invoke-Stage $RepoRoot ".\Tools\generate_error_code_registry.ps1"
+    $errText = Get-Content (Join-Path $RepoRoot "Build\Generated\error_code_registry.txt") -Raw
+    Add-Check "M18A_error_code_registry" ($errExit -eq 0 -and $errText.Contains("ERROR|L001") -and $errText.Contains("ERROR|S010") -and $errText.Contains("ERROR|B001"))
+
+    $coverageExit = Invoke-Stage $RepoRoot ".\Tools\validate_command_test_coverage.ps1"
+    $coverageText = Get-Content (Join-Path $RepoRoot "Build\Generated\command_test_coverage_validation.txt") -Raw
+    Add-Check "M18A_command_test_coverage" ($coverageExit -eq 0 -and $coverageText.Contains("SUMMARY|folders=") -and $coverageText.Contains("PASS|has_valid_window"))
+
+    $windowExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\window\valid_window_small.arq", "--rebuild")
+    $windowExe = Join-Path $RepoRoot "Build\EXE\valid_window_small.exe"
+    $windowManifest = Join-Path $RepoRoot "Build\Manifests\valid_window_small.build.txt"
+    $windowIr = Join-Path $RepoRoot "Build\IR\valid_window_small.arqir"
+    $windowManifestText = if (Test-Path $windowManifest) { Get-Content $windowManifest -Raw } else { "" }
+    Add-Check "M18A_window_wrapper_build" ($windowExit -eq 0 -and (Test-Path $windowExe) -and (Test-Path $windowIr) -and $windowManifestText.Contains("STATUS|success"))
+    Add-Check "M18A_window_wrapper_pe" (Test-Pe-Signature $windowExe)
+
+    $windowBackendOnly = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @("--backend-only", ".\Build\IR\valid_window_small.arqir", "-o", ".\Build\EXE\valid_window_small_from_ir.exe", "--rebuild")
+    $windowBackendExe = Join-Path $RepoRoot "Build\EXE\valid_window_small_from_ir.exe"
+    Add-Check "M18A_window_backend_only" ($windowBackendOnly -eq 0 -and (Test-Path $windowBackendExe) -and (Test-Pe-Signature $windowBackendExe))
+}
+
 Run-M15D-Tests
 Run-M15E-Tests
+Run-M18A-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

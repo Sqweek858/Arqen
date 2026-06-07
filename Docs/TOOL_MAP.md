@@ -116,3 +116,12 @@ Backend-only bootstrap test:
 ```
 
 The old M10 manual stages remain available for debugging.
+
+## M18A Hardening Tools
+
+| File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `validate_repo_hygiene.ps1` | `Tools` | M18A | validator | Checks line-ending policy, ignore rules, required hardening tools, and tracked junk guards | `.gitattributes`, `.gitignore`, git index | `Build\Generated\repo_hygiene_validation.txt` | `.\Tools\validate_repo_hygiene.ps1` | yes | no | active | Prevents invisible repo rot before style/DX12 |
+| `validate_backend_capabilities.ps1` | `Tools` | M18A | validator | Checks supported/reserved backend operations and artifact verifier coverage | backend config + backend helper | `Build\Generated\backend_capability_validation.txt` | `.\Tools\validate_backend_capabilities.ps1` | yes | no | active | Keeps wrapper/backend capabilities aligned |
+| `generate_error_code_registry.ps1` | `Tools` | M18A | generator | Scans compiler/tools/docs for error code references | `Tools`, `Docs` | `Build\Generated\error_code_registry.txt` | `.\Tools\generate_error_code_registry.ps1` | yes | no | active | Generated registry, not hand-maintained truth |
+| `validate_command_test_coverage.ps1` | `Tools` | M18A | validator | Ensures every command test has expected mapping and valid/invalid coverage | `Tests\CommandTests` | `Build\Generated\command_test_coverage_validation.txt` | `.\Tools\validate_command_test_coverage.ps1` | yes | no | active | Catches orphaned tests and missing expected entries |
