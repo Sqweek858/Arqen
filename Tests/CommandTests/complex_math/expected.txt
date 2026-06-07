@@ -1,0 +1,5 @@
+valid_complex_basic.arq|0|MESSAGE|3-1i\n14-5i\n2\n3\n5\n0
+invalid_complex_from_string.arq|1|ERROR|S170|semantic
+invalid_complex_div_zero.arq|1|ERROR|S172|semantic
+invalid_complex_assign_double.arq|1|ERROR|S054|semantic
+invalid_complex_function_text.arq|1|ERROR|S170|semantic

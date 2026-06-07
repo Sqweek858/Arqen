@@ -1,0 +1,31 @@
+program "GeometryPrimitives"
+
+define rect called "panel" be rect [0, 0] size [10, 10]
+define rect called "other" be rect [8, 8] size [5, 5]
+define rect called "far" be rect [20, 20] size [3, 3]
+define circle called "area" be circle center [0, 0] radius 5
+define bool called "inside" be false
+define bool called "hit" be false
+define vec2 called "closest" be [0, 0]
+
+set "inside" to point [5, 5] inside "panel"
+print "inside"
+
+set "inside" to point [3, 4] inside "area"
+print "inside"
+
+set "hit" to rect "panel" intersects "other"
+print "hit"
+
+set "hit" to rect "panel" intersects "far"
+print "hit"
+
+set "closest" to closest point on rect "panel" to [20, -5]
+print "closest"
+
+set "closest" to closest point on circle "area" to [10, 0]
+print "closest"
+
+blend mix to code 0
+
+end program "GeometryPrimitives"

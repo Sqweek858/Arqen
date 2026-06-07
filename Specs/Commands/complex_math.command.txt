@@ -1,0 +1,11 @@
+COMMAND_ID|complex_math
+CANONICAL|complex number literals and basic complex functions
+CATEGORY|expression
+TOKENS|KEYWORD(complex),IDENT(i),IDENT(real),IDENT(imag),IDENT(magnitude),IDENT(phase)
+AST_NODE|ComplexMathExpression
+SEMANTIC|evaluates compile-time complex literals, arithmetic, real/imag extraction, magnitude, and phase
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\complex_math\valid_complex_basic.arq
+INVALID_TEST|Tests\CommandTests\complex_math\invalid_complex_from_string.arq
+STATUS|experimental

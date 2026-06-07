@@ -1,0 +1,7 @@
+program "InvalidQuatZeroAxis"
+
+define quat called "bad" be quat from axis [0, 0, 0] angle 90 deg
+
+blend mix to code 0
+
+end program "InvalidQuatZeroAxis"

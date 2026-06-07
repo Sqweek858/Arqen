@@ -1,0 +1,7 @@
+program "InvalidComplexFromString"
+
+define complex called "bad" be string "oops"
+
+blend mix to code 0
+
+end program "InvalidComplexFromString"

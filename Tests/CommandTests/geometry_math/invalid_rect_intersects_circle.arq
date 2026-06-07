@@ -1,0 +1,11 @@
+program "InvalidRectIntersectsCircle"
+
+define rect called "panel" be rect [0, 0] size [10, 10]
+define circle called "area" be circle center [0, 0] radius 5
+define bool called "hit" be false
+
+set "hit" to rect "panel" intersects "area"
+
+blend mix to code 0
+
+end program "InvalidRectIntersectsCircle"

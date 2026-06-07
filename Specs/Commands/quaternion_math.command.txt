@@ -1,0 +1,11 @@
+COMMAND_ID|quaternion_math
+CANONICAL|quaternion literals, rotation, slerp, and euler extraction
+CATEGORY|expression
+TOKENS|KEYWORD(quat),IDENT(identity),IDENT(axis),IDENT(angle),IDENT(rotate),IDENT(vector),KEYWORD(by),IDENT(slerp),IDENT(euler)
+AST_NODE|QuaternionMathExpression
+SEMANTIC|evaluates compile-time quaternion identity, axis-angle, vector rotation, quaternion slerp, and euler conversion
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\quaternion_math\valid_quaternion_rotation.arq
+INVALID_TEST|Tests\CommandTests\quaternion_math\invalid_quat_zero_axis.arq
+STATUS|experimental

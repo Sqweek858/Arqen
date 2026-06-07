@@ -1,0 +1,4 @@
+valid_quaternion_rotation.arq|0|MESSAGE|[0,1,0]\n[0,0,0.3826834324,0.9238795325]\n[0,0,1.5707963268]
+invalid_quat_zero_axis.arq|1|ERROR|S152|semantic
+invalid_quat_rotate_non_quat.arq|1|ERROR|S154|semantic
+invalid_quat_slerp_mismatch.arq|1|ERROR|S153|semantic

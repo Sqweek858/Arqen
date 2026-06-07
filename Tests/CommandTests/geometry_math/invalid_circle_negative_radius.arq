@@ -1,0 +1,7 @@
+program "InvalidCircleNegativeRadius"
+
+define circle called "bad" be circle center [0, 0] radius -5
+
+blend mix to code 0
+
+end program "InvalidCircleNegativeRadius"

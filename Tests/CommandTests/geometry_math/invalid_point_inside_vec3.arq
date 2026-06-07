@@ -1,0 +1,10 @@
+program "InvalidPointInsideVec3"
+
+define rect called "panel" be rect [0, 0] size [10, 10]
+define bool called "inside" be false
+
+set "inside" to point [1, 2, 3] inside "panel"
+
+blend mix to code 0
+
+end program "InvalidPointInsideVec3"

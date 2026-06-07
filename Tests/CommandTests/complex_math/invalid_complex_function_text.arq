@@ -1,0 +1,10 @@
+program "InvalidComplexFunctionText"
+
+define string called "name" be string "oops"
+define double called "x" be 0
+
+set "x" to real "name"
+
+blend mix to code 0
+
+end program "InvalidComplexFunctionText"

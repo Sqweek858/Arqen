@@ -337,7 +337,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "quat" or "rect" or "circle" or "complex" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -3005,7 +3005,7 @@ static class Program
                 ExpectKeyword("const");
             }
 
-            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "color" or "angle" or "var"))
+            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "quat" or "rect" or "circle" or "complex" or "color" or "angle" or "var"))
                 throw new CompileError("PARSE", "P070", Current.Line, Current.Column, "Expected canonical type after \"define\".");
             var declaredType = Advance();
 
@@ -3135,6 +3135,18 @@ static class Program
                 return new ExprResult(declaredType, FormatMatrix(IdentityMatrix()), $"identity({idTok.Value})");
             }
 
+            if (declaredType == "quat")
+                return ParseQuaternionLiteral();
+
+            if (declaredType == "rect")
+                return ParseRectLiteral();
+
+            if (declaredType == "circle")
+                return ParseCircleLiteral();
+
+            if (declaredType == "complex")
+                return ParseComplexValueExpression();
+
             if (declaredType == "color")
                 return ParseColorLiteralExpression();
 
@@ -3167,7 +3179,97 @@ static class Program
                 return new ExprResult("mat4", FormatMatrix(IdentityMatrix()), $"identity({idTok.Value})");
             }
 
-            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, bool, vector, matrix, transform, color, or angle literal value.");
+            if (CurrentWordIs("quat"))
+                return ParseQuaternionLiteral();
+
+            if (CurrentWordIs("rect"))
+                return ParseRectLiteral();
+
+            if (CurrentWordIs("circle"))
+                return ParseCircleLiteral();
+
+            if (CurrentWordIs("complex"))
+                return ParseComplexLiteral();
+
+            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, bool, vector, matrix, transform, quaternion, geometry, complex, color, or angle literal value.");
+        }
+
+        ExprResult ParseQuaternionLiteral()
+        {
+            if (CurrentWordIs("identity"))
+            {
+                var idTok = Advance();
+                return new ExprResult("quat", FormatQuaternion(0, 0, 0, 1), $"quat_identity({idTok.Value})");
+            }
+
+            ExpectWord("quat", "P150", "Expected quat literal.");
+            ExpectWord("from", "P151", "Expected from in quaternion axis-angle literal.");
+            ExpectWord("axis", "P152", "Expected axis in quaternion axis-angle literal.");
+            var axis = ParseAddExpression(legacyQuotedStrings: false);
+            if (axis.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S150", Current.Line, Current.Column, "Quaternion axis must be vec3.");
+            ExpectWord("angle", "P153", "Expected angle in quaternion axis-angle literal.");
+            var angle = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(angle.Type) && !IsAngle(angle.Type))
+                throw new CompileError("SEMANTIC", "S151", Current.Line, Current.Column, "Quaternion angle must be numeric or angle.");
+            var q = QuaternionFromAxisAngle(ToVector(axis), ToNumber(angle));
+            return new ExprResult("quat", FormatQuaternion(q), $"quat_axis_angle({axis.Repr},{angle.Repr})");
+        }
+
+        ExprResult ParseRectLiteral()
+        {
+            ExpectWord("rect", "P160", "Expected rect literal.");
+            var origin = ParseAddExpression(legacyQuotedStrings: false);
+            if (origin.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S160", Current.Line, Current.Column, "rect origin must be vec2.");
+            ExpectWord("size", "P161", "Expected size in rect literal.");
+            var size = ParseAddExpression(legacyQuotedStrings: false);
+            if (size.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S160", Current.Line, Current.Column, "rect size must be vec2.");
+            var s = ToVector(size);
+            if (s[0] < 0 || s[1] < 0)
+                throw new CompileError("SEMANTIC", "S161", Current.Line, Current.Column, "rect size cannot be negative.");
+            return new ExprResult("rect", FormatRect(ToVector(origin), s), $"rect({origin.Repr},{size.Repr})");
+        }
+
+        ExprResult ParseCircleLiteral()
+        {
+            ExpectWord("circle", "P162", "Expected circle literal.");
+            ExpectWord("center", "P163", "Expected center in circle literal.");
+            var center = ParseAddExpression(legacyQuotedStrings: false);
+            if (center.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S162", Current.Line, Current.Column, "circle center must be vec2.");
+            ExpectWord("radius", "P164", "Expected radius in circle literal.");
+            var radius = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(radius.Type))
+                throw new CompileError("SEMANTIC", "S162", Current.Line, Current.Column, "circle radius must be numeric.");
+            var r = ToNumber(radius);
+            if (r < 0)
+                throw new CompileError("SEMANTIC", "S163", Current.Line, Current.Column, "circle radius cannot be negative.");
+            return new ExprResult("circle", FormatCircle(ToVector(center), r), $"circle({center.Repr},{radius.Repr})");
+        }
+
+        ExprResult ParseComplexValueExpression()
+        {
+            var value = ParseAddExpression(legacyQuotedStrings: false);
+            if (value.Type == "complex")
+                return value;
+            if (IsNumeric(value.Type))
+                return new ExprResult("complex", FormatComplex(ToNumber(value), 0), $"complex({value.Repr},0)");
+            throw new CompileError("SEMANTIC", "S170", Current.Line, Current.Column, "define complex requires a complex expression.");
+        }
+
+        ExprResult ParseComplexLiteral()
+        {
+            ExpectWord("complex", "P170", "Expected complex literal.");
+            var real = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(real.Type))
+                throw new CompileError("SEMANTIC", "S170", Current.Line, Current.Column, "Complex real part must be numeric.");
+            Expect("COMMA", "comma between complex parts");
+            var imag = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(imag.Type))
+                throw new CompileError("SEMANTIC", "S170", Current.Line, Current.Column, "Complex imaginary part must be numeric.");
+            return new ExprResult("complex", FormatComplex(ToNumber(real), ToNumber(imag)), $"complex({real.Repr},{imag.Repr})");
         }
 
         ExprResult ParseCanonicalStringLiteral()
@@ -3206,6 +3308,12 @@ static class Program
                 var unit = Advance();
                 var radians = unit.Value == "deg" ? number * Math.PI / 180.0 : number;
                 return new ExprResult("angle", FormatNumber(radians, "double"), $"angle({token.Value}{unit.Value})");
+            }
+
+            if (CurrentWordIs("i"))
+            {
+                Advance();
+                return new ExprResult("complex", FormatComplex(0, number), $"imag({token.Value})");
             }
 
             return new ExprResult(numericType, FormatNumber(number, numericType), $"{numericType}({token.Value})");
@@ -3274,6 +3382,9 @@ static class Program
         static bool IsNumeric(string type) => type is "int" or "float" or "double";
         static bool IsVector(string type) => type is "vec2" or "vec3" or "vec4";
         static bool IsMatrixType(string type) => type is "mat4" or "transform";
+        static bool IsQuaternion(string type) => type == "quat";
+        static bool IsGeometryType(string type) => type is "rect" or "circle";
+        static bool IsComplex(string type) => type == "complex";
         static bool IsColor(string type) => type == "color";
         static bool IsAngle(string type) => type == "angle";
 
@@ -3380,6 +3491,180 @@ static class Program
 
         static string FormatMatrix(double[] values)
             => "[" + string.Join(",", values.Select(value => FormatNumber(value, "double"))) + "]";
+
+        static double[] ToQuaternion(ExprResult expr)
+        {
+            if (!IsQuaternion(expr.Type))
+                throw new CompileError("SEMANTIC", "S150", 0, 0, "Expected quaternion value.");
+            var values = ParseBracketedDoubles(expr.Value, "quaternion", 4);
+            var len = Math.Sqrt(values.Sum(v => v * v));
+            if (Math.Abs(len) < 0.0000000001)
+                throw new CompileError("SEMANTIC", "S152", 0, 0, "Quaternion cannot have zero length.");
+            return values.Select(v => v / len).ToArray();
+        }
+
+        static string FormatQuaternion(params double[] values)
+            => "[" + string.Join(",", values.Select(value => FormatNumber(value, "double"))) + "]";
+
+        static double[] QuaternionFromAxisAngle(double[] axis, double radians)
+        {
+            if (axis.Length != 3)
+                throw new CompileError("SEMANTIC", "S150", 0, 0, "Quaternion axis must be vec3.");
+            var len = Math.Sqrt(axis.Sum(v => v * v));
+            if (Math.Abs(len) < 0.0000000001)
+                throw new CompileError("SEMANTIC", "S152", 0, 0, "Quaternion axis must be non-zero.");
+            var half = radians / 2.0;
+            var scale = Math.Sin(half) / len;
+            return new[] { axis[0] * scale, axis[1] * scale, axis[2] * scale, Math.Cos(half) };
+        }
+
+        static double[] QuaternionMultiply(double[] a, double[] b)
+        {
+            var ax = a[0]; var ay = a[1]; var az = a[2]; var aw = a[3];
+            var bx = b[0]; var by = b[1]; var bz = b[2]; var bw = b[3];
+            return new[]
+            {
+                aw * bx + ax * bw + ay * bz - az * by,
+                aw * by - ax * bz + ay * bw + az * bx,
+                aw * bz + ax * by - ay * bx + az * bw,
+                aw * bw - ax * bx - ay * by - az * bz,
+            };
+        }
+
+        static double[] RotateVectorByQuaternion(double[] vector, double[] quat)
+        {
+            if (vector.Length != 3)
+                throw new CompileError("SEMANTIC", "S154", 0, 0, "rotate vector requires vec3.");
+            var q = quat;
+            var v = new[] { vector[0], vector[1], vector[2], 0.0 };
+            var qi = new[] { -q[0], -q[1], -q[2], q[3] };
+            var r = QuaternionMultiply(QuaternionMultiply(q, v), qi);
+            return new[] { r[0], r[1], r[2] };
+        }
+
+        static double[] SlerpQuaternion(double[] a, double[] b, double t)
+        {
+            var q1 = a.ToArray();
+            var q2 = b.ToArray();
+            var dot = q1.Select((v, i) => v * q2[i]).Sum();
+            if (dot < 0.0)
+            {
+                q2 = q2.Select(v => -v).ToArray();
+                dot = -dot;
+            }
+
+            if (dot > 0.9995)
+            {
+                var linear = q1.Select((v, i) => v + t * (q2[i] - v)).ToArray();
+                var len = Math.Sqrt(linear.Sum(v => v * v));
+                return linear.Select(v => v / len).ToArray();
+            }
+
+            dot = Math.Clamp(dot, -1.0, 1.0);
+            var theta0 = Math.Acos(dot);
+            var theta = theta0 * t;
+            var sinTheta = Math.Sin(theta);
+            var sinTheta0 = Math.Sin(theta0);
+            var s0 = Math.Cos(theta) - dot * sinTheta / sinTheta0;
+            var s1 = sinTheta / sinTheta0;
+            return q1.Select((v, i) => s0 * v + s1 * q2[i]).ToArray();
+        }
+
+        static double[] EulerFromQuaternion(double[] q)
+        {
+            var x = q[0]; var y = q[1]; var z = q[2]; var w = q[3];
+
+            var sinrCosp = 2.0 * (w * x + y * z);
+            var cosrCosp = 1.0 - 2.0 * (x * x + y * y);
+            var roll = Math.Atan2(sinrCosp, cosrCosp);
+
+            var sinp = 2.0 * (w * y - z * x);
+            var pitch = Math.Abs(sinp) >= 1.0 ? Math.CopySign(Math.PI / 2.0, sinp) : Math.Asin(sinp);
+
+            var sinyCosp = 2.0 * (w * z + x * y);
+            var cosyCosp = 1.0 - 2.0 * (y * y + z * z);
+            var yaw = Math.Atan2(sinyCosp, cosyCosp);
+
+            return new[] { roll, pitch, yaw };
+        }
+
+        static double[] ParseBracketedDoubles(string value, string label, int expectedCount)
+        {
+            var inner = value.Trim();
+            if (inner.StartsWith("[") && inner.EndsWith("]"))
+                inner = inner[1..^1];
+            var parts = inner.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length != expectedCount)
+                throw new CompileError("SEMANTIC", "S150", 0, 0, $"Expected {expectedCount} values in {label}.");
+            return parts.Select(part => double.Parse(part, CultureInfo.InvariantCulture)).ToArray();
+        }
+
+        static string FormatRect(double[] origin, double[] size)
+            => $"rect({FormatVector(origin)},{FormatVector(size)})";
+
+        static string FormatCircle(double[] center, double radius)
+            => $"circle({FormatVector(center)},{FormatNumber(radius, "double")})";
+
+        static (double X, double Y, double W, double H) ToRect(ExprResult expr)
+        {
+            if (expr.Type != "rect")
+                throw new CompileError("SEMANTIC", "S160", 0, 0, "Expected rect value.");
+            var value = expr.Value.Trim();
+            if (!value.StartsWith("rect(", StringComparison.Ordinal) || !value.EndsWith(")", StringComparison.Ordinal))
+                throw new CompileError("SEMANTIC", "S160", 0, 0, "Invalid rect value.");
+            var inner = value[5..^1];
+            var split = inner.IndexOf("],[", StringComparison.Ordinal);
+            if (split < 0)
+                throw new CompileError("SEMANTIC", "S160", 0, 0, "Invalid rect value.");
+            var origin = ToVector(new ExprResult("vec2", inner[..(split + 1)], "rect_origin"));
+            var size = ToVector(new ExprResult("vec2", inner[(split + 2)..], "rect_size"));
+            return (origin[0], origin[1], size[0], size[1]);
+        }
+
+        static (double X, double Y, double R) ToCircle(ExprResult expr)
+        {
+            if (expr.Type != "circle")
+                throw new CompileError("SEMANTIC", "S162", 0, 0, "Expected circle value.");
+            var value = expr.Value.Trim();
+            if (!value.StartsWith("circle(", StringComparison.Ordinal) || !value.EndsWith(")", StringComparison.Ordinal))
+                throw new CompileError("SEMANTIC", "S162", 0, 0, "Invalid circle value.");
+            var inner = value[7..^1];
+            var split = inner.LastIndexOf(",", StringComparison.Ordinal);
+            if (split < 0)
+                throw new CompileError("SEMANTIC", "S162", 0, 0, "Invalid circle value.");
+            var center = ToVector(new ExprResult("vec2", inner[..split], "circle_center"));
+            var radius = double.Parse(inner[(split + 1)..], CultureInfo.InvariantCulture);
+            return (center[0], center[1], radius);
+        }
+
+        static (double R, double I) ToComplex(ExprResult expr)
+        {
+            if (IsNumeric(expr.Type))
+                return (ToNumber(expr), 0);
+            if (!IsComplex(expr.Type))
+                throw new CompileError("SEMANTIC", "S170", 0, 0, "Expected complex value.");
+            var raw = expr.Value.Trim();
+            if (!raw.EndsWith("i", StringComparison.Ordinal))
+                throw new CompileError("SEMANTIC", "S170", 0, 0, "Invalid complex value.");
+            var body = raw[..^1];
+            var split = -1;
+            for (var i = 1; i < body.Length; i++)
+                if (body[i] is '+' or '-')
+                    split = i;
+            if (split < 0)
+                throw new CompileError("SEMANTIC", "S170", 0, 0, "Invalid complex value.");
+            var real = double.Parse(body[..split], CultureInfo.InvariantCulture);
+            var imag = double.Parse(body[split..], CultureInfo.InvariantCulture);
+            return (real, imag);
+        }
+
+        static string FormatComplex(double real, double imag)
+        {
+            var r = FormatNumber(real, "double");
+            var absI = FormatNumber(Math.Abs(imag), "double");
+            var sign = imag < 0 ? "-" : "+";
+            return $"{r}{sign}{absI}i";
+        }
 
         static double[] MultiplyMatrix(double[] a, double[] b)
         {
@@ -3489,11 +3774,38 @@ static class Program
         {
             if (left.Type == "text" && right.Type == "text")
                 return new ExprResult("text", left.Value + right.Value, $"plus({left.Repr},{right.Repr})");
+            if (IsComplex(left.Type) || IsComplex(right.Type))
+                return ApplyComplexBinary("+", left, right);
             if (IsVector(left.Type) || IsVector(right.Type))
                 return ApplyVectorBinary("+", left, right);
             if (IsNumeric(left.Type) && IsNumeric(right.Type))
                 return ApplyNumericBinary("+", left, right);
             throw new CompileError("SEMANTIC", "S011", Current.Line, Current.Column, "Type mismatch in expression.");
+        }
+
+        ExprResult ApplyComplexBinary(string op, ExprResult left, ExprResult right)
+        {
+            if ((!IsComplex(left.Type) && !IsNumeric(left.Type)) || (!IsComplex(right.Type) && !IsNumeric(right.Type)))
+                throw new CompileError("SEMANTIC", "S171", Current.Line, Current.Column, "Complex operation requires complex or numeric operands.");
+            var l = ToComplex(left);
+            var r = ToComplex(right);
+            var result = op switch
+            {
+                "+" => (R: l.R + r.R, I: l.I + r.I),
+                "-" => (R: l.R - r.R, I: l.I - r.I),
+                "*" => (R: l.R * r.R - l.I * r.I, I: l.R * r.I + l.I * r.R),
+                "/" => ComplexDivide(l, r),
+                _ => throw new CompileError("SEMANTIC", "S171", Current.Line, Current.Column, $"Unsupported complex operator {op}."),
+            };
+            return new ExprResult("complex", FormatComplex(result.R, result.I), $"complex_{op}({left.Repr},{right.Repr})");
+        }
+
+        static (double R, double I) ComplexDivide((double R, double I) left, (double R, double I) right)
+        {
+            var denom = right.R * right.R + right.I * right.I;
+            if (Math.Abs(denom) < 0.0000000001)
+                throw new CompileError("SEMANTIC", "S172", 0, 0, "Complex division by zero.");
+            return ((left.R * right.R + left.I * right.I) / denom, (left.I * right.R - left.R * right.I) / denom);
         }
 
         ExprResult ApplyVectorBinary(string op, ExprResult left, ExprResult right)
@@ -3540,6 +3852,9 @@ static class Program
 
         ExprResult ApplyNumericBinary(string op, ExprResult left, ExprResult right)
         {
+            if (IsComplex(left.Type) || IsComplex(right.Type))
+                return ApplyComplexBinary(op, left, right);
+
             if (IsVector(left.Type) || IsVector(right.Type))
                 return ApplyVectorBinary(op, left, right);
 
@@ -3862,7 +4177,13 @@ static class Program
             => value is "dot" or "cross";
 
         static bool IsAdvancedMathFunctionName(string value)
-            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "inverse" or "remap" or "lerp" or "distance" or "reflect" or "project" or "clamp" or "translate" or "scale" or "rotate" or "matmul" or "compose";
+            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "inverse" or "remap" or "lerp" or "distance" or "reflect" or "project" or "clamp" or "translate" or "scale" or "rotate" or "matmul" or "compose" or "slerp" or "euler";
+
+        static bool IsComplexFunctionName(string value)
+            => value is "real" or "imag" or "magnitude" or "phase";
+
+        static bool IsGeometryFunctionName(string value)
+            => value is "point" or "rect" or "closest";
 
         ExprResult ApplyVectorUnaryFunction(Token functionTok, ExprResult value)
         {
@@ -3916,6 +4237,157 @@ static class Program
             }
 
             throw new CompileError("SEMANTIC", "S102", functionTok.Line, functionTok.Column, $"Unknown vector math function \"{functionTok.Value}\".");
+        }
+
+        ExprResult ApplyQuaternionRotateVector(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("vector", "P154", "Expected vector after rotate.");
+            var vector = ParseAddExpression(legacyQuotedStrings);
+            if (vector.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S154", functionTok.Line, functionTok.Column, "rotate vector requires vec3 value.");
+            ExpectWord("by", "P155", "Expected by in rotate vector expression.");
+            var quat = ParseAddExpression(legacyQuotedStrings);
+            if (quat.Type != "quat")
+                throw new CompileError("SEMANTIC", "S154", functionTok.Line, functionTok.Column, "rotate vector requires quaternion operand.");
+            var result = RotateVectorByQuaternion(ToVector(vector), ToQuaternion(quat));
+            return new ExprResult("vec3", FormatVector(result), $"rotate_vector({vector.Repr},{quat.Repr})");
+        }
+
+        ExprResult ApplyQuaternionSlerp(Token functionTok, ExprResult a, ExprResult b, ExprResult t)
+        {
+            if (a.Type != "quat" || b.Type != "quat")
+                throw new CompileError("SEMANTIC", "S153", functionTok.Line, functionTok.Column, "slerp requires quaternion operands.");
+            if (!IsNumeric(t.Type))
+                throw new CompileError("SEMANTIC", "S153", functionTok.Line, functionTok.Column, "slerp t must be numeric.");
+            var result = SlerpQuaternion(ToQuaternion(a), ToQuaternion(b), ToNumber(t));
+            return new ExprResult("quat", FormatQuaternion(result), $"slerp({a.Repr},{b.Repr},{t.Repr})");
+        }
+
+        ExprResult ApplyEulerFromQuat(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("from", "P156", "Expected from after euler.");
+            ExpectWord("quat", "P157", "Expected quat after euler from.");
+            var quat = ParseAddExpression(legacyQuotedStrings);
+            if (quat.Type != "quat")
+                throw new CompileError("SEMANTIC", "S155", functionTok.Line, functionTok.Column, "euler from quat requires quaternion operand.");
+            return new ExprResult("vec3", FormatVector(EulerFromQuaternion(ToQuaternion(quat))), $"euler_from_quat({quat.Repr})");
+        }
+
+        ExprResult ParseComplexFunction(bool legacyQuotedStrings)
+        {
+            var functionTok = Advance();
+            var value = ParseUnaryExpression(legacyQuotedStrings);
+            if (value.Type != "complex" && !IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S170", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires a complex operand.");
+            var c = ToComplex(value);
+            var result = functionTok.Value switch
+            {
+                "real" => c.R,
+                "imag" => c.I,
+                "magnitude" => Math.Sqrt(c.R * c.R + c.I * c.I),
+                "phase" => Math.Atan2(c.I, c.R),
+                _ => throw new CompileError("SEMANTIC", "S170", functionTok.Line, functionTok.Column, $"Unknown complex function {functionTok.Value}.")
+            };
+            return new ExprResult("double", FormatNumber(result, "double"), $"{functionTok.Value}({value.Repr})");
+        }
+
+        ExprResult ParseGeometryFunction(bool legacyQuotedStrings)
+        {
+            var functionTok = Advance();
+            return functionTok.Value switch
+            {
+                "point" => ApplyPointInside(functionTok, legacyQuotedStrings),
+                "rect" => ApplyRectIntersects(functionTok, legacyQuotedStrings),
+                "closest" => ApplyClosestPoint(functionTok, legacyQuotedStrings),
+                _ => throw new CompileError("SEMANTIC", "S160", functionTok.Line, functionTok.Column, $"Unknown geometry function {functionTok.Value}.")
+            };
+        }
+
+        ExprResult ApplyPointInside(Token functionTok, bool legacyQuotedStrings)
+        {
+            var point = ParseAddExpression(legacyQuotedStrings);
+            if (point.Type != "vec2")
+                throw new CompileError("SEMANTIC", "S164", functionTok.Line, functionTok.Column, "point inside requires vec2 point.");
+            ExpectWord("inside", "P165", "Expected inside in point inside expression.");
+            var shape = ParseAddExpression(legacyQuotedStrings);
+            var p = ToVector(point);
+            var inside = shape.Type switch
+            {
+                "rect" => PointInsideRect(p, ToRect(shape)),
+                "circle" => PointInsideCircle(p, ToCircle(shape)),
+                _ => throw new CompileError("SEMANTIC", "S164", functionTok.Line, functionTok.Column, "point inside requires rect or circle shape.")
+            };
+            return new ExprResult("bool", inside.ToString().ToLowerInvariant(), $"point_inside({point.Repr},{shape.Repr})");
+        }
+
+        ExprResult ApplyRectIntersects(Token functionTok, bool legacyQuotedStrings)
+        {
+            var left = ParseAddExpression(legacyQuotedStrings);
+            if (left.Type != "rect")
+                throw new CompileError("SEMANTIC", "S165", functionTok.Line, functionTok.Column, "rect intersects requires rect operand.");
+            ExpectWord("intersects", "P166", "Expected intersects in rect expression.");
+            var right = ParseAddExpression(legacyQuotedStrings);
+            if (right.Type != "rect")
+                throw new CompileError("SEMANTIC", "S165", functionTok.Line, functionTok.Column, "rect intersects requires another rect.");
+            var hit = RectIntersects(ToRect(left), ToRect(right));
+            return new ExprResult("bool", hit.ToString().ToLowerInvariant(), $"rect_intersects({left.Repr},{right.Repr})");
+        }
+
+        ExprResult ApplyClosestPoint(Token functionTok, bool legacyQuotedStrings)
+        {
+            ExpectWord("point", "P167", "Expected point after closest.");
+            ExpectWord("on", "P168", "Expected on after closest point.");
+            if (CurrentWordIs("rect"))
+            {
+                Advance();
+                var rect = ParseAddExpression(legacyQuotedStrings);
+                if (rect.Type != "rect")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point on rect requires rect operand.");
+                ExpectWord("to", "P169", "Expected to in closest point expression.");
+                var point = ParseAddExpression(legacyQuotedStrings);
+                if (point.Type != "vec2")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point target must be vec2.");
+                return new ExprResult("vec2", FormatVector(ClosestPointOnRect(ToRect(rect), ToVector(point))), $"closest_rect({rect.Repr},{point.Repr})");
+            }
+            if (CurrentWordIs("circle"))
+            {
+                Advance();
+                var circle = ParseAddExpression(legacyQuotedStrings);
+                if (circle.Type != "circle")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point on circle requires circle operand.");
+                ExpectWord("to", "P169", "Expected to in closest point expression.");
+                var point = ParseAddExpression(legacyQuotedStrings);
+                if (point.Type != "vec2")
+                    throw new CompileError("SEMANTIC", "S166", functionTok.Line, functionTok.Column, "closest point target must be vec2.");
+                return new ExprResult("vec2", FormatVector(ClosestPointOnCircle(ToCircle(circle), ToVector(point))), $"closest_circle({circle.Repr},{point.Repr})");
+            }
+            throw new CompileError("PARSE", "P168", Current.Line, Current.Column, "Expected rect or circle after closest point on.");
+        }
+
+        static bool PointInsideRect(double[] point, (double X, double Y, double W, double H) rect)
+            => point[0] >= rect.X && point[0] <= rect.X + rect.W && point[1] >= rect.Y && point[1] <= rect.Y + rect.H;
+
+        static bool PointInsideCircle(double[] point, (double X, double Y, double R) circle)
+        {
+            var dx = point[0] - circle.X;
+            var dy = point[1] - circle.Y;
+            return dx * dx + dy * dy <= circle.R * circle.R + 0.0000000001;
+        }
+
+        static bool RectIntersects((double X, double Y, double W, double H) a, (double X, double Y, double W, double H) b)
+            => a.X <= b.X + b.W && a.X + a.W >= b.X && a.Y <= b.Y + b.H && a.Y + a.H >= b.Y;
+
+        static double[] ClosestPointOnRect((double X, double Y, double W, double H) rect, double[] point)
+            => new[] { Math.Min(Math.Max(point[0], rect.X), rect.X + rect.W), Math.Min(Math.Max(point[1], rect.Y), rect.Y + rect.H) };
+
+        static double[] ClosestPointOnCircle((double X, double Y, double R) circle, double[] point)
+        {
+            var dx = point[0] - circle.X;
+            var dy = point[1] - circle.Y;
+            var len = Math.Sqrt(dx * dx + dy * dy);
+            if (Math.Abs(len) < 0.0000000001)
+                return new[] { circle.X + circle.R, circle.Y };
+            return new[] { circle.X + dx / len * circle.R, circle.Y + dy / len * circle.R };
         }
 
         ExprResult ParseAdvancedMathFunction(bool legacyQuotedStrings)
@@ -4008,9 +4480,23 @@ static class Program
                     }
                     return ParseScalarMathFunctionStartingWith(functionTok, legacyQuotedStrings);
                 }
+                case "slerp":
+                {
+                    var a = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between slerp arguments");
+                    var b = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between slerp arguments");
+                    var t = ParseAddExpression(legacyQuotedStrings);
+                    return ApplyQuaternionSlerp(functionTok, a, b, t);
+                }
+                case "euler":
+                    return ApplyEulerFromQuat(functionTok, legacyQuotedStrings);
+                case "rotate":
+                    if (CurrentWordIs("vector"))
+                        return ApplyQuaternionRotateVector(functionTok, legacyQuotedStrings);
+                    return ApplyMatrixFunction(functionTok);
                 case "translate":
                 case "scale":
-                case "rotate":
                 case "matmul":
                     return ApplyMatrixFunction(functionTok);
                 case "compose":
@@ -4231,6 +4717,12 @@ static class Program
                 return false;
             if (IsMatrixType(targetType) || IsMatrixType(valueType))
                 return false;
+            if (IsQuaternion(targetType) || IsQuaternion(valueType))
+                return false;
+            if (IsGeometryType(targetType) || IsGeometryType(valueType))
+                return false;
+            if (IsComplex(targetType) || IsComplex(valueType))
+                return false;
             return targetType switch
             {
                 "int" => IsNumeric(valueType),
@@ -4242,7 +4734,7 @@ static class Program
 
         static string CoerceValue(ExprResult value, string targetType)
         {
-            if (IsVector(targetType) || IsMatrixType(targetType) || IsColor(targetType) || IsAngle(targetType))
+            if (IsVector(targetType) || IsMatrixType(targetType) || IsQuaternion(targetType) || IsGeometryType(targetType) || IsComplex(targetType) || IsColor(targetType) || IsAngle(targetType))
                 return value.Value;
             if (!IsNumeric(targetType))
                 return value.Value;
@@ -4543,8 +5035,13 @@ static class Program
             {
                 Advance();
                 var value = ParseUnaryExpression(legacyQuotedStrings);
+                if (IsComplex(value.Type))
+                {
+                    var c = ToComplex(value);
+                    return new ExprResult("complex", FormatComplex(-c.R, -c.I), $"neg({value.Repr})");
+                }
                 if (!IsNumeric(value.Type))
-                    throw new CompileError("SEMANTIC", "S043", Current.Line, Current.Column, "Unary minus requires numeric operand.");
+                    throw new CompileError("SEMANTIC", "S043", Current.Line, Current.Column, "Unary minus requires numeric or complex operand.");
                 var type = value.Type;
                 var num = -ToNumber(value);
                 return new ExprResult(type, FormatNumber(num, type), $"neg({value.Repr})");
@@ -4553,13 +5050,19 @@ static class Program
             if (CurrentWordIs("transform"))
                 return ApplyTransformFunction(Advance());
 
-            if (CurrentIs("IDENT") && IsAdvancedMathFunctionName(Current.Value))
+            if ((CurrentIs("IDENT") || CurrentIs("KEYWORD")) && IsComplexFunctionName(Current.Value))
+                return ParseComplexFunction(legacyQuotedStrings);
+
+            if ((CurrentIs("IDENT") || CurrentIs("KEYWORD")) && IsGeometryFunctionName(Current.Value))
+                return ParseGeometryFunction(legacyQuotedStrings);
+
+            if ((CurrentIs("IDENT") || CurrentIs("KEYWORD")) && IsAdvancedMathFunctionName(Current.Value))
                 return ParseAdvancedMathFunction(legacyQuotedStrings);
 
-            if (CurrentIs("IDENT") && (IsScalarUnaryFunctionName(Current.Value) || IsScalarBinaryFunctionName(Current.Value) || Current.Value == "clamp"))
+            if ((CurrentIs("IDENT") || CurrentIs("KEYWORD")) && (IsScalarUnaryFunctionName(Current.Value) || IsScalarBinaryFunctionName(Current.Value) || Current.Value == "clamp"))
                 return ParseScalarMathFunction(legacyQuotedStrings);
 
-            if (CurrentIs("IDENT") && (IsVectorUnaryFunctionName(Current.Value) || IsVectorBinaryFunctionName(Current.Value)))
+            if ((CurrentIs("IDENT") || CurrentIs("KEYWORD")) && (IsVectorUnaryFunctionName(Current.Value) || IsVectorBinaryFunctionName(Current.Value)))
                 return ParseVectorMathFunction(legacyQuotedStrings);
 
             return ParsePrimaryExpression(legacyQuotedStrings);
@@ -4605,6 +5108,18 @@ static class Program
 
             if (IsKeyword("color"))
                 return ParseColorLiteralExpression();
+
+            if (CurrentWordIs("complex"))
+                return ParseComplexLiteral();
+
+            if (CurrentWordIs("quat"))
+                return ParseQuaternionLiteral();
+
+            if (CurrentWordIs("rect"))
+                return ParseRectLiteral();
+
+            if (CurrentWordIs("circle"))
+                return ParseCircleLiteral();
 
             if (CurrentIs("LPAREN"))
             {
