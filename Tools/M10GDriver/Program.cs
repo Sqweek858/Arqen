@@ -423,6 +423,14 @@ static class Program
                 continue;
             }
 
+            if (ch == ',')
+            {
+                tokens.Add(new Token("COMMA", ",", line, col));
+                i++;
+                col++;
+                continue;
+            }
+
             if (ch == '(')
             {
                 tokens.Add(new Token("LPAREN", "(", line, col));
@@ -3213,6 +3221,111 @@ static class Program
             return new ExprResult(type, FormatNumber(value, type), $"{op}({left.Repr},{right.Repr})");
         }
 
+        ExprResult ApplyScalarUnaryFunction(Token functionTok, ExprResult value)
+        {
+            if (!IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires a numeric operand.");
+
+            var n = ToNumber(value);
+            var result = functionTok.Value switch
+            {
+                "abs" => Math.Abs(n),
+                "sqrt" => n < 0 ? throw new CompileError("SEMANTIC", "S091", functionTok.Line, functionTok.Column, "sqrt requires a non-negative operand.") : Math.Sqrt(n),
+                "floor" => Math.Floor(n),
+                "ceil" => Math.Ceiling(n),
+                "round" => Math.Round(n, MidpointRounding.AwayFromZero),
+                "sin" => Math.Sin(n),
+                "cos" => Math.Cos(n),
+                "tan" => Math.Tan(n),
+                "log" => n <= 0 ? throw new CompileError("SEMANTIC", "S092", functionTok.Line, functionTok.Column, "log requires an operand greater than 0.") : Math.Log(n),
+                "log10" => n <= 0 ? throw new CompileError("SEMANTIC", "S092", functionTok.Line, functionTok.Column, "log10 requires an operand greater than 0.") : Math.Log10(n),
+                "exp" => Math.Exp(n),
+                _ => throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"Unknown scalar math function \"{functionTok.Value}\"."),
+            };
+
+            return new ExprResult("double", FormatNumber(result, "double"), $"{functionTok.Value}({value.Repr})");
+        }
+
+        ExprResult ApplyScalarBinaryFunction(Token functionTok, ExprResult left, ExprResult right)
+        {
+            if (!IsNumeric(left.Type) || !IsNumeric(right.Type))
+                throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires numeric operands.");
+
+            var l = ToNumber(left);
+            var r = ToNumber(right);
+            var result = functionTok.Value switch
+            {
+                "min" => Math.Min(l, r),
+                "max" => Math.Max(l, r),
+                "pow" => Math.Pow(l, r),
+                _ => throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"Unknown scalar math function \"{functionTok.Value}\"."),
+            };
+
+            var type = PromoteNumericType(left.Type, right.Type, functionTok.Value);
+            if (functionTok.Value == "pow")
+                type = "double";
+            if (type == "int" && Math.Abs(result - Math.Round(result)) > 0.0000000001)
+                type = "double";
+            return new ExprResult(type, FormatNumber(result, type), $"{functionTok.Value}({left.Repr},{right.Repr})");
+        }
+
+        ExprResult ApplyClampFunction(Token functionTok, ExprResult value, ExprResult min, ExprResult max)
+        {
+            if (!IsNumeric(value.Type) || !IsNumeric(min.Type) || !IsNumeric(max.Type))
+                throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, "clamp requires numeric operands.");
+
+            var lo = ToNumber(min);
+            var hi = ToNumber(max);
+            if (lo > hi)
+                throw new CompileError("SEMANTIC", "S093", functionTok.Line, functionTok.Column, "clamp minimum cannot be greater than maximum.");
+
+            var n = ToNumber(value);
+            var result = Math.Min(Math.Max(n, lo), hi);
+            var type = PromoteNumericType(PromoteNumericType(value.Type, min.Type, "clamp"), max.Type, "clamp");
+            if (type == "int" && Math.Abs(result - Math.Round(result)) > 0.0000000001)
+                type = "double";
+            return new ExprResult(type, FormatNumber(result, type), $"clamp({value.Repr},{min.Repr},{max.Repr})");
+        }
+
+        static bool IsScalarUnaryFunctionName(string value)
+            => value is "abs" or "sqrt" or "floor" or "ceil" or "round" or "sin" or "cos" or "tan" or "log" or "log10" or "exp";
+
+        static bool IsScalarBinaryFunctionName(string value)
+            => value is "min" or "max" or "pow";
+
+        static bool IsMathConstantName(string value)
+            => value is "pi" or "e";
+
+        ExprResult ParseScalarMathFunction(bool legacyQuotedStrings)
+        {
+            var functionTok = Advance();
+            if (functionTok.Value == "clamp")
+            {
+                var value = ParseAddExpression(legacyQuotedStrings);
+                ExpectWord("between", "P120", "Expected word \"between\" in clamp expression.");
+                var min = ParseAddExpression(legacyQuotedStrings);
+                ExpectWord("and", "P121", "Expected word \"and\" in clamp expression.");
+                var max = ParseAddExpression(legacyQuotedStrings);
+                return ApplyClampFunction(functionTok, value, min, max);
+            }
+
+            if (IsScalarBinaryFunctionName(functionTok.Value))
+            {
+                var left = ParseAddExpression(legacyQuotedStrings);
+                Expect("COMMA", "comma between scalar math arguments");
+                var right = ParseAddExpression(legacyQuotedStrings);
+                return ApplyScalarBinaryFunction(functionTok, left, right);
+            }
+
+            if (IsScalarUnaryFunctionName(functionTok.Value))
+            {
+                var value = ParseUnaryExpression(legacyQuotedStrings);
+                return ApplyScalarUnaryFunction(functionTok, value);
+            }
+
+            throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"Unknown scalar math function \"{functionTok.Value}\".");
+        }
+
         void ParseRename()
         {
             ExpectKeyword("rename");
@@ -3636,6 +3749,10 @@ static class Program
                 var num = -ToNumber(value);
                 return new ExprResult(type, FormatNumber(num, type), $"neg({value.Repr})");
             }
+
+            if (CurrentIs("IDENT") && (IsScalarUnaryFunctionName(Current.Value) || IsScalarBinaryFunctionName(Current.Value) || Current.Value == "clamp"))
+                return ParseScalarMathFunction(legacyQuotedStrings);
+
             return ParsePrimaryExpression(legacyQuotedStrings);
         }
 
@@ -3665,6 +3782,11 @@ static class Program
             if (CurrentIs("IDENT"))
             {
                 var t = Advance();
+                if (IsMathConstantName(t.Value) && !SymbolExists(t.Value))
+                {
+                    var value = t.Value == "pi" ? Math.PI : Math.E;
+                    return new ExprResult("double", FormatNumber(value, "double"), $"const({t.Value})");
+                }
                 return FormatVariableReference(t, _parsingCondition ? "S020" : "S010", name => _parsingCondition ? $"Unknown variable \"{name}\" in comparison." : $"Unknown variable \"{name}\".");
             }
 
@@ -3685,6 +3807,16 @@ static class Program
             if (CurrentIs("STRING") || CurrentIs("IDENT"))
                 return Advance().Value;
             throw new CompileError("PARSE", "P001", Current.Line, Current.Column, $"Expected {what}.");
+        }
+
+        void ExpectWord(string value, string code, string message)
+        {
+            if ((Current.Type == "KEYWORD" || Current.Type == "IDENT") && Current.Value == value)
+            {
+                Advance();
+                return;
+            }
+            throw new CompileError("PARSE", code, Current.Line, Current.Column, message);
         }
 
         void ExpectKeyword(string value)

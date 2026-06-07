@@ -1,0 +1,11 @@
+COMMAND_ID|scalar_math
+CANONICAL|scalar math functions
+CATEGORY|expression
+TOKENS|IDENT,COMMA
+AST_NODE|ScalarMathExpression
+SEMANTIC|evaluates compile-time scalar math functions and constants
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\scalar_math\valid_math_scalar_demo.arq
+INVALID_TEST|Tests\CommandTests\scalar_math\invalid_sqrt_string.arq
+STATUS|experimental

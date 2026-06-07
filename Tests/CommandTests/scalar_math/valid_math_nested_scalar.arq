@@ -1,0 +1,13 @@
+program "MathNestedScalar"
+
+define double called "x" be 0
+
+set "x" to sqrt (16 + 9) + max 1, 2
+print "x"
+
+set "x" to clamp 5 + 20 between min 0, 10 and max 11, 15
+print "x"
+
+blend mix to code 0
+
+end program "MathNestedScalar"
