@@ -202,6 +202,8 @@ $ToolMap = [ordered]@{
     "dx12" = "Tools\validate_dx12_readiness.ps1"
     "backend_docs" = "Tools\validate_backend_contract_docs.ps1"
     "docs" = "Tools\validate_backend_contract_docs.ps1"
+    "parser_split" = "Tools\validate_parser_split.ps1"
+    "parser" = "Tools\validate_parser_split.ps1"
 }
 
 function Run-ToolCheck {
@@ -261,8 +263,14 @@ function Expand-Group {
         "m18b" {
             foreach ($t in @("runtime_registry","ir_contract","wrapper_cache","dx12_readiness","backend_docs")) { Add-Unique $tools $t }
         }
+        "m18fg" {
+            foreach ($t in @("parser_split","ir_contract","runtime_registry")) { Add-Unique $tools $t }
+        }
+        "refactor" {
+            foreach ($t in @("parser_split","ir_contract","runtime_registry","backend_docs")) { Add-Unique $tools $t }
+        }
         "tooling" {
-            foreach ($t in @("repo_hygiene","backend_capabilities","command_coverage","error_registry","runtime_registry","ir_contract","wrapper_cache","dx12_readiness","backend_docs")) { Add-Unique $tools $t }
+            foreach ($t in @("repo_hygiene","backend_capabilities","command_coverage","error_registry","runtime_registry","ir_contract","wrapper_cache","dx12_readiness","backend_docs","parser_split")) { Add-Unique $tools $t }
         }
         "core" {
             foreach ($f in @("program","let","set_value","message_text","show_message","set_title_to","exit","blend_mix_to_code","comments","comparison_is","logical_condition","if_compile_time","while_compile_time","function")) { Add-Unique $folders $f }
@@ -311,8 +319,17 @@ function Add-ChangedTargets {
             continue
         }
         if ($file -eq "Tools/M10GDriver/Program.cs") {
-            Write-Host "WARN|changed|Program.cs changed; selecting all command tests. Use -Folder/-Group manually for a smaller slice."
+            Write-Host "WARN|changed|Program.cs changed; selecting parser/refactor tools and all command tests. Use -Folder/-Group manually for a smaller slice."
+            Add-Unique $Tools "parser_split"
+            Add-Unique $Tools "ir_contract"
             foreach ($f in $allFolders) { Add-Unique $Folders $f }
+            continue
+        }
+        if ($file -match '^Tools/M10GDriver/.+\.cs$') {
+            Write-Host "WARN|changed|Tools/M10GDriver changed; selecting parser/refactor tools. Add command folders manually for behavior checks."
+            Add-Unique $Tools "parser_split"
+            Add-Unique $Tools "ir_contract"
+            Add-Unique $Tools "runtime_registry"
             continue
         }
         if ($file -match '^Tools/.*\.ps1$' -or $file -match '^Tools/.*\.psm1$') {
@@ -325,6 +342,7 @@ function Add-ChangedTargets {
             elseif ($file -like "*validate_wrapper_cache_contract.ps1") { Add-Unique $Tools "wrapper_cache" }
             elseif ($file -like "*validate_dx12_readiness.ps1") { Add-Unique $Tools "dx12_readiness" }
             elseif ($file -like "*validate_backend_contract_docs.ps1") { Add-Unique $Tools "backend_docs" }
+            elseif ($file -like "*validate_parser_split.ps1") { Add-Unique $Tools "parser_split" }
             else { Add-Unique $Tools "repo_hygiene" }
             continue
         }
@@ -375,7 +393,7 @@ if ($List) {
         Write-Host " - $key -> $($ToolMap[$key]) [$state]"
     }
     Write-Host ""
-    Write-Host "Groups: math, geometry, backend, m18a, m18b, tooling, core, commands"
+    Write-Host "Groups: math, geometry, backend, m18a, m18b, m18fg, refactor, tooling, core, commands"
     exit 0
 }
 

@@ -136,3 +136,4 @@ Tools/validate_backend_contract_docs.ps1
 ```
 
 These tools are fast static/contract checks. They do not implement DX12; they protect the boundary before DX12 work starts.
+- `Tools/validate_parser_split.ps1` - validates the M18FG parser extraction/split boundary.

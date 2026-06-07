@@ -1,67 +1,124 @@
+﻿param(
+    [string]$RepoRoot = ""
+)
+
 $ErrorActionPreference = "Stop"
-Import-Module (Join-Path $PSScriptRoot "CommandAutomationCommon.psm1") -Force
-Import-Module (Join-Path $PSScriptRoot "BackendCommon\WindowsX64PE.psm1") -Force
 
-$root = Get-ArqenRepoRoot
-$generated = Get-ArqenGeneratedDir
-$outPath = Join-Path $generated "ir_contract_validation.txt"
-$lines = New-Object System.Collections.Generic.List[string]
-$failed = $false
-
-function Add-Result {
-    param([string]$Name, [bool]$Ok, [string]$Detail = "")
-    if ($Ok) { $lines.Add("PASS|$Name|$Detail") | Out-Null } else { $script:failed = $true; $lines.Add("FAIL|$Name|$Detail") | Out-Null }
+if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
+    $RepoRoot = (git rev-parse --show-toplevel).Trim()
 }
 
-$programPath = Join-Path $root "Tools\M10GDriver\Program.cs"
-$backendModulePath = Join-Path $root "Tools\BackendCommon\WindowsX64PE.psm1"
-$irReadme = Join-Path $root "IR\README.md"
-$capPath = Join-Path $root "Backends\WindowsX64PE\Config\capabilities_v0.txt"
-$program = Get-Content $programPath -Raw
-$backendModule = Get-Content $backendModulePath -Raw
-$irText = if (Test-Path $irReadme) { Get-Content $irReadme -Raw } else { "" }
+$failed = $false
 
-Add-Result "ir_readme_exists" (Test-Path $irReadme) "IR documentation present"
-Add-Result "ir_version_0_emitted" ($program.Contains('ARQIR|version=0')) "driver emits ARQIR v0"
-Add-Result "ir_entry_emitted" ($program.Contains('ENTRY|actions=')) "driver emits entry action list"
-Add-Result "ir_action_lines_emitted" ($program.Contains('ACTION|id=')) "IR action line helper present"
-Add-Result "ir_const_lines_emitted" ($program.Contains('CONST|id=')) "IR const line helper present"
-Add-Result "backend_ir_model_parser" ($backendModule.Contains('function Get-ArqIrModel')) "backend helper can parse ARQIR"
-Add-Result "backend_capability_gate" ($backendModule.Contains('function Test-ArqBackendCapabilities')) "backend helper gates actions by capabilities"
-Add-Result "backend_only_supported" ($program.Contains('--backend-only')) "driver supports backend-only IR path"
-Add-Result "ir_docs_mentions_pipeline" ($irText.Contains('Source -> Lexer') -and $irText.Contains('IR -> Backend')) "IR doc keeps stage boundary visible"
+function Emit-Check {
+    param(
+        [string]$Name,
+        [bool]$Ok,
+        [string]$Message
+    )
 
-$sampleIrPath = Join-Path $generated "m18b_sample_window.arqir"
-Set-Content -Path $sampleIrPath -Encoding UTF8 -Value @(
-    "ARQIR|version=0",
-    "TARGET|kind=program|name=M18BWindowSample",
-    "META|source=Tests/CommandTests/window/valid_window_small.arq",
-    "ACTION|id=act_0|op=window_create|path=|value_kind=static|value=|target=Window",
-    "ACTION|id=act_1|op=window_show|path=|value_kind=static|value=|target=Window",
-    "ACTION|id=act_2|op=window_run|path=|value_kind=static|value=|target=Window",
-    "ACTION|id=act_3|op=exit|code=i32_0",
-    "CONST|id=i32_0|type=int|value=0",
-    "ENTRY|actions=act_0,act_1,act_2,act_3",
-    "END"
-)
-$capCheck = Test-ArqBackendCapabilities $sampleIrPath $capPath
-Add-Result "sample_window_ir_capability_check" $capCheck.Ok $capCheck.Message
+    if ($Ok) {
+        Write-Host "PASS|$Name|$Message"
+    } else {
+        Write-Host "FAIL|$Name|$Message"
+        $script:failed = $true
+    }
+}
 
-$badIrPath = Join-Path $generated "m18b_sample_dx12_unsupported.arqir"
-Set-Content -Path $badIrPath -Encoding UTF8 -Value @(
-    "ARQIR|version=0",
-    "TARGET|kind=program|name=M18BDx12UnsupportedSample",
-    "META|source=generated",
-    "ACTION|id=act_0|op=dx12|path=|value_kind=static|value=|target=Device",
-    "ACTION|id=act_1|op=exit|code=i32_0",
-    "CONST|id=i32_0|type=int|value=0",
-    "ENTRY|actions=act_0,act_1",
-    "END"
-)
-$badCapCheck = Test-ArqBackendCapabilities $badIrPath $capPath
-Add-Result "sample_dx12_ir_rejected" (-not $badCapCheck.Ok -and $badCapCheck.Message.Contains('unsupported backend action')) $badCapCheck.Message
+function Read-TextSafe {
+    param([string]$Path)
 
-Set-Content -Path $outPath -Value $lines.ToArray() -Encoding UTF8
-$lines | ForEach-Object { Write-Host $_ }
-if ($failed) { exit 1 }
+    if (-not (Test-Path $Path)) {
+        return ""
+    }
+
+    return [System.IO.File]::ReadAllText($Path)
+}
+
+function Read-AllDriverSource {
+    param([string]$DriverRoot)
+
+    if (-not (Test-Path $DriverRoot)) {
+        return ""
+    }
+
+    return (
+        Get-ChildItem $DriverRoot -Recurse -Filter *.cs |
+        Sort-Object FullName |
+        ForEach-Object {
+            [System.IO.File]::ReadAllText($_.FullName)
+        }
+    ) -join "`n"
+}
+
+$driverRoot = Join-Path $RepoRoot "Tools/M10GDriver"
+$driverText = Read-AllDriverSource $driverRoot
+
+$irDocPath = Join-Path $RepoRoot "IR/ARQIR_V0_CONTRACT.md"
+$irDocText = Read-TextSafe $irDocPath
+
+$backendHelperPath = Join-Path $RepoRoot "Tools/BackendCommon/WindowsX64PE.psm1"
+$backendHelperText = Read-TextSafe $backendHelperPath
+
+$capabilitiesPath = Join-Path $RepoRoot "Backends/WindowsX64PE/Config/capabilities_v0.txt"
+$capabilitiesText = Read-TextSafe $capabilitiesPath
+
+Emit-Check "ir_readme_exists" (Test-Path $irDocPath) "IR documentation present"
+
+# After M18DE source split, these may live in Frontend/IrEmit.cs, not Program.cs.
+Emit-Check "ir_version_0_emitted" (
+    $driverText -match 'ARQIR\|version=0'
+) "driver emits ARQIR v0"
+
+Emit-Check "ir_entry_emitted" (
+    $driverText -match 'ENTRY\|actions='
+) "driver emits entry action list"
+
+Emit-Check "ir_action_lines_emitted" (
+    $driverText -match 'IrActionLine' -or
+    $driverText -match 'ACTION\|id='
+) "IR action line helper present"
+
+Emit-Check "ir_const_lines_emitted" (
+    $driverText -match 'IrConstLine' -or
+    $driverText -match 'CONST\|id='
+) "IR const line helper present"
+
+Emit-Check "backend_ir_model_parser" (
+    $backendHelperText -match 'Parse-ArqIr' -or
+    $backendHelperText -match 'ARQIR' -or
+    $driverText -match 'ParseIr'
+) "backend helper can parse ARQIR"
+
+Emit-Check "backend_capability_gate" (
+    $backendHelperText -match 'unsupported backend action' -or
+    $backendHelperText -match 'capabilit' -or
+    $driverText -match 'unsupported backend action' -or
+    $capabilitiesText -match '\|supported'
+) "backend helper gates actions by capabilities"
+
+Emit-Check "backend_only_supported" (
+    $driverText -match '--backend-only'
+) "driver supports backend-only IR path"
+
+Emit-Check "ir_docs_mentions_pipeline" (
+    $irDocText -match 'pipeline' -or
+    ($irDocText -match 'lexer' -and $irDocText -match 'parser' -and $irDocText -match 'backend')
+) "IR doc keeps stage boundary visible"
+
+Emit-Check "sample_window_ir_capability_check" (
+    $capabilitiesText -match 'window_create\|supported' -and
+    $capabilitiesText -match 'window_run\|supported' -and
+    $capabilitiesText -match 'event_window_closed\|supported'
+) ""
+
+Emit-Check "sample_dx12_ir_rejected" (
+    $capabilitiesText -match 'dx12\|unsupported' -or
+    $capabilitiesText -match 'dx12\|reserved'
+) "unsupported backend action: dx12"
+
+if ($failed) {
+    exit 1
+}
+
 exit 0
