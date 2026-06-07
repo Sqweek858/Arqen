@@ -1,0 +1,20 @@
+program "FileIONumericValues"
+
+define int called "score" be 14
+define float called "speed" be 4.5
+define bool called "alive" be true
+define string called "content" be string ""
+
+write file "stats.txt" with string "Score: "
+add "score" to file "stats.txt"
+add string "\nSpeed: " to file "stats.txt"
+add "speed" to file "stats.txt"
+add string "\nAlive: " to file "stats.txt"
+add "alive" to file "stats.txt"
+
+load file "stats.txt" to "content"
+print "content"
+
+blend mix to code 0
+
+end program "FileIONumericValues"

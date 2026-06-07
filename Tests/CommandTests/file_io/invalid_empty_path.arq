@@ -1,0 +1,7 @@
+program "BadEmptyPath"
+
+write file "" with string "Hello"
+
+blend mix to code 0
+
+end program "BadEmptyPath"

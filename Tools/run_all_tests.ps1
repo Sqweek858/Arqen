@@ -1084,6 +1084,78 @@ function Run-M15B-Tests {
     Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
 }
 
+function Run-M15C-Tests {
+    Write-Host ""
+    Write-Host "M15C runtime text file I/O tests"
+
+    $demoExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\file_io\valid_file_io_demo.arq", "--rebuild")
+    $symbolsExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\file_io\valid_file_io_symbols.arq", "--rebuild")
+    $numericExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\file_io\valid_file_io_numeric.arq", "--rebuild")
+    $missingRuntimeExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\file_io\valid_load_missing_runtime.arq", "--rebuild")
+
+    $demoIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_file_io_demo.arqir") -Raw
+    Add-Check "M15C_file_io_ir" ($demoExit -eq 0 -and $demoIr.Contains("op=file_write") -and $demoIr.Contains("op=file_append") -and $demoIr.Contains("op=file_load") -and $demoIr.Contains("op=print_runtime_slot"))
+
+    Add-Check "M15C_file_io_manifest" ((Get-Content (Join-Path $RepoRoot "Build\Manifests\valid_file_io_demo.manifest.txt") -Raw).Contains("BACKEND|WindowsX64PE_FileIoBackend"))
+
+    Test-M15C-Runtime "M15C_file_io_demo_runtime" "valid_file_io_demo.exe" "log.txt" "Hello again" "Hello again"
+    Test-M15C-Runtime "M15C_file_io_symbols_runtime" "valid_file_io_symbols.exe" "log.txt" "First`nSecond" "First`nSecond"
+    Test-M15C-Runtime "M15C_file_io_numeric_runtime" "valid_file_io_numeric.exe" "stats.txt" "Score: 14`nSpeed: 4.5`nAlive: true" "Score: 14`nSpeed: 4.5`nAlive: true"
+    Test-M15C-RuntimeFailure "M15C_file_io_missing_runtime_failure" "valid_load_missing_runtime.exe"
+
+    $expectedIrExit = Invoke-Stage $RepoRoot "powershell" @("-ExecutionPolicy", "Bypass", "-File", ".\Tools\verify_expected_ir.ps1")
+    $expectedIrText = Get-Content (Join-Path $RepoRoot "Build\Generated\expected_ir_validation.txt") -Raw
+    Add-Check "M15C_expected_ir" ($expectedIrExit -eq 0 -and $expectedIrText.Contains("PASS|m15c_file_io_demo|") -and $expectedIrText.Contains("PASS|m15c_file_io_symbols|"))
+
+    $mapExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_statement_map.ps1"
+    $mapText = Get-Content (Join-Path $RepoRoot "Build\Generated\parser_statement_map.txt") -Raw
+    Add-Check "M15C_parser_statement_map" ($mapExit -eq 0 -and $mapText.Contains("RULE_ID|file_io_statement|COMMAND_ID|file_io"))
+
+    Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
+}
+
+function Test-M15C-RuntimeFailure {
+    param(
+        [string]$Name,
+        [string]$ExeName
+    )
+
+    $tmp = Join-Path $env:TEMP ("arqen_m15c_fail_" + [IO.Path]::GetFileNameWithoutExtension($ExeName) + "_" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tmp | Out-Null
+    Copy-Item (Join-Path $RepoRoot "Build\EXE\$ExeName") $tmp -Force
+    Push-Location $tmp
+    & ".\$ExeName" | Out-Null
+    $exit = $LASTEXITCODE
+    Pop-Location
+    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
+
+    Add-Check $Name ($exit -ne 0)
+}
+
+function Test-M15C-Runtime {
+    param(
+        [string]$Name,
+        [string]$ExeName,
+        [string]$OutputFile,
+        [string]$ExpectedStdout,
+        [string]$ExpectedFile
+    )
+
+    $tmp = Join-Path $env:TEMP ("arqen_m15c_" + [IO.Path]::GetFileNameWithoutExtension($ExeName) + "_" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tmp | Out-Null
+    Copy-Item (Join-Path $RepoRoot "Build\EXE\$ExeName") $tmp -Force
+    Push-Location $tmp
+    $stdout = (& ".\$ExeName") -join "`n"
+    $exit = $LASTEXITCODE
+    $fileText = if (Test-Path $OutputFile) { (Get-Content $OutputFile -Raw).TrimEnd("`r", "`n") } else { "" }
+    Pop-Location
+    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
+
+    Add-Check $Name ($exit -eq 0 -and $stdout -eq $ExpectedStdout -and $fileText -eq $ExpectedFile)
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -1191,6 +1263,8 @@ Run-M14C-Tests
 Run-M15-Tests
 
 Run-M15B-Tests
+
+Run-M15C-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

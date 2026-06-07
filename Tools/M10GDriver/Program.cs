@@ -2,10 +2,12 @@ using System.Globalization;
 using System.Text;
 
 record Token(string Type, string Value, int Line, int Column);
-record VarInfo(string Type, string Value, bool IsConst = false);
+record VarInfo(string Type, string Value, bool IsConst = false, bool IsRuntime = false);
 record ExprResult(string Type, string Value, string Repr);
+record FileValue(string Kind, string Value);
 record CompareResult(bool Value, string Repr);
-record AstModel(string Program, List<(string Name, string Type, string Value)> Vars, string Title, string TitleExpr, string TitleCommand, string Message, string MessageExpr, string MessageCommand, int ExitCode, string FinalCommand, List<string> Flow);
+record RuntimeAction(string Op, string Path, string ValueKind, string Value, string Target);
+record AstModel(string Program, List<(string Name, string Type, string Value)> Vars, string Title, string TitleExpr, string TitleCommand, string Message, string MessageExpr, string MessageCommand, int ExitCode, string FinalCommand, List<string> Flow, List<RuntimeAction> RuntimeActions);
 
 sealed class CompileError : Exception
 {
@@ -335,7 +337,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -506,6 +508,8 @@ static class Program
             yield return line;
         foreach (var line in AstMessageLines(ast))
             yield return line;
+        foreach (var action in ast.RuntimeActions)
+            yield return RuntimeAstLine(action);
         foreach (var line in AstFinalLines(ast))
             yield return line;
         yield return "SEMANTIC|OK";
@@ -527,6 +531,9 @@ static class Program
         yield return $"MESSAGE_EXPR|{Esc(ast.MessageExpr)}";
     }
 
+    static string RuntimeAstLine(RuntimeAction action)
+        => $"RUNTIME_ACTION|op={Esc(action.Op)}|path={Esc(action.Path)}|value_kind={Esc(action.ValueKind)}|value={Esc(action.Value)}|target={Esc(action.Target)}";
+
     static IEnumerable<string> AstFinalLines(AstModel ast)
     {
         if (ast.FinalCommand == "blend_mix_to_code")
@@ -540,6 +547,18 @@ static class Program
         yield return "ARQIR|version=0";
         yield return $"TARGET|kind=program|name={Esc(ast.Program)}";
         yield return $"META|source={Esc(sourcePath.Replace('\\', '/'))}";
+        if (ast.RuntimeActions.Count > 0)
+        {
+            foreach (var v in ast.Vars)
+                yield return IrSymbolLine(v.Name, v.Type, v.Value);
+            for (var i = 0; i < ast.RuntimeActions.Count; i++)
+                yield return RuntimeIrActionLine($"act_{i}", ast.RuntimeActions[i]);
+            yield return IrActionLine($"act_{ast.RuntimeActions.Count}", "exit", "code=i32_0");
+            yield return IrConstLine("i32_0", "int", ast.ExitCode.ToString());
+            yield return $"ENTRY|actions={string.Join(",", Enumerable.Range(0, ast.RuntimeActions.Count + 1).Select(i => $"act_{i}"))}";
+            yield return "END";
+            yield break;
+        }
         yield return IrConstLine("str_0", "text", ast.Title);
         yield return IrConstLine("str_1", "text", ast.Message);
         yield return IrConstLine("i32_0", "int", ast.ExitCode.ToString());
@@ -553,7 +572,13 @@ static class Program
     }
 
     static string IrConstLine(string id, string type, string value) => $"CONST|id={id}|type={type}|value={Esc(value)}";
+    static string IrSymbolLine(string name, string type, string value) => $"SYMBOL|name={Esc(name)}|type={Esc(type)}|value={Esc(value)}";
     static string IrActionLine(string id, string op, string fields) => $"ACTION|id={id}|op={op}|{fields}";
+    static string RuntimeIrActionLine(string id, RuntimeAction action)
+    {
+        var fields = $"path={Esc(action.Path)}|value_kind={Esc(action.ValueKind)}|value={Esc(action.Value)}|target={Esc(action.Target)}";
+        return IrActionLine(id, action.Op, fields);
+    }
 
     static string Esc(string value)
     {
@@ -589,6 +614,15 @@ static class Program
 
         if (ir.Version != "0")
             throw new CompileError("BACKEND", "B001", 0, 0, "Unsupported ARQIR version.");
+
+        if (HasFileIoActions(ir))
+        {
+            var fileIoPe = BuildFileIoPe(ir);
+            var fileIoTmpPath = outputPath + ".tmp";
+            File.WriteAllBytes(fileIoTmpPath, fileIoPe);
+            File.Move(fileIoTmpPath, outputPath, true);
+            return;
+        }
 
         if (!ir.Actions.TryGetValue("act_0", out var first) ||
             !first.TryGetValue("op", out var firstOp))
@@ -750,6 +784,331 @@ static class Program
 
         static int RvaToRaw(int rva) => sectionRaw + (rva - sectionRva);
     }
+
+    static byte[] BuildFileIoPe(IrModel ir)
+    {
+        const int sectionRaw = 0x200;
+        const int sectionRva = 0x1000;
+        const int sectionSize = 0xC000;
+        const int importRva = 0x1800;
+        const int iltRva = 0x1900;
+        const int iatRva = 0x1940;
+        const int dllNameRva = 0x1980;
+        const int dataStartRva = 0x3000;
+        const int slotLenStartRva = 0x8F00;
+        const int slotStartRva = 0x9000;
+        const int runtimeSlotBytes = 0x1000;
+
+        var actions = OrderedActionMaps(ir);
+        if (actions.Count == 0 || actions[^1].GetValueOrDefault("op") != "exit")
+            throw new CompileError("BACKEND", "B001", 0, 0, "File I/O backend requires final exit action.");
+
+        var pe = new byte[sectionRaw + sectionSize];
+        WritePeHeader(pe, sectionSize, importRva, 0x600, subsystem: 3);
+
+        var slotNames = actions
+            .Where(a => a.GetValueOrDefault("value_kind") == "slot" || a.GetValueOrDefault("op") == "file_load" || a.GetValueOrDefault("op") == "print_runtime_slot")
+            .Select(a => a.GetValueOrDefault("target") != "" ? a.GetValueOrDefault("target")! : a.GetValueOrDefault("value")!)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var slots = new Dictionary<string, (int BufferRva, int LenRva)>(StringComparer.Ordinal);
+        for (var i = 0; i < slotNames.Count; i++)
+            slots[slotNames[i]] = (slotStartRva + i * runtimeSlotBytes, slotLenStartRva + i * 8);
+
+        var dataCursor = dataStartRva;
+        var pathRvas = new Dictionary<string, int>(StringComparer.Ordinal);
+        var valueRvas = new Dictionary<string, (int Rva, int Length)>(StringComparer.Ordinal);
+        var newlineRva = AddUtf8("\n");
+
+        foreach (var action in actions)
+        {
+            var op = action.GetValueOrDefault("op");
+            if (op is "file_write" or "file_append" or "file_load")
+                GetPath(action.GetValueOrDefault("path") ?? "");
+            if (action.GetValueOrDefault("value_kind") == "static")
+                GetValue(action.GetValueOrDefault("value") ?? "");
+        }
+
+        var importNameCursor = 0x19A0;
+        var imports = new[] { "CreateFileW", "WriteFile", "ReadFile", "CloseHandle", "SetFilePointer", "GetStdHandle", "ExitProcess" };
+        for (var i = 0; i < imports.Length; i++)
+        {
+            AddImport(pe, iltRva, iatRva, i, importNameCursor, imports[i]);
+            importNameCursor += 0x20;
+        }
+        WriteAscii(pe, RvaToRaw(dllNameRva), "kernel32.dll\0");
+        var importRaw = RvaToRaw(importRva);
+        WriteUInt32(pe, importRaw, iltRva);
+        WriteUInt32(pe, importRaw + 12, dllNameRva);
+        WriteUInt32(pe, importRaw + 16, iatRva);
+
+        var code = new List<byte>();
+        var failJumps = new List<int>();
+        void Emit(params byte[] bytes) => code.AddRange(bytes);
+        void EmitUInt32(uint value) => code.AddRange(BitConverter.GetBytes(value));
+        void CallIat(int index)
+        {
+            var rva = iatRva + index * 8;
+            var nextRva = sectionRva + code.Count + 6;
+            Emit(0xff, 0x15);
+            EmitUInt32(unchecked((uint)(rva - nextRva)));
+        }
+        void Lea(byte[] prefix, int targetRva, int instructionLength)
+        {
+            var nextRva = sectionRva + code.Count + instructionLength;
+            Emit(prefix);
+            EmitUInt32(unchecked((uint)(targetRva - nextRva)));
+        }
+        void MovR8dFromMem(int targetRva)
+        {
+            var nextRva = sectionRva + code.Count + 7;
+            Emit(0x44, 0x8B, 0x05);
+            EmitUInt32(unchecked((uint)(targetRva - nextRva)));
+        }
+        void JeFail()
+        {
+            Emit(0x0F, 0x84);
+            failJumps.Add(code.Count);
+            EmitUInt32(0);
+        }
+        void CheckRaxInvalidHandle()
+        {
+            Emit(0x48, 0x83, 0xF8, 0xFF);
+            JeFail();
+        }
+        void CheckEaxZero()
+        {
+            Emit(0x85, 0xC0);
+            JeFail();
+        }
+        void StoreStack32(byte offset, uint value)
+        {
+            Emit(0x48, 0xC7, 0x44, 0x24, offset);
+            EmitUInt32(value);
+        }
+        void OpenFile(string path, uint access, uint disposition)
+        {
+            Lea(new byte[] { 0x48, 0x8D, 0x0D }, GetPath(path), 7);
+            Emit(0xBA); EmitUInt32(access);
+            Emit(0x45, 0x31, 0xC0);
+            Emit(0x45, 0x31, 0xC9);
+            StoreStack32(0x20, disposition);
+            StoreStack32(0x28, 0x80);
+            StoreStack32(0x30, 0);
+            CallIat(0);
+            CheckRaxInvalidHandle();
+            Emit(0x48, 0x89, 0xC3);
+        }
+        void WriteHandleFromStatic(string value)
+        {
+            var data = GetValue(value);
+            Emit(0x48, 0x89, 0xD9);
+            Lea(new byte[] { 0x48, 0x8D, 0x15 }, data.Rva, 7);
+            Emit(0x41, 0xB8); EmitUInt32((uint)data.Length);
+            Lea(new byte[] { 0x4C, 0x8D, 0x0D }, slotLenStartRva - 8, 7);
+            StoreStack32(0x20, 0);
+            CallIat(1);
+            CheckEaxZero();
+        }
+        void WriteHandleFromSlot(string slot)
+        {
+            var s = slots[slot];
+            Emit(0x48, 0x89, 0xD9);
+            Lea(new byte[] { 0x48, 0x8D, 0x15 }, s.BufferRva, 7);
+            MovR8dFromMem(s.LenRva);
+            Lea(new byte[] { 0x4C, 0x8D, 0x0D }, slotLenStartRva - 8, 7);
+            StoreStack32(0x20, 0);
+            CallIat(1);
+            CheckEaxZero();
+        }
+        void CloseRbx()
+        {
+            Emit(0x48, 0x89, 0xD9);
+            CallIat(3);
+        }
+
+        Emit(0x48, 0x83, 0xEC, 0x58);
+        foreach (var action in actions)
+        {
+            var op = action.GetValueOrDefault("op");
+            if (op == "file_write")
+            {
+                OpenFile(action["path"], 0x40000000, 2);
+                if (action.GetValueOrDefault("value_kind") == "slot")
+                    WriteHandleFromSlot(action["value"]);
+                else
+                    WriteHandleFromStatic(action.GetValueOrDefault("value") ?? "");
+                CloseRbx();
+            }
+            else if (op == "file_append")
+            {
+                OpenFile(action["path"], 0x40000000, 4);
+                Emit(0x48, 0x89, 0xD9);
+                Emit(0x31, 0xD2);
+                Emit(0x45, 0x31, 0xC0);
+                Emit(0x41, 0xB9, 0x02, 0x00, 0x00, 0x00);
+                CallIat(4);
+                if (action.GetValueOrDefault("value_kind") == "slot")
+                    WriteHandleFromSlot(action["value"]);
+                else
+                    WriteHandleFromStatic(action.GetValueOrDefault("value") ?? "");
+                CloseRbx();
+            }
+            else if (op == "file_load")
+            {
+                var slot = slots[action["target"]];
+                OpenFile(action["path"], 0x80000000, 3);
+                Emit(0x48, 0x89, 0xD9);
+                Lea(new byte[] { 0x48, 0x8D, 0x15 }, slot.BufferRva, 7);
+                Emit(0x41, 0xB8); EmitUInt32(runtimeSlotBytes - 1);
+                Lea(new byte[] { 0x4C, 0x8D, 0x0D }, slot.LenRva, 7);
+                StoreStack32(0x20, 0);
+                CallIat(2);
+                CheckEaxZero();
+                CloseRbx();
+            }
+            else if (op == "print_runtime_slot")
+            {
+                var slot = slots[action["target"]];
+                Emit(0xB9, 0xF5, 0xFF, 0xFF, 0xFF);
+                CallIat(5);
+                CheckRaxInvalidHandle();
+                Emit(0x48, 0x89, 0xC3);
+                WriteHandleFromSlot(action["target"]);
+                WriteHandleFromStatic("\n");
+            }
+            else if (op == "exit")
+            {
+                // Emitted once at the end.
+            }
+            else
+            {
+                throw new CompileError("BACKEND", "B001", 0, 0, $"Unsupported file I/O backend action: {op}.");
+            }
+        }
+
+        Emit(0x31, 0xC9);
+        CallIat(6);
+        var failRva = sectionRva + code.Count;
+        Emit(0xB9, 0x01, 0x00, 0x00, 0x00);
+        CallIat(6);
+        foreach (var offsetPos in failJumps)
+        {
+            var nextRva = sectionRva + offsetPos + 4;
+            var rel = failRva - nextRva;
+            BitConverter.GetBytes(rel).CopyTo(code.ToArray(), offsetPos);
+        }
+        var codeBytes = code.ToArray();
+        foreach (var offsetPos in failJumps)
+        {
+            var nextRva = sectionRva + offsetPos + 4;
+            var rel = failRva - nextRva;
+            BitConverter.GetBytes(rel).CopyTo(codeBytes, offsetPos);
+        }
+        codeBytes.CopyTo(pe, sectionRaw);
+        return pe;
+
+        int GetPath(string path)
+        {
+            if (!pathRvas.TryGetValue(path, out var rva))
+            {
+                rva = AddUtf16(path);
+                pathRvas[path] = rva;
+            }
+            return rva;
+        }
+
+        (int Rva, int Length) GetValue(string value)
+        {
+            if (!valueRvas.TryGetValue(value, out var info))
+            {
+                var rva = AddUtf8(value);
+                info = (rva, Encoding.UTF8.GetByteCount(value));
+                valueRvas[value] = info;
+            }
+            return info;
+        }
+
+        int AddUtf8(string value)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            var rva = dataCursor;
+            Array.Copy(bytes, 0, pe, RvaToRaw(rva), bytes.Length);
+            dataCursor += Align(bytes.Length + 1, 8);
+            return rva;
+        }
+
+        int AddUtf16(string value)
+        {
+            var bytes = Encoding.Unicode.GetBytes(value + "\0");
+            var rva = dataCursor;
+            Array.Copy(bytes, 0, pe, RvaToRaw(rva), bytes.Length);
+            dataCursor += Align(bytes.Length, 8);
+            return rva;
+        }
+
+        static int Align(int value, int align) => (value + align - 1) & ~(align - 1);
+        static int RvaToRaw(int rva) => sectionRaw + (rva - sectionRva);
+    }
+
+    static void WritePeHeader(byte[] pe, int sectionSize, int importRva, int importSize, ushort subsystem)
+    {
+        WriteAscii(pe, 0, "MZ");
+        WriteUInt32(pe, 0x3c, 0x80);
+
+        var peOffset = 0x80;
+        WriteAscii(pe, peOffset, "PE\0\0");
+        var coff = peOffset + 4;
+        WriteUInt16(pe, coff, 0x8664);
+        WriteUInt16(pe, coff + 2, 1);
+        WriteUInt16(pe, coff + 16, 0xF0);
+        WriteUInt16(pe, coff + 18, 0x22);
+
+        var opt = coff + 20;
+        WriteUInt16(pe, opt, 0x20b);
+        pe[opt + 2] = 14;
+        WriteUInt32(pe, opt + 4, (uint)sectionSize);
+        WriteUInt32(pe, opt + 16, 0x1000);
+        WriteUInt32(pe, opt + 20, 0x1000);
+        WriteUInt64(pe, opt + 24, 0x140000000);
+        WriteUInt32(pe, opt + 32, 0x1000);
+        WriteUInt32(pe, opt + 36, 0x200);
+        WriteUInt16(pe, opt + 40, 6);
+        WriteUInt16(pe, opt + 48, 6);
+        WriteUInt32(pe, opt + 56, (uint)(0x1000 + sectionSize));
+        WriteUInt32(pe, opt + 60, 0x200);
+        WriteUInt16(pe, opt + 68, subsystem);
+        WriteUInt64(pe, opt + 72, 0x100000);
+        WriteUInt64(pe, opt + 80, 0x1000);
+        WriteUInt64(pe, opt + 88, 0x100000);
+        WriteUInt64(pe, opt + 96, 0x1000);
+        WriteUInt32(pe, opt + 108, 16);
+        WriteUInt32(pe, opt + 120, (uint)importRva);
+        WriteUInt32(pe, opt + 124, (uint)importSize);
+
+        var section = opt + 0xF0;
+        WriteAscii(pe, section, ".text\0\0\0");
+        WriteUInt32(pe, section + 8, (uint)sectionSize);
+        WriteUInt32(pe, section + 12, 0x1000);
+        WriteUInt32(pe, section + 16, (uint)sectionSize);
+        WriteUInt32(pe, section + 20, 0x200);
+        WriteUInt32(pe, section + 36, 0xE0000020);
+    }
+
+    static List<Dictionary<string, string>> OrderedActionMaps(IrModel ir)
+        => ir.Actions
+            .OrderBy(pair => ActionIndex(pair.Key))
+            .Select(pair => pair.Value)
+            .ToList();
+
+    static int ActionIndex(string id)
+        => id.StartsWith("act_", StringComparison.Ordinal) && int.TryParse(id[4..], out var index) ? index : int.MaxValue;
+
+    static bool HasFileIoActions(IrModel ir)
+        => ir.Actions.Values.Any(action =>
+            action.TryGetValue("op", out var op) &&
+            op is "file_write" or "file_append" or "file_load" or "print_runtime_slot");
 
     static byte[] BuildStdoutPe(string text)
     {
@@ -964,6 +1323,8 @@ static class Program
     static (string Backend, string Actions) BackendManifestInfo(string irPath)
     {
         var ir = ParseIr(irPath);
+        if (HasFileIoActions(ir))
+            return ("WindowsX64PE_FileIoBackend", string.Join(",", OrderedActionMaps(ir).Select(a => a["op"])));
         if (ir.Actions.TryGetValue("act_0", out var first) &&
             first.TryGetValue("op", out var op) &&
             op == "print_stdout")
@@ -1037,6 +1398,8 @@ static class Program
         readonly List<(string Name, string Type, string Value)> _varList = new();
         readonly List<string> _flow = new();
         readonly List<string> _prints = new();
+        readonly List<RuntimeAction> _runtimeActions = new();
+        readonly HashSet<string> _runtimeSymbols = new(StringComparer.Ordinal);
         readonly Dictionary<string, List<Token>> _functions = new(StringComparer.Ordinal);
         readonly HashSet<string> _callStack = new(StringComparer.Ordinal);
         readonly List<StatementRule> _statementRules;
@@ -1063,7 +1426,8 @@ static class Program
                 new StatementRule(() => IsKeyword("print"), ParsePrintStatement),
                 new StatementRule(() => IsKeyword("title") || IsKeyword("set"), ParseTitleStatement),
                 new StatementRule(() => IsKeyword("message") || IsKeyword("show"), ParseMessageStatement),
-                new StatementRule(() => IsKeyword("add") || IsKeyword("remove") || IsKeyword("multiply") || IsKeyword("divide"), ParseMathUpdateStatement),
+                new StatementRule(() => IsKeyword("write") || IsKeyword("load"), ParseFileIoStatement),
+                new StatementRule(() => IsKeyword("add") || IsKeyword("remove") || IsKeyword("multiply") || IsKeyword("divide"), ParseAddOrMathUpdateStatement),
                 new StatementRule(() => IsKeyword("exit"), ParseExitStatement),
                 new StatementRule(() => IsKeyword("blend"), ParseBlendMixToCodeStatement),
                 new StatementRule(() => IsKeyword("if"), ParseIfStatement),
@@ -1095,6 +1459,16 @@ static class Program
                 _titleCommand = "print_default_title";
             }
 
+            if (_runtimeActions.Count > 0)
+            {
+                _title ??= program;
+                _titleExpr = _titleExpr == "" ? $"str(\"{program}\")" : _titleExpr;
+                _titleCommand = _titleCommand == "" ? "runtime_default_title" : _titleCommand;
+                _message ??= "";
+                _messageExpr = _messageExpr == "" ? "runtime_actions" : _messageExpr;
+                _messageCommand = _messageCommand == "" ? "runtime_actions" : _messageCommand;
+            }
+
             if (_title == null)
                 throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected title command.");
             if (_message == null)
@@ -1112,7 +1486,7 @@ static class Program
             SkipNewlines();
             Expect("EOF", "end of file");
 
-            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow);
+            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow, _runtimeActions);
         }
 
         void ParseStatement(bool apply, bool inIf)
@@ -1185,6 +1559,16 @@ static class Program
 
         void ParsePrintStatement(bool apply, bool inIf)
         {
+            if (IsRuntimePrint())
+            {
+                ExpectKeyword("print");
+                var slotTok = Expect("STRING", "runtime string symbol");
+                ExpectLine();
+                if (apply)
+                    _runtimeActions.Add(new RuntimeAction("print_runtime_slot", "", "slot", slotTok.Value, slotTok.Value));
+                return;
+            }
+
             var printed = ParsePrint();
             if (apply)
                 AppendPrint(printed);
@@ -1223,6 +1607,28 @@ static class Program
             if (inIf)
                 throw new CompileError("PARSE", "P082", Current.Line, Current.Column, "while inside compile-time if is not supported in M14C.");
             ParseWhile(apply);
+        }
+
+        void ParseFileIoStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("PARSE", "P100", Current.Line, Current.Column, "file I/O inside compile-time if is not supported in M15C.");
+            if (IsKeyword("write"))
+                ParseFileWrite(apply);
+            else
+                ParseFileLoad(apply);
+        }
+
+        void ParseAddOrMathUpdateStatement(bool apply, bool inIf)
+        {
+            if (IsKeyword("add") && LooksLikeFileAppend())
+            {
+                if (inIf)
+                    throw new CompileError("PARSE", "P100", Current.Line, Current.Column, "file I/O inside compile-time if is not supported in M15C.");
+                ParseFileAppend(apply);
+                return;
+            }
+            ParseMathUpdate(apply);
         }
 
         void ParseMathUpdateStatement(bool apply, bool inIf)
@@ -1373,6 +1779,119 @@ static class Program
             ExpectLine();
             return expr;
         }
+
+        bool IsRuntimePrint()
+            => IsKeyword("print") &&
+               PeekType("STRING") &&
+               (_pos + 1) < _tokens.Count &&
+               _runtimeSymbols.Contains(_tokens[_pos + 1].Value);
+
+        bool LooksLikeFileAppend()
+        {
+            for (var i = _pos + 1; i + 1 < _tokens.Count; i++)
+            {
+                if (_tokens[i].Type is "NEWLINE" or "EOF")
+                    return false;
+                if (_tokens[i].Type == "KEYWORD" && _tokens[i].Value == "to" &&
+                    _tokens[i + 1].Type == "KEYWORD" && _tokens[i + 1].Value == "file")
+                    return true;
+            }
+            return false;
+        }
+
+        void ParseFileWrite(bool apply)
+        {
+            ExpectKeyword("write");
+            if (!IsKeyword("file"))
+                throw new CompileError("PARSE", "P100", Current.Line, Current.Column, "Expected keyword \"file\" after write.");
+            ExpectKeyword("file");
+            var pathTok = ExpectFilePath();
+            if (!IsKeyword("with"))
+                throw new CompileError("PARSE", "P101", Current.Line, Current.Column, "Expected keyword \"with\" after file path.");
+            ExpectKeyword("with");
+            var value = ParseFileValue();
+            ExpectLine();
+            if (apply)
+                _runtimeActions.Add(new RuntimeAction("file_write", pathTok.Value, value.Kind, value.Value, ""));
+        }
+
+        void ParseFileAppend(bool apply)
+        {
+            ExpectKeyword("add");
+            var value = ParseFileValue();
+            if (!IsKeyword("to"))
+                throw new CompileError("PARSE", "P102", Current.Line, Current.Column, "Expected keyword \"to\" after add value.");
+            ExpectKeyword("to");
+            if (!IsKeyword("file"))
+                throw new CompileError("PARSE", "P103", Current.Line, Current.Column, "Expected keyword \"file\" after add value to.");
+            ExpectKeyword("file");
+            var pathTok = ExpectFilePath();
+            ExpectLine();
+            if (apply)
+                _runtimeActions.Add(new RuntimeAction("file_append", pathTok.Value, value.Kind, value.Value, ""));
+        }
+
+        void ParseFileLoad(bool apply)
+        {
+            ExpectKeyword("load");
+            if (!IsKeyword("file"))
+                throw new CompileError("PARSE", "P104", Current.Line, Current.Column, "Expected keyword \"file\" after load.");
+            ExpectKeyword("file");
+            var pathTok = ExpectFilePath();
+            if (!IsKeyword("to"))
+                throw new CompileError("PARSE", "P105", Current.Line, Current.Column, "Expected keyword \"to\" after load file path.");
+            ExpectKeyword("to");
+            var targetTok = Expect("STRING", "target symbol name");
+            ExpectLine();
+
+            if (!apply)
+                return;
+
+            var target = ResolveSymbol(targetTok, "S060", name => $"Cannot load file into missing symbol \"{name}\".");
+            if (target.IsConst)
+                throw new CompileError("SEMANTIC", "S063", targetTok.Line, targetTok.Column, $"Cannot load file into const symbol \"{targetTok.Value}\".");
+            if (target.Type != "text")
+                throw new CompileError("SEMANTIC", "S061", targetTok.Line, targetTok.Column, $"load file target \"{targetTok.Value}\" must be string or var text.");
+
+            _vars[targetTok.Value] = target with { IsRuntime = true };
+            _runtimeSymbols.Add(targetTok.Value);
+            _runtimeActions.Add(new RuntimeAction("file_load", pathTok.Value, "slot", targetTok.Value, targetTok.Value));
+        }
+
+        Token ExpectFilePath()
+        {
+            var pathTok = Expect("STRING", "file path string");
+            if (string.IsNullOrWhiteSpace(pathTok.Value))
+                throw new CompileError("SEMANTIC", "S062", pathTok.Line, pathTok.Column, "File path cannot be empty.");
+            return pathTok;
+        }
+
+        FileValue ParseFileValue()
+        {
+            if (IsExpressionEnd())
+                throw new CompileError("PARSE", "P106", Current.Line, Current.Column, "Expected file value.");
+
+            if (IsKeyword("string"))
+            {
+                var literal = ParseCanonicalStringLiteral();
+                return new FileValue("static", RuntimeUnescape(literal.Value));
+            }
+
+            if (CurrentIs("STRING") && !PeekType("PLUS"))
+            {
+                var symbolTok = Advance();
+                var info = ResolveSymbol(symbolTok, "S036", name => $"Unknown symbol \"{name}\".");
+                if (info.IsRuntime)
+                    return new FileValue("slot", symbolTok.Value);
+                return new FileValue("static", FormatValue(new ExprResult(info.Type, info.Value, $"symbol({symbolTok.Value})")));
+            }
+
+            var value = ParseAddExpression(legacyQuotedStrings: false);
+            return new FileValue("static", FormatValue(value));
+        }
+
+        static string RuntimeUnescape(string value)
+            => value.Replace("\\r", "\r").Replace("\\n", "\n").Replace("\\t", "\t").Replace("\\\\", "\\");
 
         void ParseSetValue(bool apply)
         {

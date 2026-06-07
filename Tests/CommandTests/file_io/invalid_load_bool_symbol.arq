@@ -1,0 +1,9 @@
+program "BadLoadBool"
+
+define bool called "content" be true
+
+load file "log.txt" to "content"
+
+blend mix to code 0
+
+end program "BadLoadBool"

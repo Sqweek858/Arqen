@@ -1,0 +1,7 @@
+program "BadWriteSyntax"
+
+write file "log.txt" string "Hello"
+
+blend mix to code 0
+
+end program "BadWriteSyntax"

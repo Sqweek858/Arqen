@@ -1,0 +1,9 @@
+program "BadLoadSyntax"
+
+define string called "content" be string ""
+
+load file "log.txt" "content"
+
+blend mix to code 0
+
+end program "BadLoadSyntax"

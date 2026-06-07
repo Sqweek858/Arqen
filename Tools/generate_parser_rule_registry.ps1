@@ -3,7 +3,7 @@ Import-Module (Join-Path $PSScriptRoot "CommandAutomationCommon.psm1") -Force
 
 $generated = Get-ArqenGeneratedDir
 $outPath = Join-Path $generated "parser_rule_registry.txt"
-$preferred = @("program", "comments", "let", "define", "rename", "title", "set_title_to", "set_value", "message_text", "show_message", "show_string", "show_value", "print", "math_update", "while_compile_time", "function", "exit", "BlendMixToCode", "literals", "plus_expression", "numeric_expression", "logical_condition")
+$preferred = @("program", "comments", "let", "define", "rename", "title", "set_title_to", "set_value", "message_text", "show_message", "show_string", "show_value", "print", "file_io", "math_update", "while_compile_time", "function", "exit", "BlendMixToCode", "literals", "plus_expression", "numeric_expression", "logical_condition")
 $specs = @(Get-ArqenCommandSpecs)
 $byId = @{}
 foreach ($spec in $specs) { $byId[$spec.Id] = $spec }

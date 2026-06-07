@@ -1,8 +1,11 @@
 show_message|supported
 print_stdout|supported
+print_runtime_slot|supported
+file_write|supported
+file_append|supported
+file_load|supported
 exit|supported
 print|unsupported
-file_write|unsupported
 branch|unsupported
 loop|unsupported
 function|unsupported

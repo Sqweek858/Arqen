@@ -1,0 +1,7 @@
+program "BadWriteMissing"
+
+write file "log.txt" with "missing"
+
+blend mix to code 0
+
+end program "BadWriteMissing"

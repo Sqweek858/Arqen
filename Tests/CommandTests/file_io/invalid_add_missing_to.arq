@@ -1,0 +1,7 @@
+program "BadAddSyntax"
+
+add string "Hello" file "log.txt"
+
+blend mix to code 0
+
+end program "BadAddSyntax"

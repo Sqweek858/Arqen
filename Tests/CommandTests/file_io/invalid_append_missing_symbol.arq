@@ -1,0 +1,7 @@
+program "BadAppendMissing"
+
+add "missing" to file "log.txt"
+
+blend mix to code 0
+
+end program "BadAppendMissing"

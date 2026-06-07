@@ -21,6 +21,7 @@ $statementRows = @(
     @{ Rule = "show_string_statement"; Command = "show_string"; Keywords = "show,string"; TestFolder = "canonical_show" },
     @{ Rule = "show_value_statement"; Command = "show_value"; Keywords = "show"; TestFolder = "canonical_show" },
     @{ Rule = "print_statement"; Command = "print"; Keywords = "print" },
+    @{ Rule = "file_io_statement"; Command = "file_io"; Keywords = "write,file,with,add,to,file,load,file,to"; TestFolder = "file_io" },
     @{ Rule = "math_update_statement"; Command = "math_update"; Keywords = "add,remove,multiply,divide"; TestFolder = "math_update" },
     @{ Rule = "while_statement"; Command = "while_compile_time"; Keywords = "while"; TestFolder = "while_compile_time" },
     @{ Rule = "function_statement"; Command = "function"; Keywords = "define,function,call"; TestFolder = "function" },
