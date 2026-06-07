@@ -1317,7 +1317,52 @@ Run-M15B-Tests
 
 Run-M15C-Tests
 
+function Run-M15E-Tests {
+    Write-Host ""
+    Write-Host "M15E runtime backend hardening tests"
+
+    $mixedExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\file_io\valid_mixed_runtime.arq", "--rebuild")
+    $mixedIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_mixed_runtime.arqir") -Raw
+    Add-Check "M15E_mixed_runtime_ir" ($mixedExit -eq 0 -and $mixedIr.Contains("op=command_arg_index") -and $mixedIr.Contains("op=file_write") -and $mixedIr.Contains("op=file_append") -and $mixedIr.Contains("op=file_load") -and $mixedIr.Contains("op=print_runtime_slot"))
+
+    $tmp = Join-Path $env:TEMP ("arqen_m15e_mixed_" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tmp | Out-Null
+    Copy-Item (Join-Path $RepoRoot "Build\EXE\valid_mixed_runtime.exe") $tmp -Force
+    Push-Location $tmp
+    $out = & ".\valid_mixed_runtime.exe" "MixedArg" 2>&1
+    $exitMixed = $LASTEXITCODE
+    $outText = ($out | Out-String).Trim()
+    Pop-Location
+    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
+
+    Add-Check "M15E_mixed_runtime_output" ($exitMixed -eq 0 -and $outText.Contains("MixedArg") -and $outText.Contains("Added line"))
+
+    $hugeArg = "A" * 4096
+    $tmp2 = Join-Path $env:TEMP ("arqen_m15e_fail_" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tmp2 | Out-Null
+    Copy-Item (Join-Path $RepoRoot "Build\EXE\valid_args_demo.exe") $tmp2 -Force
+    Push-Location $tmp2
+    & ".\valid_args_demo.exe" $hugeArg | Out-Null
+    $exitArg = $LASTEXITCODE
+    Pop-Location
+    Remove-Item $tmp2 -Recurse -Force -ErrorAction SilentlyContinue
+    Add-Check "M15E_args_over_limit_fail" ($exitArg -ne 0)
+
+    $hugeContent = "B" * 4096
+    $tmp3 = Join-Path $env:TEMP ("arqen_m15e_fail_" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tmp3 | Out-Null
+    Copy-Item (Join-Path $RepoRoot "Build\EXE\valid_load_missing_runtime.exe") $tmp3 -Force
+    Push-Location $tmp3
+    Set-Content -Path "missing.txt" -Value $hugeContent -NoNewline
+    & ".\valid_load_missing_runtime.exe" | Out-Null
+    $exitFile = $LASTEXITCODE
+    Pop-Location
+    Remove-Item $tmp3 -Recurse -Force -ErrorAction SilentlyContinue
+    Add-Check "M15E_file_over_limit_fail" ($exitFile -ne 0)
+}
+
 Run-M15D-Tests
+Run-M15E-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

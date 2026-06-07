@@ -829,6 +829,16 @@ static class Program
                 GetPath(action.GetValueOrDefault("path") ?? "");
             if (action.GetValueOrDefault("value_kind") == "static")
                 GetValue(action.GetValueOrDefault("value") ?? "");
+            if (op == "print_stdout")
+            {
+                var textId = action["text"];
+                var text = ir.Consts[textId].Value;
+                if (text.Length > 0 && !text.EndsWith('\n')) text += "\n";
+                var messageBytes = Encoding.UTF8.GetBytes(text);
+                if (messageBytes.Length > 0x900)
+                    throw new CompileError("BACKEND", "B004", 0, 0, $"stdout text too long for M15 stdout backend: {messageBytes.Length} bytes.");
+                GetValue(text);
+            }
         }
 
         var importNameCursor = 0x1A20;
@@ -1144,11 +1154,11 @@ static class Program
             var afterEmptyRva = sectionRva + code.Count;
             PatchRel32(findBack, findLoopRva);
             PatchRel32(outOfRange, emptyRva);
-            PatchRel32(quotedDoneByCap, doneRva);
+            failJumps.Add(quotedDoneByCap);
             PatchRel32(quotedDoneByNull, doneRva);
             PatchRel32(quotedDoneByQuote, doneRva);
             PatchRel32(quotedBack, quotedLoopRva);
-            PatchRel32(unquotedDoneByCap, doneRva);
+            failJumps.Add(unquotedDoneByCap);
             PatchRel32(unquotedDoneByNull, doneRva);
             PatchRel32(unquotedDoneBySpace, doneRva);
             PatchRel32(unquotedBack, unquotedLoopRva);
@@ -1193,11 +1203,16 @@ static class Program
                 OpenFile(action["path"], 0x80000000, 3);
                 Emit(0x48, 0x89, 0xD9);
                 Lea(new byte[] { 0x48, 0x8D, 0x15 }, slot.BufferRva, 7);
-                Emit(0x41, 0xB8); EmitUInt32(runtimeSlotBytes - 1);
+                Emit(0x41, 0xB8); EmitUInt32(runtimeSlotBytes);
                 Lea(new byte[] { 0x4C, 0x8D, 0x0D }, slot.LenRva, 7);
                 StoreStack32(0x20, 0);
                 CallIat(2);
                 CheckEaxZero();
+                var nextRva = sectionRva + code.Count + 10;
+                Emit(0x81, 0x3D);
+                EmitUInt32(unchecked((uint)(slot.LenRva - nextRva)));
+                EmitUInt32(runtimeSlotBytes);
+                JeFail();
                 CloseRbx();
             }
             else if (op == "print_runtime_slot")
@@ -1209,6 +1224,17 @@ static class Program
                 Emit(0x48, 0x89, 0xC3);
                 WriteHandleFromSlot(action["target"]);
                 WriteHandleFromStatic("\n");
+            }
+            else if (op == "print_stdout")
+            {
+                var textId = action["text"];
+                var text = ir.Consts[textId].Value;
+                if (text.Length > 0 && !text.EndsWith('\n')) text += "\n";
+                Emit(0xB9, 0xF5, 0xFF, 0xFF, 0xFF);
+                CallIat(5);
+                CheckRaxInvalidHandle();
+                Emit(0x48, 0x89, 0xC3);
+                WriteHandleFromStatic(text);
             }
             else if (op == "command_arg_count")
             {
