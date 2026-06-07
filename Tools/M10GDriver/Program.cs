@@ -2042,6 +2042,8 @@ static class Program
 
     sealed class Parser
     {
+        const double NumericEpsilon = 0.0000000001;
+
         List<Token> _tokens;
         readonly Dictionary<string, VarInfo> _vars = new(StringComparer.Ordinal);
         readonly List<(string Name, string Type, string Value)> _varList = new();
@@ -3557,6 +3559,8 @@ static class Program
             {
                 var linear = q1.Select((v, i) => v + t * (q2[i] - v)).ToArray();
                 var len = Math.Sqrt(linear.Sum(v => v * v));
+                if (Math.Abs(len) < NumericEpsilon)
+                    throw new CompileError("SEMANTIC", "S152", 0, 0, "Quaternion slerp produced zero length result.");
                 return linear.Select(v => v / len).ToArray();
             }
 
@@ -3567,7 +3571,11 @@ static class Program
             var sinTheta0 = Math.Sin(theta0);
             var s0 = Math.Cos(theta) - dot * sinTheta / sinTheta0;
             var s1 = sinTheta / sinTheta0;
-            return q1.Select((v, i) => s0 * v + s1 * q2[i]).ToArray();
+            var result = q1.Select((v, i) => s0 * v + s1 * q2[i]).ToArray();
+            var resultLen = Math.Sqrt(result.Sum(v => v * v));
+            if (Math.Abs(resultLen) < NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S152", 0, 0, "Quaternion slerp produced zero length result.");
+            return result.Select(v => v / resultLen).ToArray();
         }
 
         static double[] EulerFromQuaternion(double[] q)
@@ -3660,6 +3668,10 @@ static class Program
 
         static string FormatComplex(double real, double imag)
         {
+            if (Math.Abs(real) < NumericEpsilon)
+                real = 0;
+            if (Math.Abs(imag) < NumericEpsilon)
+                imag = 0;
             var r = FormatNumber(real, "double");
             var absI = FormatNumber(Math.Abs(imag), "double");
             var sign = imag < 0 ? "-" : "+";
@@ -3749,13 +3761,40 @@ static class Program
 
         static string FormatNumber(double value, string type)
         {
-           if (Math.Abs(value) < 0.0000000001)
-             value = 0;
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                throw new CompileError("SEMANTIC", "S094", 0, 0, "Math result must be finite.");
 
-          if (type == "int")
-             return ((long)Math.Round(value)).ToString(CultureInfo.InvariantCulture);
+            if (Math.Abs(value) < NumericEpsilon)
+                value = 0;
 
-             return value.ToString("0.##########", CultureInfo.InvariantCulture);
+            var rounded = Math.Round(value);
+            if (Math.Abs(value - rounded) < NumericEpsilon)
+                value = rounded;
+
+            if (type == "int")
+            {
+                if (value > long.MaxValue || value < long.MinValue)
+                    throw new CompileError("SEMANTIC", "S094", 0, 0, "Integer math result is outside the supported range.");
+                return ((long)Math.Round(value)).ToString(CultureInfo.InvariantCulture);
+            }
+
+            return value.ToString("0.##########", CultureInfo.InvariantCulture);
+        }
+
+        static double Clamp01(double value) => Math.Min(Math.Max(value, 0), 1);
+
+        static bool IsNearlyZero(double value) => Math.Abs(value) < NumericEpsilon;
+
+        static double SmoothStep01(double value)
+        {
+            var t = Clamp01(value);
+            return t * t * (3 - 2 * t);
+        }
+
+        static double SmootherStep01(double value)
+        {
+            var t = Clamp01(value);
+            return t * t * t * (t * (t * 6 - 15) + 10);
         }
 
         static string FormatValue(ExprResult expr) => expr.Type == "bool" ? expr.Value.ToLowerInvariant() : expr.Value;
@@ -3975,43 +4014,91 @@ static class Program
             return new ExprResult("double", ToNumber(value) < ToNumber(edge) ? "0" : "1", $"step({edge.Repr},{value.Repr})");
         }
 
-        ExprResult ApplySmoothStepFunction(Token functionTok, ExprResult edge0, ExprResult edge1, ExprResult value)
+        ExprResult ApplySmoothStepFunction(Token functionTok, ExprResult edge0, ExprResult edge1, ExprResult value, bool smoother)
         {
             if (!IsNumeric(edge0.Type) || !IsNumeric(edge1.Type) || !IsNumeric(value.Type))
-                throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, "smoothstep requires numeric operands.");
+                throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires numeric operands.");
             var lo = ToNumber(edge0);
             var hi = ToNumber(edge1);
-            if (Math.Abs(hi - lo) < 0.0000000001)
-                throw new CompileError("SEMANTIC", "S121", functionTok.Line, functionTok.Column, "smoothstep edges cannot be equal.");
-            var t = Math.Min(Math.Max((ToNumber(value) - lo) / (hi - lo), 0), 1);
-            var result = t * t * (3 - 2 * t);
-            return new ExprResult("double", FormatNumber(result, "double"), $"smoothstep({edge0.Repr},{edge1.Repr},{value.Repr})");
+            if (IsNearlyZero(hi - lo))
+                throw new CompileError("SEMANTIC", "S121", functionTok.Line, functionTok.Column, $"{functionTok.Value} edges cannot be equal.");
+            var t = (ToNumber(value) - lo) / (hi - lo);
+            var result = smoother ? SmootherStep01(t) : SmoothStep01(t);
+            var repr = smoother ? "smootherstep" : "smoothstep";
+            return new ExprResult("double", FormatNumber(result, "double"), $"{repr}({edge0.Repr},{edge1.Repr},{value.Repr})");
         }
 
-        ExprResult ApplyInverseLerpFunction(Token functionTok, ExprResult a, ExprResult b, ExprResult value)
+        ExprResult ApplyInverseLerpFunction(Token functionTok, ExprResult a, ExprResult b, ExprResult value, bool clamped)
         {
             if (!IsNumeric(a.Type) || !IsNumeric(b.Type) || !IsNumeric(value.Type))
                 throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, "inverse lerp requires numeric operands.");
             var start = ToNumber(a);
             var end = ToNumber(b);
-            if (Math.Abs(end - start) < 0.0000000001)
+            if (IsNearlyZero(end - start))
                 throw new CompileError("SEMANTIC", "S121", functionTok.Line, functionTok.Column, "inverse lerp range cannot be zero.");
             var result = (ToNumber(value) - start) / (end - start);
-            return new ExprResult("double", FormatNumber(result, "double"), $"inverse_lerp({a.Repr},{b.Repr},{value.Repr})");
+            if (clamped)
+                result = Clamp01(result);
+            var repr = clamped ? "clamped_inverse_lerp" : "inverse_lerp";
+            return new ExprResult("double", FormatNumber(result, "double"), $"{repr}({a.Repr},{b.Repr},{value.Repr})");
         }
 
-        ExprResult ApplyRemapFunction(Token functionTok, ExprResult value, ExprResult inMin, ExprResult inMax, ExprResult outMin, ExprResult outMax)
+        ExprResult ApplyRemapFunction(Token functionTok, ExprResult value, ExprResult inMin, ExprResult inMax, ExprResult outMin, ExprResult outMax, bool clamped)
         {
             if (!IsNumeric(value.Type) || !IsNumeric(inMin.Type) || !IsNumeric(inMax.Type) || !IsNumeric(outMin.Type) || !IsNumeric(outMax.Type))
                 throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, "remap requires numeric operands.");
             var a = ToNumber(inMin);
             var b = ToNumber(inMax);
-            if (Math.Abs(b - a) < 0.0000000001)
+            if (IsNearlyZero(b - a))
                 throw new CompileError("SEMANTIC", "S121", functionTok.Line, functionTok.Column, "remap input range cannot be zero.");
             var t = (ToNumber(value) - a) / (b - a);
+            if (clamped)
+                t = Clamp01(t);
             var result = ToNumber(outMin) + (ToNumber(outMax) - ToNumber(outMin)) * t;
-            return new ExprResult("double", FormatNumber(result, "double"), $"remap({value.Repr},{inMin.Repr},{inMax.Repr},{outMin.Repr},{outMax.Repr})");
+            var repr = clamped ? "clamped_remap" : "remap";
+            return new ExprResult("double", FormatNumber(result, "double"), $"{repr}({value.Repr},{inMin.Repr},{inMax.Repr},{outMin.Repr},{outMax.Repr})");
         }
+
+        ExprResult ApplyEaseFunction(Token functionTok, string mode, string curve, ExprResult value)
+        {
+            if (!IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S125", functionTok.Line, functionTok.Column, "ease requires a numeric factor.");
+
+            var t = ToNumber(value);
+            if (t < -NumericEpsilon || t > 1 + NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S125", functionTok.Line, functionTok.Column, "ease factor must be between 0 and 1.");
+            t = Clamp01(t);
+
+            var result = curve switch
+            {
+                "linear" => t,
+                "sine" => mode switch
+                {
+                    "in" => 1 - Math.Cos(t * Math.PI / 2),
+                    "out" => Math.Sin(t * Math.PI / 2),
+                    "in out" => -(Math.Cos(Math.PI * t) - 1) / 2,
+                    _ => throw new CompileError("SEMANTIC", "S125", functionTok.Line, functionTok.Column, "Unknown ease direction."),
+                },
+                "quad" => EasePolynomial(mode, t, 2),
+                "cubic" => EasePolynomial(mode, t, 3),
+                "quart" => EasePolynomial(mode, t, 4),
+                "quint" => EasePolynomial(mode, t, 5),
+                _ => throw new CompileError("SEMANTIC", "S125", functionTok.Line, functionTok.Column, $"Unknown ease curve \"{curve}\"."),
+            };
+
+            return new ExprResult("double", FormatNumber(result, "double"), $"ease_{mode.Replace(" ", "_")}_{curve}({value.Repr})");
+        }
+
+        static double EasePolynomial(string mode, double t, int power)
+            => mode switch
+            {
+                "in" => Math.Pow(t, power),
+                "out" => 1 - Math.Pow(1 - t, power),
+                "in out" => t < 0.5
+                    ? Math.Pow(2, power - 1) * Math.Pow(t, power)
+                    : 1 - Math.Pow(-2 * t + 2, power) / 2,
+                _ => throw new CompileError("SEMANTIC", "S125", 0, 0, "Unknown ease direction."),
+            };
 
         ExprResult ApplyLerpFunction(Token functionTok, ExprResult a, ExprResult b, ExprResult t)
         {
@@ -4177,7 +4264,7 @@ static class Program
             => value is "dot" or "cross";
 
         static bool IsAdvancedMathFunctionName(string value)
-            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "inverse" or "remap" or "lerp" or "distance" or "reflect" or "project" or "clamp" or "translate" or "scale" or "rotate" or "matmul" or "compose" or "slerp" or "euler";
+            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "smootherstep" or "inverse" or "remap" or "clamped" or "lerp" or "ease" or "distance" or "reflect" or "project" or "clamp" or "translate" or "scale" or "rotate" or "matmul" or "compose" or "slerp" or "euler";
 
         static bool IsComplexFunctionName(string value)
             => value is "real" or "imag" or "magnitude" or "phase";
@@ -4407,13 +4494,14 @@ static class Program
                     return ApplyStepFunction(functionTok, edge, value);
                 }
                 case "smoothstep":
+                case "smootherstep":
                 {
                     var edge0 = ParseAddExpression(legacyQuotedStrings);
-                    Expect("COMMA", "comma between smoothstep arguments");
+                    Expect("COMMA", $"comma between {functionTok.Value} arguments");
                     var edge1 = ParseAddExpression(legacyQuotedStrings);
-                    Expect("COMMA", "comma between smoothstep arguments");
+                    Expect("COMMA", $"comma between {functionTok.Value} arguments");
                     var value = ParseAddExpression(legacyQuotedStrings);
-                    return ApplySmoothStepFunction(functionTok, edge0, edge1, value);
+                    return ApplySmoothStepFunction(functionTok, edge0, edge1, value, functionTok.Value == "smootherstep");
                 }
                 case "inverse":
                 {
@@ -4423,7 +4511,7 @@ static class Program
                     var b = ParseAddExpression(legacyQuotedStrings);
                     Expect("COMMA", "comma between inverse lerp arguments");
                     var value = ParseAddExpression(legacyQuotedStrings);
-                    return ApplyInverseLerpFunction(functionTok, a, b, value);
+                    return ApplyInverseLerpFunction(functionTok, a, b, value, clamped: false);
                 }
                 case "remap":
                 {
@@ -4436,7 +4524,70 @@ static class Program
                     var outMin = ParseAddExpression(legacyQuotedStrings);
                     Expect("COMMA", "comma between remap output range values");
                     var outMax = ParseAddExpression(legacyQuotedStrings);
-                    return ApplyRemapFunction(functionTok, value, inMin, inMax, outMin, outMax);
+                    return ApplyRemapFunction(functionTok, value, inMin, inMax, outMin, outMax, clamped: false);
+                }
+                case "clamped":
+                {
+                    if (CurrentWordIs("inverse"))
+                    {
+                        Advance();
+                        ExpectWord("lerp", "P122", "Expected lerp after clamped inverse.");
+                        var a = ParseAddExpression(legacyQuotedStrings);
+                        Expect("COMMA", "comma between clamped inverse lerp arguments");
+                        var b = ParseAddExpression(legacyQuotedStrings);
+                        Expect("COMMA", "comma between clamped inverse lerp arguments");
+                        var value = ParseAddExpression(legacyQuotedStrings);
+                        return ApplyInverseLerpFunction(functionTok, a, b, value, clamped: true);
+                    }
+
+                    if (CurrentWordIs("remap"))
+                    {
+                        Advance();
+                        var value = ParseAddExpression(legacyQuotedStrings);
+                        ExpectWord("from", "P123", "Expected from in clamped remap expression.");
+                        var inMin = ParseAddExpression(legacyQuotedStrings);
+                        Expect("COMMA", "comma between clamped remap input range values");
+                        var inMax = ParseAddExpression(legacyQuotedStrings);
+                        ExpectWord("to", "P124", "Expected to in clamped remap expression.");
+                        var outMin = ParseAddExpression(legacyQuotedStrings);
+                        Expect("COMMA", "comma between clamped remap output range values");
+                        var outMax = ParseAddExpression(legacyQuotedStrings);
+                        return ApplyRemapFunction(functionTok, value, inMin, inMax, outMin, outMax, clamped: true);
+                    }
+
+                    throw new CompileError("PARSE", "P129", Current.Line, Current.Column, "Expected inverse lerp or remap after clamped.");
+                }
+                case "ease":
+                {
+                    var mode = "";
+                    if (CurrentWordIs("in"))
+                    {
+                        Advance();
+                        if (CurrentWordIs("out"))
+                        {
+                            Advance();
+                            mode = "in out";
+                        }
+                        else
+                        {
+                            mode = "in";
+                        }
+                    }
+                    else if (CurrentWordIs("out"))
+                    {
+                        Advance();
+                        mode = "out";
+                    }
+                    else
+                    {
+                        throw new CompileError("PARSE", "P127", Current.Line, Current.Column, "Expected in, out, or in out after ease.");
+                    }
+
+                    if (!CurrentWordIs("linear") && !CurrentWordIs("sine") && !CurrentWordIs("quad") && !CurrentWordIs("cubic") && !CurrentWordIs("quart") && !CurrentWordIs("quint"))
+                        throw new CompileError("PARSE", "P128", Current.Line, Current.Column, "Expected ease curve linear, sine, quad, cubic, quart, or quint.");
+                    var curve = Advance().Value;
+                    var value = ParseUnaryExpression(legacyQuotedStrings);
+                    return ApplyEaseFunction(functionTok, mode, curve, value);
                 }
                 case "lerp":
                 {

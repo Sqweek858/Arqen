@@ -1,0 +1,11 @@
+COMMAND_ID|interpolation_easing
+CANONICAL|interpolation easing remap and clamped interpolation expressions
+CATEGORY|expression
+TOKENS|IDENT,INT,DECIMAL,COMMA,KEYWORD(from),KEYWORD(to)
+AST_NODE|InterpolationEasingExpression
+SEMANTIC|evaluates lerp, inverse lerp, remap, clamped remap, smoothstep, smootherstep, and ease curves at compile time
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\interpolation_easing\valid_interpolation_easing.arq
+INVALID_TEST|Tests\CommandTests\interpolation_easing\invalid_ease_factor_out_of_range.arq
+STATUS|experimental

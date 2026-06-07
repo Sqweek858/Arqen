@@ -1,0 +1,9 @@
+program "InvalidSmootherStepEqualEdges"
+
+define double called "x" be 0
+
+set "x" to smootherstep 1, 1, 0.5
+
+blend mix to code 0
+
+end program "InvalidSmootherStepEqualEdges"
