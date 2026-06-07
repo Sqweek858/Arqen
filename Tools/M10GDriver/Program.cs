@@ -803,10 +803,13 @@ static class Program
         const int sectionRva = 0x1000;
         const int sectionSize = 0x5000;
         const int importRva = 0x1800;
-        const int iltRva = 0x1900;
-        const int iatRva = 0x1980;
-        const int kernelDllNameRva = 0x1A00;
-        const int userDllNameRva = 0x1A20;
+        const int kernelIltRva = 0x1840;
+        const int userIltRva = 0x1860;
+        const int kernelIatRva = 0x18C0;
+        const int userIatRva = 0x18E0;
+        const int kernelDllNameRva = 0x1940;
+        const int userDllNameRva = 0x1960;
+        const int importNameCursorStart = 0x1980;
         const int dataStartRva = 0x2000;
 
         var actions = OrderedActionMaps(ir);
@@ -860,18 +863,18 @@ static class Program
 
         var titleRva = AddUtf16(windowTitle);
 
-        var importNameCursor = 0x1A40;
         var kernelImports = new[] { "ExitProcess", "GetModuleHandleW" };
-        var userImports = new[] { "RegisterClassW", "CreateWindowExW", "ShowWindow", "UpdateWindow", "GetMessageW", "TranslateMessage", "DispatchMessageW", "DefWindowProcW" };
+        var userImports = new[] { "RegisterClassW", "CreateWindowExW", "ShowWindow", "UpdateWindow", "GetMessageW", "TranslateMessage", "DispatchMessageW", "DefWindowProcW", "PostQuitMessage" };
         
+        var importNameCursor = importNameCursorStart;
         for (var i = 0; i < kernelImports.Length; i++)
         {
-            AddImport(pe, iltRva, iatRva, i, importNameCursor, kernelImports[i]);
+            AddImport(pe, kernelIltRva, kernelIatRva, i, importNameCursor, kernelImports[i]);
             importNameCursor += 0x20;
         }
         for (var i = 0; i < userImports.Length; i++)
         {
-            AddImport(pe, iltRva + 0x20, iatRva + 0x20, i, importNameCursor, userImports[i]);
+            AddImport(pe, userIltRva, userIatRva, i, importNameCursor, userImports[i]);
             importNameCursor += 0x20;
         }
 
@@ -879,25 +882,15 @@ static class Program
         Encoding.ASCII.GetBytes("USER32.dll\0").CopyTo(pe, RvaToRaw(userDllNameRva));
 
         // ILT / IAT table entries for KERNEL32
-        pe[RvaToRaw(importRva)] = (byte)(iltRva & 0xff); pe[RvaToRaw(importRva) + 1] = (byte)((iltRva >> 8) & 0xff);
+        pe[RvaToRaw(importRva)] = (byte)(kernelIltRva & 0xff); pe[RvaToRaw(importRva) + 1] = (byte)((kernelIltRva >> 8) & 0xff);
         pe[RvaToRaw(importRva) + 12] = (byte)(kernelDllNameRva & 0xff); pe[RvaToRaw(importRva) + 13] = (byte)((kernelDllNameRva >> 8) & 0xff);
-        pe[RvaToRaw(importRva) + 16] = (byte)(iatRva & 0xff); pe[RvaToRaw(importRva) + 17] = (byte)((iatRva >> 8) & 0xff);
+        pe[RvaToRaw(importRva) + 16] = (byte)(kernelIatRva & 0xff); pe[RvaToRaw(importRva) + 17] = (byte)((kernelIatRva >> 8) & 0xff);
         
         // ILT / IAT table entries for USER32
         var userDescRva = importRva + 20;
-        var userIltRva = iltRva + 0x40; // separate block for ilt
-        var userIatRva = iatRva + 0x40;
         pe[RvaToRaw(userDescRva)] = (byte)(userIltRva & 0xff); pe[RvaToRaw(userDescRva) + 1] = (byte)((userIltRva >> 8) & 0xff);
         pe[RvaToRaw(userDescRva) + 12] = (byte)(userDllNameRva & 0xff); pe[RvaToRaw(userDescRva) + 13] = (byte)((userDllNameRva >> 8) & 0xff);
         pe[RvaToRaw(userDescRva) + 16] = (byte)(userIatRva & 0xff); pe[RvaToRaw(userDescRva) + 17] = (byte)((userIatRva >> 8) & 0xff);
-        
-        // Relocate user imports
-        importNameCursor = 0x1A40 + 0x20 * kernelImports.Length;
-        for (var i = 0; i < userImports.Length; i++)
-        {
-            AddImport(pe, userIltRva, userIatRva, i, importNameCursor, userImports[i]);
-            importNameCursor += 0x20;
-        }
 
         var entryRva = sectionRva + 0x100;
         var codeStart = entryRva;
@@ -931,9 +924,12 @@ static class Program
         EmitProc(0x4C, 0x89, 0x4C, 0x24, 0x20); // r9 -> shadow
         EmitProc(0x48, 0x83, 0xEC, 0x28);       // sub rsp, 40
         EmitProc(0x81, 0xFA, 0x02, 0x00, 0x00, 0x00); // cmp edx, 2 (WM_DESTROY)
-        EmitProc(0x75, 0x07); // jne +7
+        EmitProc(0x75, 0x0F); // jne +15
         EmitProc(0x31, 0xC9); // xor ecx, ecx
-        CallProcIat(iatRva); // ExitProcess
+        CallProcIat(userIatRva + 8 * 8); // PostQuitMessage
+        EmitProc(0x31, 0xC0); // xor eax, eax
+        EmitProc(0x48, 0x83, 0xC4, 0x28); // add rsp, 40
+        EmitProc(0xC3); // ret
         EmitProc(0x48, 0x8B, 0x4C, 0x24, 0x30); // mov rcx, [rsp+48]
         EmitProc(0x8B, 0x54, 0x24, 0x38); // mov edx, [rsp+56]
         EmitProc(0x4C, 0x8B, 0x44, 0x24, 0x40); // mov r8, [rsp+64]
@@ -945,7 +941,7 @@ static class Program
 
         Emit(0x48, 0x83, 0xEC, 0x68); // sub rsp, 104
         Emit(0x31, 0xC9); // xor ecx, ecx
-        CallIat(iatRva + 1 * 8); // GetModuleHandleW
+        CallIat(kernelIatRva + 1 * 8); // GetModuleHandleW
         Emit(0x48, 0x89, 0xC3); // mov rbx, rax (hInstance)
 
         Emit(0x48, 0x8D, 0x4C, 0x24, 0x20); // mov rcx, rsp+32
@@ -1022,7 +1018,7 @@ static class Program
         }
 
         Emit(0x31, 0xC9); // xor ecx, ecx
-        CallIat(iatRva); // ExitProcess
+        CallIat(kernelIatRva); // ExitProcess
 
         Array.Copy(code.ToArray(), 0, pe, RvaToRaw(entryRva), code.Count);
         pe[0x128] = (byte)(entryRva & 0xff);
