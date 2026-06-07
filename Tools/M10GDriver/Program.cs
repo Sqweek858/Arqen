@@ -964,7 +964,7 @@ static class Program
         Emit(0x48, 0x8D, 0x05);
         int classNameOffset = classNameRva - (codeStart + code.Count + 4);
         Emit((byte)(classNameOffset & 0xFF), (byte)((classNameOffset >> 8) & 0xFF), (byte)((classNameOffset >> 16) & 0xFF), (byte)((classNameOffset >> 24) & 0xFF));
-        Emit(0x48, 0x89, 0x44, 0x24, 0x40); // lpszClassName = classNameRva
+        Emit(0x48, 0x89, 0x44, 0x24, 0x60); // lpszClassName = classNameRva
         
         Emit(0x48, 0x8D, 0x4C, 0x24, 0x20); // rcx = &wc
         CallIat(userIatRva); // RegisterClassW
