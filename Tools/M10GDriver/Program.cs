@@ -1072,8 +1072,8 @@ static class Program
         int titleOffset = titleRva - (codeStart + code.Count + 4);
         Emit((byte)(titleOffset & 0xFF), (byte)((titleOffset >> 8) & 0xFF), (byte)((titleOffset >> 16) & 0xFF), (byte)((titleOffset >> 24) & 0xFF));
         
-        uint style = 0x10C00000; // WS_VISIBLE | WS_CAPTION
-        if (resizable) style |= 0x00040000 | 0x00010000; // WS_SIZEBOX | WS_MAXIMIZEBOX
+        // WS_VISIBLE=0x10000000, WS_OVERLAPPEDWINDOW=0x00CF0000, WS_CAPTION=0x00C00000, WS_SYSMENU=0x00080000, WS_MINIMIZEBOX=0x00020000
+        uint style = resizable ? 0x10CF0000u : 0x10CA0000u;
         Emit(0x41, 0xB9, (byte)(style & 0xFF), (byte)((style >> 8) & 0xFF), (byte)((style >> 16) & 0xFF), (byte)((style >> 24) & 0xFF)); // r9 = style
         
         Emit(0xC7, 0x44, 0x24, 0x20, 0x00, 0x00, 0x00, 0x80); // CW_USEDEFAULT
@@ -1134,14 +1134,14 @@ static class Program
     {
         const int sectionRaw = 0x200;
         const int sectionRva = 0x1000;
-        const int sectionSize = 0xC000;
-        const int importRva = 0x1800;
-        const int iltRva = 0x1900;
-        const int iatRva = 0x1960;
-        const int kernelDllNameRva = 0x1A00;
-        const int dataStartRva = 0x3000;
-        const int slotLenStartRva = 0x8F00;
-        const int slotStartRva = 0x9000;
+        const int sectionSize = 0x100000;
+        const int importRva = 0x40000;
+        const int iltRva = 0x40100;
+        const int iatRva = 0x40180;
+        const int kernelDllNameRva = 0x40280;
+        const int dataStartRva = 0x41000;
+        const int slotLenStartRva = 0xE0000;
+        const int slotStartRva = 0xE1000;
         const int runtimeSlotBytes = 0x1000;
         const int bytesWrittenRva = slotLenStartRva - 8;
 
@@ -1159,6 +1159,9 @@ static class Program
             .Distinct(StringComparer.Ordinal)
             .ToList();
         var slots = new Dictionary<string, (int BufferRva, int LenRva)>(StringComparer.Ordinal);
+        var maxRuntimeSlots = (sectionRva + sectionSize - slotStartRva) / runtimeSlotBytes;
+        if (slotNames.Count > maxRuntimeSlots)
+            throw new CompileError("BACKEND", "B001", 0, 0, $"Too many runtime string slots for file I/O backend: {slotNames.Count} > {maxRuntimeSlots}.");
         for (var i = 0; i < slotNames.Count; i++)
             slots[slotNames[i]] = (slotStartRva + i * runtimeSlotBytes, slotLenStartRva + i * 8);
 
@@ -1186,7 +1189,7 @@ static class Program
             }
         }
 
-        var importNameCursor = 0x1A20;
+        var importNameCursor = kernelDllNameRva + 0x40;
         var kernelImports = new[] { "CreateFileW", "WriteFile", "ReadFile", "CloseHandle", "SetFilePointer", "GetStdHandle", "GetCommandLineW", "ExitProcess" };
         for (var i = 0; i < kernelImports.Length; i++)
         {
@@ -1611,6 +1614,8 @@ static class Program
             BitConverter.GetBytes(rel).CopyTo(code.ToArray(), offsetPos);
         }
         var codeBytes = code.ToArray();
+        if (sectionRva + codeBytes.Length > importRva)
+            throw new CompileError("BACKEND", "B001", 0, 0, $"File I/O backend code section overlaps import table: code end RVA 0x{sectionRva + codeBytes.Length:X}, import RVA 0x{importRva:X}.");
         foreach (var offsetPos in failJumps)
         {
             var nextRva = sectionRva + offsetPos + 4;
@@ -1645,8 +1650,10 @@ static class Program
         {
             var bytes = Encoding.UTF8.GetBytes(value);
             var rva = dataCursor;
-            Array.Copy(bytes, 0, pe, RvaToRaw(rva), bytes.Length);
             dataCursor += Align(bytes.Length + 1, 8);
+            if (dataCursor > slotLenStartRva)
+                throw new CompileError("BACKEND", "B001", 0, 0, $"File I/O backend data section overlaps runtime slot metadata: data end RVA 0x{dataCursor:X}, slot metadata RVA 0x{slotLenStartRva:X}.");
+            Array.Copy(bytes, 0, pe, RvaToRaw(rva), bytes.Length);
             return rva;
         }
 
@@ -1654,8 +1661,10 @@ static class Program
         {
             var bytes = Encoding.Unicode.GetBytes(value + "\0");
             var rva = dataCursor;
-            Array.Copy(bytes, 0, pe, RvaToRaw(rva), bytes.Length);
             dataCursor += Align(bytes.Length, 8);
+            if (dataCursor > slotLenStartRva)
+                throw new CompileError("BACKEND", "B001", 0, 0, $"File I/O backend data section overlaps runtime slot metadata: data end RVA 0x{dataCursor:X}, slot metadata RVA 0x{slotLenStartRva:X}.");
+            Array.Copy(bytes, 0, pe, RvaToRaw(rva), bytes.Length);
             return rva;
         }
 
