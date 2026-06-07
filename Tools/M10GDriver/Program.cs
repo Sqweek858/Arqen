@@ -337,7 +337,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -3005,7 +3005,7 @@ static class Program
                 ExpectKeyword("const");
             }
 
-            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "var"))
+            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "color" or "angle" or "var"))
                 throw new CompileError("PARSE", "P070", Current.Line, Current.Column, "Expected canonical type after \"define\".");
             var declaredType = Advance();
 
@@ -3127,14 +3127,25 @@ static class Program
                 return vector;
             }
 
+            if (declaredType == "color")
+                return ParseColorLiteralExpression();
+
+            if (declaredType == "angle")
+            {
+                var angle = ParseNumberMaybeAngleLiteral();
+                if (angle.Type != "angle")
+                    throw new CompileError("SEMANTIC", "S111", Current.Line, Current.Column, "define angle requires numeric literal followed by deg or rad.");
+                return angle;
+            }
+
+            if (IsKeyword("color"))
+                return ParseColorLiteralExpression();
+
             if (IsKeyword("string"))
                 return ParseCanonicalStringLiteral();
 
-            if (CurrentIs("INT"))
-                return ParseIntLiteral();
-
-            if (CurrentIs("DECIMAL"))
-                return ParseNumericLiteral("double");
+            if (CurrentIs("INT") || CurrentIs("DECIMAL"))
+                return ParseNumberMaybeAngleLiteral();
 
             if (CurrentIs("BOOL"))
                 return ParseBoolLiteral();
@@ -3142,7 +3153,7 @@ static class Program
             if (CurrentIs("LBRACKET"))
                 return ParseVectorLiteral(legacyQuotedStrings: false);
 
-            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, bool, or vector literal value.");
+            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, bool, vector, color, or angle literal value.");
         }
 
         ExprResult ParseCanonicalStringLiteral()
@@ -3170,14 +3181,86 @@ static class Program
             return new ExprResult(type, FormatNumber(double.Parse(token.Value, CultureInfo.InvariantCulture), type), $"{type}({token.Value})");
         }
 
+        ExprResult ParseNumberMaybeAngleLiteral()
+        {
+            var token = CurrentIs("DECIMAL") ? Expect("DECIMAL", "decimal literal") : Expect("INT", "integer literal");
+            var number = double.Parse(token.Value, CultureInfo.InvariantCulture);
+            var numericType = token.Type == "INT" ? "int" : "double";
+
+            if (IsAngleUnitToken(Current))
+            {
+                var unit = Advance();
+                var radians = unit.Value == "deg" ? number * Math.PI / 180.0 : number;
+                return new ExprResult("angle", FormatNumber(radians, "double"), $"angle({token.Value}{unit.Value})");
+            }
+
+            return new ExprResult(numericType, FormatNumber(number, numericType), $"{numericType}({token.Value})");
+        }
+
+        static bool IsAngleUnitToken(Token token)
+            => (token.Type == "KEYWORD" || token.Type == "IDENT") && token.Value is "deg" or "rad";
+
+        ExprResult ParseColorLiteralExpression()
+        {
+            if (IsKeyword("color"))
+                ExpectKeyword("color");
+
+            if (!CurrentIs("STRING") && !CurrentIs("IDENT") && !CurrentIs("KEYWORD"))
+                throw new CompileError("PARSE", "P140", Current.Line, Current.Column, "Expected color literal.");
+
+            var token = Advance();
+            var normalized = NormalizeColorLiteral(token);
+            return new ExprResult("color", normalized, $"color({normalized})");
+        }
+
+        static string NormalizeColorLiteral(Token token)
+        {
+            var raw = token.Value.Trim();
+            var named = raw.ToLowerInvariant() switch
+            {
+                "black" => "#000000",
+                "white" => "#FFFFFF",
+                "red" => "#FF0000",
+                "green" => "#00FF00",
+                "blue" => "#0000FF",
+                "transparent" => "#00000000",
+                _ => raw,
+            };
+
+            if (!named.StartsWith("#", StringComparison.Ordinal))
+                throw new CompileError("SEMANTIC", "S110", token.Line, token.Column, $"Unknown color literal \"{raw}\".");
+
+            var hex = named[1..];
+            if (hex.Length != 6 && hex.Length != 8)
+                throw new CompileError("SEMANTIC", "S110", token.Line, token.Column, "Color hex literal must be #RRGGBB or #RRGGBBAA.");
+
+            if (hex.Any(ch => !Uri.IsHexDigit(ch)))
+                throw new CompileError("SEMANTIC", "S110", token.Line, token.Column, "Color hex literal contains non-hex characters.");
+
+            return "#" + hex.ToUpperInvariant();
+        }
+
+        static int ColorToWin32ColorRef(string normalizedColor)
+        {
+            var hex = normalizedColor.TrimStart('#');
+            var r = Convert.ToInt32(hex[..2], 16);
+            var g = Convert.ToInt32(hex[2..4], 16);
+            var b = Convert.ToInt32(hex[4..6], 16);
+            return (b << 16) | (g << 8) | r;
+        }
+
         ExprResult FormatSymbolReference(Token token)
         {
+            if (!SymbolExists(token.Value) && token.Value.Contains('.', StringComparison.Ordinal))
+                return FormatComponentReference(token);
             var info = ResolveSymbol(token, "S036", name => $"Unknown symbol \"{name}\".");
             return new ExprResult(info.Type, info.Value, $"symbol({token.Value})");
         }
 
         static bool IsNumeric(string type) => type is "int" or "float" or "double";
         static bool IsVector(string type) => type is "vec2" or "vec3" or "vec4";
+        static bool IsColor(string type) => type == "color";
+        static bool IsAngle(string type) => type == "angle";
 
         static double ToNumber(ExprResult expr)
             => double.Parse(expr.Value, CultureInfo.InvariantCulture);
@@ -3196,6 +3279,59 @@ static class Program
 
         static string FormatVector(double[] values)
             => "[" + string.Join(",", values.Select(value => FormatNumber(value, "double"))) + "]";
+
+        static bool TrySplitComponentName(string name, out string symbolName, out string component)
+        {
+            symbolName = "";
+            component = "";
+            var dot = name.IndexOf('.', StringComparison.Ordinal);
+            if (dot < 0)
+                return false;
+            if (dot == 0 || dot == name.Length - 1 || name.IndexOf('.', dot + 1) >= 0)
+                return false;
+            symbolName = name[..dot];
+            component = name[(dot + 1)..];
+            return true;
+        }
+
+        static int VectorComponentIndex(string type, string component)
+        {
+            var index = component switch
+            {
+                "x" => 0,
+                "y" => 1,
+                "z" => 2,
+                "w" => 3,
+                _ => -1,
+            };
+
+            return type switch
+            {
+                "vec2" when index is >= 0 and <= 1 => index,
+                "vec3" when index is >= 0 and <= 2 => index,
+                "vec4" when index is >= 0 and <= 3 => index,
+                _ => -1,
+            };
+        }
+
+        ExprResult FormatComponentReference(Token token)
+        {
+            if (!TrySplitComponentName(token.Value, out var symbolName, out var component))
+                throw new CompileError("SEMANTIC", "S108", token.Line, token.Column, $"Invalid component reference \"{token.Value}\".");
+
+            if (!_vars.TryGetValue(symbolName, out var info))
+                throw new CompileError("SEMANTIC", "S108", token.Line, token.Column, $"Unknown component base symbol \"{symbolName}\".");
+
+            if (!IsVector(info.Type))
+                throw new CompileError("SEMANTIC", "S108", token.Line, token.Column, $"Component access requires vector symbol \"{symbolName}\".");
+
+            var index = VectorComponentIndex(info.Type, component);
+            if (index < 0)
+                throw new CompileError("SEMANTIC", "S108", token.Line, token.Column, $"Vector {info.Type} does not have component \"{component}\".");
+
+            var values = ToVector(new ExprResult(info.Type, info.Value, $"symbol({symbolName})"));
+            return new ExprResult("double", FormatNumber(values[index], "double"), $"component({token.Value})");
+        }
 
         static string VectorTypeForCount(int count) => count switch
         {
@@ -3218,9 +3354,13 @@ static class Program
 
         static string FormatNumber(double value, string type)
         {
-            if (type == "int")
-                return ((long)Math.Round(value)).ToString(CultureInfo.InvariantCulture);
-            return value.ToString("0.##########", CultureInfo.InvariantCulture);
+           if (Math.Abs(value) < 0.0000000001)
+             value = 0;
+
+          if (type == "int")
+             return ((long)Math.Round(value)).ToString(CultureInfo.InvariantCulture);
+
+             return value.ToString("0.##########", CultureInfo.InvariantCulture);
         }
 
         static string FormatValue(ExprResult expr) => expr.Type == "bool" ? expr.Value.ToLowerInvariant() : expr.Value;
@@ -3323,8 +3463,9 @@ static class Program
 
         ExprResult ApplyScalarUnaryFunction(Token functionTok, ExprResult value)
         {
-            if (!IsNumeric(value.Type))
-                throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires a numeric operand.");
+            var acceptsAngle = functionTok.Value is "sin" or "cos" or "tan";
+            if (!IsNumeric(value.Type) && !(acceptsAngle && IsAngle(value.Type)))
+                throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires a numeric operand." + (acceptsAngle ? " Angle operands are also accepted." : ""));
 
             var n = ToNumber(value);
             var result = functionTok.Value switch
@@ -3539,6 +3680,11 @@ static class Program
 
         ExprResult FormatSymbolForOutput(Token token, string code = "S036")
         {
+            if (!SymbolExists(token.Value) && token.Value.Contains('.', StringComparison.Ordinal))
+            {
+                var component = FormatComponentReference(token);
+                return new ExprResult("text", component.Value, component.Repr);
+            }
             var info = ResolveSymbol(token, code, name => $"Unknown symbol \"{name}\".");
             return new ExprResult("text", info.Value, $"symbol({token.Value})");
         }
@@ -3584,6 +3730,12 @@ static class Program
 
         void SetSymbolValue(Token target, ExprResult value)
         {
+            if (!SymbolExists(target.Value) && target.Value.Contains('.', StringComparison.Ordinal))
+            {
+                SetVectorComponentValue(target, value);
+                return;
+            }
+
             var current = ResolveSymbol(target, "S052", name => $"Cannot set missing symbol \"{name}\".");
             if (current.IsConst)
                 throw new CompileError("SEMANTIC", "S053", target.Line, target.Column, $"Cannot set const symbol \"{target.Value}\".");
@@ -3595,6 +3747,31 @@ static class Program
             var finalValue = CoerceValue(value, current.Type);
             _vars[target.Value] = current with { Value = finalValue };
             UpdateVarList(target.Value, current.Type, finalValue, current.IsConst);
+        }
+
+        void SetVectorComponentValue(Token target, ExprResult value)
+        {
+            if (!TrySplitComponentName(target.Value, out var symbolName, out var component))
+                throw new CompileError("SEMANTIC", "S108", target.Line, target.Column, $"Invalid component target \"{target.Value}\".");
+
+            var baseToken = target with { Value = symbolName };
+            var current = ResolveSymbol(baseToken, "S108", name => $"Cannot set missing component base symbol \"{name}\".");
+            if (current.IsConst)
+                throw new CompileError("SEMANTIC", "S053", target.Line, target.Column, $"Cannot set const symbol \"{symbolName}\".");
+            if (!IsVector(current.Type))
+                throw new CompileError("SEMANTIC", "S108", target.Line, target.Column, "Component assignment requires vector symbol.");
+            if (!IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S109", target.Line, target.Column, "Vector component assignment requires numeric value.");
+
+            var index = VectorComponentIndex(current.Type, component);
+            if (index < 0)
+                throw new CompileError("SEMANTIC", "S108", target.Line, target.Column, $"Vector {current.Type} does not have component \"{component}\".");
+
+            var values = ToVector(new ExprResult(current.Type, current.Value, $"symbol({symbolName})"));
+            values[index] = ToNumber(value);
+            var finalValue = FormatVector(values);
+            _vars[symbolName] = current with { Value = finalValue };
+            UpdateVarList(symbolName, current.Type, finalValue, current.IsConst);
         }
 
         void ApplyNumericUpdate(Token target, ExprResult value, string op)
@@ -3626,7 +3803,7 @@ static class Program
 
         static string CoerceValue(ExprResult value, string targetType)
         {
-            if (IsVector(targetType))
+            if (IsVector(targetType) || IsColor(targetType) || IsAngle(targetType))
                 return value.Value;
             if (!IsNumeric(targetType))
                 return value.Value;
@@ -3981,6 +4158,9 @@ static class Program
             if (IsKeyword("string"))
                 return ParseCanonicalStringLiteral();
 
+            if (IsKeyword("color"))
+                return ParseColorLiteralExpression();
+
             if (CurrentIs("LPAREN"))
             {
                 Advance();
@@ -3992,15 +4172,15 @@ static class Program
             if (CurrentIs("LBRACKET"))
                 return ParseVectorLiteral(legacyQuotedStrings);
 
-            if (CurrentIs("STRING"))
-            {
-                var t = Advance();
-                if (legacyQuotedStrings)
-                    return new ExprResult("text", t.Value, $"str(\"{t.Value}\")");
-                if (SymbolExists(t.Value))
-                    return FormatSymbolReference(t);
-                throw new CompileError("SEMANTIC", "S036", t.Line, t.Column, $"Unknown symbol \"{t.Value}\".");
-            }
+if (CurrentIs("STRING"))
+{
+    var t = Advance();
+    if (legacyQuotedStrings)
+        return new ExprResult("text", t.Value, $"str(\"{t.Value}\")");
+    if (SymbolExists(t.Value) || t.Value.Contains('.', StringComparison.Ordinal))
+        return FormatSymbolReference(t);
+    throw new CompileError("SEMANTIC", "S036", t.Line, t.Column, $"Unknown symbol \"{t.Value}\".");
+}
 
             if (CurrentIs("IDENT"))
             {
@@ -4013,11 +4193,8 @@ static class Program
                 return FormatVariableReference(t, _parsingCondition ? "S020" : "S010", name => _parsingCondition ? $"Unknown variable \"{name}\" in comparison." : $"Unknown variable \"{name}\".");
             }
 
-            if (CurrentIs("INT"))
-                return ParseIntLiteral();
-
-            if (CurrentIs("DECIMAL"))
-                return ParseNumericLiteral("double");
+            if (CurrentIs("INT") || CurrentIs("DECIMAL"))
+                return ParseNumberMaybeAngleLiteral();
 
             if (CurrentIs("BOOL"))
                 return ParseBoolLiteral();

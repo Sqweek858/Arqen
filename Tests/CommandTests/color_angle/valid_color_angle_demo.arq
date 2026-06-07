@@ -1,0 +1,23 @@
+program "ColorAngleDemo"
+
+define color called "bg" be color "#050807"
+define color called "accent" be color green
+define angle called "quarter" be 90 deg
+define angle called "halfPi" be 1.57079632679 rad
+define double called "x" be 0
+
+print "bg"
+print "accent"
+
+set "x" to sin "quarter"
+print "x"
+
+set "x" to cos "quarter"
+print "x"
+
+set "x" to sin "halfPi"
+print "x"
+
+blend mix to code 0
+
+end program "ColorAngleDemo"

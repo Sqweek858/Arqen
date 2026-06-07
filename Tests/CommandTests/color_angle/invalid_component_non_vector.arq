@@ -1,0 +1,9 @@
+program "InvalidComponentNonVector"
+
+define double called "x" be 1
+
+print "x.y"
+
+blend mix to code 0
+
+end program "InvalidComponentNonVector"

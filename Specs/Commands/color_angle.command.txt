@@ -1,0 +1,11 @@
+COMMAND_ID|color_angle
+CANONICAL|color and angle literals with angle-aware trig and vector component access
+CATEGORY|expression
+TOKENS|KEYWORD(color),KEYWORD(angle),KEYWORD(deg),KEYWORD(rad),STRING,IDENT
+AST_NODE|ColorAngleExpression
+SEMANTIC|evaluates compile-time color literals, angle literals, angle-aware trig, and vector component access
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\color_angle\valid_color_angle_demo.arq
+INVALID_TEST|Tests\CommandTests\color_angle\invalid_color_bad_hex.arq
+STATUS|experimental

@@ -1,0 +1,10 @@
+program "InvalidSqrtAngle"
+
+define angle called "turn" be 90 deg
+define double called "x" be 0
+
+set "x" to sqrt "turn"
+
+blend mix to code 0
+
+end program "InvalidSqrtAngle"

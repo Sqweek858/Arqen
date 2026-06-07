@@ -1,0 +1,9 @@
+program "InvalidComponentAssignText"
+
+define vec2 called "pos" be [1, 2]
+
+set "pos.x" to string "oops"
+
+blend mix to code 0
+
+end program "InvalidComponentAssignText"
