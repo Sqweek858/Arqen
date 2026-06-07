@@ -1,0 +1,6 @@
+program "Bad"
+write file "test.txt" with string "Hello"
+define window called "Win1"
+show window "Win1"
+run window "Win1"
+end program "Bad"

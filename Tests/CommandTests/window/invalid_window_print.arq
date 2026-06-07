@@ -1,0 +1,6 @@
+program "Bad"
+print string "Print not supported with window"
+define window called "Win1"
+show window "Win1"
+run window "Win1"
+end program "Bad"
