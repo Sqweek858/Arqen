@@ -1,0 +1,8 @@
+program "LongVisualMessage"
+
+set title to string "M15B Visual Buffer"
+show string "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
+
+blend mix to code 0
+
+end program "LongVisualMessage"

@@ -303,6 +303,8 @@ function Test-ArqRDataPlan {
 
     $layout = Read-ArqKeyValueFile $LayoutPath
     $slotBytes = if ($layout.ContainsKey("STRING_SLOT_BYTES")) { Convert-ArqNumber $layout["STRING_SLOT_BYTES"] } else { 64 }
+    $messageBytes = if ($layout.ContainsKey("MESSAGE_SLOT_BYTES")) { Convert-ArqNumber $layout["MESSAGE_SLOT_BYTES"] } else { $slotBytes }
+    $titleBytes = if ($layout.ContainsKey("TITLE_SLOT_BYTES")) { Convert-ArqNumber $layout["TITLE_SLOT_BYTES"] } else { $slotBytes }
     $ir = Get-ArqIrModel $IrPath
 
     foreach ($action in $ir.Actions) {
@@ -316,7 +318,8 @@ function Test-ArqRDataPlan {
             }
             $value = $ir.Consts[$id].Value
             $bytes = [Text.Encoding]::Unicode.GetByteCount($value + [char]0)
-            if ($bytes -gt $slotBytes) {
+            $limit = if ($field -eq "title") { $titleBytes } else { $messageBytes }
+            if ($bytes -gt $limit) {
                 return New-ArqCheck $false "B003" "rdata overflow for $field"
             }
         }

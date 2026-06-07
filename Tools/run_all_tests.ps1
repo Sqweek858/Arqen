@@ -1063,6 +1063,27 @@ function Run-M15-Tests {
     Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
 }
 
+function Run-M15B-Tests {
+    Write-Host ""
+    Write-Host "M15B visual buffer tests"
+
+    $visualExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\ExpectedIR\m15b_visual_buffer.arq", "--rebuild")
+    $visualIr = Get-Content (Join-Path $RepoRoot "Build\IR\m15b_visual_buffer.arqir") -Raw
+    $visualManifest = Get-Content (Join-Path $RepoRoot "Build\Manifests\m15b_visual_buffer.manifest.txt") -Raw
+    $visualExe = Join-Path $RepoRoot "Build\EXE\m15b_visual_buffer.exe"
+    Add-Check "M15B_visual_ir" ($visualExit -eq 0 -and $visualIr.Contains("op=show_message") -and -not $visualIr.Contains("op=print_stdout"))
+    Add-Check "M15B_visual_manifest" ($visualManifest.Contains("BACKEND|WindowsX64PE_MessageBoxBackend") -and $visualManifest.Contains("ACTIONS|show_message,exit"))
+    Add-Check "M15B_visual_pe" ((Test-Path $visualExe) -and (Test-Pe-Signature $visualExe))
+
+    $expectedIrExit = Invoke-Stage $RepoRoot "powershell" @("-ExecutionPolicy", "Bypass", "-File", ".\Tools\verify_expected_ir.ps1")
+    $expectedIrText = Get-Content (Join-Path $RepoRoot "Build\Generated\expected_ir_validation.txt") -Raw
+    Add-Check "M15B_expected_ir" ($expectedIrExit -eq 0 -and $expectedIrText.Contains("PASS|m15b_visual_buffer|"))
+
+    Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -1168,6 +1189,8 @@ Run-M14A-Tests
 Run-M14C-Tests
 
 Run-M15-Tests
+
+Run-M15B-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="
