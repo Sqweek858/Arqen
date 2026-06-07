@@ -137,3 +137,13 @@ Tools/validate_backend_contract_docs.ps1
 
 These tools are fast static/contract checks. They do not implement DX12; they protect the boundary before DX12 work starts.
 - `Tools/validate_parser_split.ps1` - validates the M18FG parser extraction/split boundary.
+
+## M18H/M18I/M18J pre-DX12 hardening tools
+
+| File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `run_test_slice.ps1` | `Tools` | M18H | test runner | Runs selected command-test folders and tooling groups, including changed-file slices | `Tests\CommandTests`, tools, git diff | `Build\Logs\test_slice.last.txt` | `.\Tools\run_test_slice.ps1 -Group m18h` | yes | no | active | Includes untracked-file detection and fails no-match case filters |
+| `validate_test_slice.ps1` | `Tools` | M18H | validator | Checks selective runner safety guarantees | `Tools\run_test_slice.ps1` | console output | `.\Tools\validate_test_slice.ps1` | yes | no | active | Prevents false-green slices |
+| `validate_strict_ir.ps1` | `Tools` | M18I | validator | Exercises backend-only strict IR rejection cases | `Tools\arqc_m10g.exe`, generated IR samples | `Build\Temp\strict_ir` | `.\Tools\validate_strict_ir.ps1` | yes | no | active | Requires built driver exe |
+| `validate_keyword_registry.ps1` | `Tools` | M18J | validator | Compares spec keyword registry against lexer keywords and reserved runtime/DX12 docs | `Specs\Commands`, `Lexer.cs`, docs | `Build\Generated\keyword_registry.txt` | `.\Tools\validate_keyword_registry.ps1` | yes | no | active | Catches forgotten lexer keywords before style/DX12 grammar work |
+| `validate_parser_statement_map.ps1` | `Tools` | M18J | validator | Validates generated parser statement map and core dispatch coverage | parser split, specs, tests | `Build\Generated\parser_statement_map.txt` | `.\Tools\validate_parser_statement_map.ps1` | yes | no | active | Warnings are allowed for older gaps; missing specs fail |

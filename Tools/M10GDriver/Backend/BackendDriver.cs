@@ -1,16 +1,53 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
 static partial class Program
 {
+    static readonly HashSet<string> SupportedBackendActions = new(StringComparer.Ordinal)
+    {
+        "show_message",
+        "print_stdout",
+        "print_runtime_slot",
+        "file_write",
+        "file_append",
+        "file_load",
+        "command_arg_count",
+        "command_arg_index",
+        "window_create",
+        "window_set_title",
+        "window_set_resolution",
+        "window_set_resizable",
+        "window_show",
+        "window_run",
+        "window_close",
+        "event_window_closed",
+        "event_key_pressed",
+        "event_end",
+        "exit"
+    };
+
+    static void ValidateBackendActionCapabilities(IrModel ir)
+    {
+        foreach (var actionId in ir.EntryActions)
+        {
+            if (!ir.Actions.TryGetValue(actionId, out var action) || !action.TryGetValue("op", out var op) || string.IsNullOrWhiteSpace(op))
+                throw new CompileError("BACKEND", "B001", 0, 0, $"Invalid ACTION referenced by ENTRY: {actionId}.");
+            if (!SupportedBackendActions.Contains(op))
+                throw new CompileError("BACKEND", "B008", 0, 0, $"Unsupported backend action: {op}.");
+        }
+    }
+
     static void BackendFromIr(string repoRoot, string irPath, string outputPath)
     {
         var ir = ParseIr(irPath);
 
         if (ir.Version != "0")
             throw new CompileError("BACKEND", "B001", 0, 0, "Unsupported ARQIR version.");
+
+        ValidateBackendActionCapabilities(ir);
 
         if (HasWindowActions(ir))
         {

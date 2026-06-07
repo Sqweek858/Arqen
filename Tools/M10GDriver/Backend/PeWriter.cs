@@ -50,13 +50,10 @@ static partial class Program
     }
 
     static List<Dictionary<string, string>> OrderedActionMaps(IrModel ir)
-        => ir.Actions
-            .OrderBy(pair => ActionIndex(pair.Key))
-            .Select(pair => pair.Value)
+        => ir.EntryActions
+            .Where(id => ir.Actions.ContainsKey(id))
+            .Select(id => ir.Actions[id])
             .ToList();
-
-    static int ActionIndex(string id)
-        => id.StartsWith("act_", StringComparison.Ordinal) && int.TryParse(id[4..], out var index) ? index : int.MaxValue;
 
     static bool HasFileIoActions(IrModel ir)
         => ir.Actions.Values.Any(action =>

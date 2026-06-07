@@ -7,7 +7,7 @@ using System.Text;
 static partial class Program
 {
     record IrConst(string Type, string Value);
-    record IrModel(string Version, string Source, Dictionary<string, IrConst> Consts, Dictionary<string, Dictionary<string, string>> Actions);
+    record IrModel(string Version, string Source, Dictionary<string, IrConst> Consts, Dictionary<string, Dictionary<string, string>> Actions, List<string> EntryActions);
 
     static IrModel ParseIr(string irPath)
     {
@@ -18,12 +18,18 @@ static partial class Program
         var source = "";
         var consts = new Dictionary<string, IrConst>(StringComparer.Ordinal);
         var actions = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
+        List<string>? entryActions = null;
+        var sawTarget = false;
         var sawEnd = false;
+        var lineNumber = 0;
 
         foreach (var raw in File.ReadAllLines(irPath, Encoding.UTF8))
         {
+            lineNumber++;
             if (string.IsNullOrWhiteSpace(raw))
                 continue;
+            if (sawEnd)
+                throw new CompileError("BACKEND", "B001", 0, 0, $"Unexpected IR content after END at line {lineNumber}.");
 
             var parts = SplitStable(raw);
             var op = parts[0];
@@ -32,33 +38,68 @@ static partial class Program
             switch (op)
             {
                 case "ARQIR":
-                    fields.TryGetValue("version", out version);
+                    if (version != null)
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Duplicate ARQIR header in IR.");
+                    if (!fields.TryGetValue("version", out version) || string.IsNullOrWhiteSpace(version))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed ARQIR header in IR.");
+                    break;
+                case "TARGET":
+                    if (sawTarget)
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Duplicate TARGET in IR.");
+                    if (!fields.TryGetValue("kind", out var kind) || kind != "program" ||
+                        !fields.TryGetValue("name", out var targetName) || string.IsNullOrWhiteSpace(targetName))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed TARGET in IR.");
+                    sawTarget = true;
                     break;
                 case "META":
                     fields.TryGetValue("source", out source);
                     break;
+                case "SYMBOL":
+                    if (!fields.ContainsKey("name") || !fields.ContainsKey("type") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed SYMBOL in IR.");
+                    break;
                 case "CONST":
-                    if (!fields.TryGetValue("id", out var id) ||
-                        !fields.TryGetValue("type", out var type) ||
+                    if (!fields.TryGetValue("id", out var id) || string.IsNullOrWhiteSpace(id) ||
+                        !fields.TryGetValue("type", out var type) || string.IsNullOrWhiteSpace(type) ||
                         !fields.TryGetValue("value", out var value))
                         throw new CompileError("BACKEND", "B001", 0, 0, "Malformed CONST in IR.");
+                    if (consts.ContainsKey(id))
+                        throw new CompileError("BACKEND", "B001", 0, 0, $"Duplicate CONST id in IR: {id}.");
                     consts[id] = new IrConst(type, value);
                     break;
                 case "ACTION":
-                    if (!fields.TryGetValue("id", out var actionId))
+                    if (!fields.TryGetValue("id", out var actionId) || string.IsNullOrWhiteSpace(actionId) ||
+                        !fields.TryGetValue("op", out var actionOp) || string.IsNullOrWhiteSpace(actionOp))
                         throw new CompileError("BACKEND", "B001", 0, 0, "Malformed ACTION in IR.");
+                    if (actions.ContainsKey(actionId))
+                        throw new CompileError("BACKEND", "B001", 0, 0, $"Duplicate ACTION id in IR: {actionId}.");
                     actions[actionId] = fields;
+                    break;
+                case "ENTRY":
+                    if (entryActions != null)
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Duplicate ENTRY in IR.");
+                    if (!fields.TryGetValue("actions", out var entryRaw) || string.IsNullOrWhiteSpace(entryRaw))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed ENTRY in IR.");
+                    entryActions = entryRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                    if (entryActions.Count == 0)
+                        throw new CompileError("BACKEND", "B001", 0, 0, "ENTRY in IR has no actions.");
                     break;
                 case "END":
                     sawEnd = true;
                     break;
+                default:
+                    throw new CompileError("BACKEND", "B001", 0, 0, $"Unknown IR line kind: {op}.");
             }
         }
 
-        if (version == null || !sawEnd)
+        if (version == null || !sawTarget || entryActions == null || !sawEnd)
             throw new CompileError("BACKEND", "B001", 0, 0, "Invalid ARQIR file.");
 
-        return new IrModel(version, source ?? "", consts, actions);
+        foreach (var actionId in entryActions)
+            if (!actions.ContainsKey(actionId))
+                throw new CompileError("BACKEND", "B001", 0, 0, $"ENTRY references missing ACTION id: {actionId}.");
+
+        return new IrModel(version, source ?? "", consts, actions, entryActions);
     }
 
     static Dictionary<string, string> KeyValues(IEnumerable<string> parts)

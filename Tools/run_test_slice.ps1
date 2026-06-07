@@ -137,6 +137,7 @@ function Run-CommandFolder {
     }
 
     $lines = @(Get-Content $expectedPath | Where-Object { $_.Trim() -ne "" -and -not $_.Trim().StartsWith("#") })
+    $matchedCases = 0
     foreach ($line in $lines) {
         $parts = $line.Split("|")
         if ($parts.Length -lt 4) {
@@ -150,6 +151,7 @@ function Run-CommandFolder {
         if (-not (Matches-AnyPattern $file $CasePatterns) -and -not (Matches-AnyPattern $stem $CasePatterns) -and -not (Matches-AnyPattern $name $CasePatterns)) {
             continue
         }
+        $matchedCases += 1
 
         $wantExit = [int]$parts[1]
         $kind = $parts[2]
@@ -181,6 +183,10 @@ function Run-CommandFolder {
             Add-Check $name $false "unknown expected kind $kind"
         }
     }
+
+    if ($CasePatterns.Count -gt 0 -and $matchedCases -eq 0) {
+        Add-Check ("CMD_{0}_CASE_MATCH" -f $FolderName.ToUpperInvariant()) $false "no cases matched: $($CasePatterns -join ', ')"
+    }
 }
 
 $ToolMap = [ordered]@{
@@ -204,6 +210,12 @@ $ToolMap = [ordered]@{
     "docs" = "Tools\validate_backend_contract_docs.ps1"
     "parser_split" = "Tools\validate_parser_split.ps1"
     "parser" = "Tools\validate_parser_split.ps1"
+    "strict_ir" = "Tools\validate_strict_ir.ps1"
+    "keyword_registry" = "Tools\validate_keyword_registry.ps1"
+    "keywords" = "Tools\validate_keyword_registry.ps1"
+    "parser_statement_map" = "Tools\validate_parser_statement_map.ps1"
+    "statement_map" = "Tools\validate_parser_statement_map.ps1"
+    "test_slice_self" = "Tools\validate_test_slice.ps1"
 }
 
 function Run-ToolCheck {
@@ -270,10 +282,22 @@ function Expand-Group {
             foreach ($t in @("parser_split","ir_contract","runtime_registry","backend_docs")) { Add-Unique $tools $t }
         }
         "tooling" {
-            foreach ($t in @("repo_hygiene","backend_capabilities","command_coverage","error_registry","runtime_registry","ir_contract","wrapper_cache","dx12_readiness","backend_docs","parser_split")) { Add-Unique $tools $t }
+            foreach ($t in @("repo_hygiene","backend_capabilities","command_coverage","error_registry","runtime_registry","ir_contract","wrapper_cache","dx12_readiness","backend_docs","parser_split","strict_ir","keyword_registry","parser_statement_map","test_slice_self")) { Add-Unique $tools $t }
         }
         "core" {
             foreach ($f in @("program","let","set_value","message_text","show_message","set_title_to","exit","blend_mix_to_code","comments","comparison_is","logical_condition","if_compile_time","while_compile_time","function")) { Add-Unique $folders $f }
+        }
+        "flow" {
+            foreach ($f in @("comparison_is","logical_condition","if_compile_time","while_compile_time","function")) { Add-Unique $folders $f }
+        }
+        "m18h" {
+            foreach ($t in @("repo_hygiene","test_slice_self","keyword_registry","parser_statement_map")) { Add-Unique $tools $t }
+        }
+        "m18i" {
+            foreach ($t in @("ir_contract","strict_ir")) { Add-Unique $tools $t }
+        }
+        "m18j" {
+            foreach ($t in @("keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
         }
         "commands" {
             foreach ($f in Existing-CommandFolders) { Add-Unique $folders $f }
@@ -300,9 +324,11 @@ function Add-ChangedTargets {
 
     $changedFiles = @()
     try {
-        $changedFiles = @(git -C $RepoRoot diff --name-only HEAD | ForEach-Object { $_ -replace "\\", "/" })
+        $trackedChanged = @(git -C $RepoRoot diff --name-only HEAD | ForEach-Object { $_ -replace "\\", "/" })
+        $untrackedChanged = @(git -C $RepoRoot ls-files --others --exclude-standard | ForEach-Object { $_ -replace "\\", "/" })
+        $changedFiles = @($trackedChanged + $untrackedChanged | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -Unique)
     } catch {
-        Write-Host "WARN|changed|git diff failed: $($_.Exception.Message)"
+        Write-Host "WARN|changed|git diff/untracked scan failed: $($_.Exception.Message)"
         return
     }
 
@@ -316,6 +342,14 @@ function Add-ChangedTargets {
             $candidate = $Matches[1]
             if ($allFolders -contains $candidate) { Add-Unique $Folders $candidate }
             Add-Unique $Tools "command_coverage"
+            Add-Unique $Tools "keyword_registry"
+            Add-Unique $Tools "parser_statement_map"
+            continue
+        }
+        if ($file -match '^Tools/M10GDriver/Frontend/Lexer\.cs$') {
+            Add-Unique $Tools "keyword_registry"
+            Add-Unique $Tools "parser_statement_map"
+            Add-Unique $Tools "parser_split"
             continue
         }
         if ($file -eq "Tools/M10GDriver/Program.cs") {
@@ -343,6 +377,10 @@ function Add-ChangedTargets {
             elseif ($file -like "*validate_dx12_readiness.ps1") { Add-Unique $Tools "dx12_readiness" }
             elseif ($file -like "*validate_backend_contract_docs.ps1") { Add-Unique $Tools "backend_docs" }
             elseif ($file -like "*validate_parser_split.ps1") { Add-Unique $Tools "parser_split" }
+            elseif ($file -like "*validate_strict_ir.ps1") { Add-Unique $Tools "strict_ir" }
+            elseif ($file -like "*validate_keyword_registry.ps1") { Add-Unique $Tools "keyword_registry" }
+            elseif ($file -like "*validate_parser_statement_map.ps1") { Add-Unique $Tools "parser_statement_map" }
+            elseif ($file -like "*validate_test_slice.ps1") { Add-Unique $Tools "test_slice_self" }
             else { Add-Unique $Tools "repo_hygiene" }
             continue
         }
@@ -359,6 +397,11 @@ function Add-ChangedTargets {
             Add-Unique $Tools "ir_contract"
             Add-Unique $Tools "dx12_readiness"
             Add-Unique $Tools "backend_docs"
+            continue
+        }
+        if ($file -match '^Tools/M10GDriver/Frontend/Lexer\.cs$' -or $file -match '^Specs/Commands/') {
+            Add-Unique $Tools "keyword_registry"
+            Add-Unique $Tools "parser_statement_map"
             continue
         }
     }
@@ -393,7 +436,7 @@ if ($List) {
         Write-Host " - $key -> $($ToolMap[$key]) [$state]"
     }
     Write-Host ""
-    Write-Host "Groups: math, geometry, backend, m18a, m18b, m18fg, refactor, tooling, core, commands"
+    Write-Host "Groups: math, geometry, backend, m18a, m18b, m18fg, m18h, m18i, m18j, refactor, tooling, core, flow, commands"
     exit 0
 }
 

@@ -43,3 +43,22 @@ END
 ## DX12 rule
 
 DX12 actions are reserved but unsupported in M18B. `dx12`, `shader`, `render_pass`, and `frame_update` must be rejected by backend capability validation until the DX12 backend exists.
+
+## Pipeline boundary
+
+ARQIR v0 sits between the lexer/parser/semantic pipeline and the backend, so every backend action must stay visible as a capability-checked IR action.
+
+## Strict validation rules
+
+M18I makes ARQIR v0 strict enough for pre-DX12 work:
+
+- `ARQIR`, `TARGET`, `ENTRY`, and `END` are required.
+- `ARQIR`, `TARGET`, and `ENTRY` may appear only once.
+- Unknown top-level line kinds are invalid.
+- Duplicate `CONST` ids are invalid.
+- Duplicate `ACTION` ids are invalid.
+- Every `ACTION` must include both `id` and `op`.
+- `ENTRY|actions=...` must reference existing action ids.
+- Every entry action must pass the C# backend capability gate, not only wrapper-side PowerShell checks.
+
+These rules intentionally keep DX12, shader, render pass, and frame update operations rejected until a real runtime/backend implementation exists.

@@ -27,7 +27,7 @@ $statementRows = @(
     @{ Rule = "while_statement"; Command = "while_compile_time"; Keywords = "while"; TestFolder = "while_compile_time" },
     @{ Rule = "function_statement"; Command = "function"; Keywords = "define,function,call"; TestFolder = "function" },
     @{ Rule = "exit_statement"; Command = "exit"; Keywords = "exit" },
-    @{ Rule = "blend_mix_to_code_statement"; Command = "BlendMixToCode"; Keywords = "blend,mix,to,code" },
+    @{ Rule = "blend_mix_to_code_statement"; Command = "blend_mix_to_code"; Keywords = "blend,mix,to,code" },
     @{ Rule = "if_statement"; Command = "if_compile_time"; Keywords = "if" },
     @{ Rule = "else_statement"; Command = "if_compile_time"; Keywords = "else" },
     @{ Rule = "end_if_statement"; Command = "if_compile_time"; Keywords = "end,if" }
@@ -45,7 +45,7 @@ foreach ($row in $statementRows) {
     $spec = if ($specs.ContainsKey($commandId)) { $specs[$commandId] } else { $null }
     $status = if ($null -ne $spec) { Get-ArqenSpecValue $spec "STATUS" "stable" } else { "missing" }
     $specPath = if ($null -ne $spec) { ConvertTo-ArqenRelativePath $spec.Path } else { "none" }
-    $folderName = if ($row.ContainsKey("TestFolder")) { $row.TestFolder } else { ($commandId -replace '^BlendMixToCode$', 'blend_mix_to_code') }
+    $folderName = if ($row.ContainsKey("TestFolder")) { $row.TestFolder } else { $commandId }
     $testDir = Join-Path $testRoot $folderName
     $hasTests = Test-Path $testDir
     $validCount = if ($hasTests) { @(Get-ChildItem $testDir -Filter "valid_*.arq" -File -ErrorAction SilentlyContinue).Count } else { 0 }

@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$RepoRoot = ""
 )
 
@@ -9,6 +9,7 @@ if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
 }
 
 $failed = $false
+$lines = New-Object System.Collections.Generic.List[string]
 
 function Emit-Check {
     param(
@@ -18,8 +19,10 @@ function Emit-Check {
     )
 
     if ($Ok) {
+        $lines.Add("PASS|$Name|$Message") | Out-Null
         Write-Host "PASS|$Name|$Message"
     } else {
+        $lines.Add("FAIL|$Name|$Message") | Out-Null
         Write-Host "FAIL|$Name|$Message"
         $script:failed = $true
     }
@@ -117,6 +120,27 @@ Emit-Check "sample_dx12_ir_rejected" (
     $capabilitiesText -match 'dx12\|reserved'
 ) "unsupported backend action: dx12"
 
+Emit-Check "ir_parser_rejects_unknown_lines" (
+    $driverText -match 'Unknown IR line kind'
+) "strict IR parser rejects unknown top-level lines"
+Emit-Check "ir_parser_rejects_duplicate_action" (
+    $driverText -match 'Duplicate ACTION id'
+) "strict IR parser rejects duplicate ACTION ids"
+Emit-Check "ir_parser_rejects_duplicate_const" (
+    $driverText -match 'Duplicate CONST id'
+) "strict IR parser rejects duplicate CONST ids"
+Emit-Check "ir_parser_requires_entry" (
+    $driverText -match 'ENTRY references missing ACTION id' -and $driverText -match 'Malformed ENTRY'
+) "strict IR parser validates ENTRY references"
+Emit-Check "ir_backend_has_csharp_capability_gate" (
+    $driverText -match 'ValidateBackendActionCapabilities' -and $driverText -match 'Unsupported backend action'
+) "C# backend validates capabilities directly"
+
+
+$generatedDir = Join-Path $RepoRoot "Build/Generated"
+New-Item -ItemType Directory -Force -Path $generatedDir | Out-Null
+$outPath = Join-Path $generatedDir "ir_contract_validation.txt"
+[System.IO.File]::WriteAllLines($outPath, $lines.ToArray(), [System.Text.UTF8Encoding]::new($false))
 if ($failed) {
     exit 1
 }
