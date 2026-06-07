@@ -1,0 +1,11 @@
+program "InvalidDotMismatch"
+
+define vec2 called "a" be [1, 2]
+define vec3 called "b" be [1, 2, 3]
+define double called "d" be 0
+
+set "d" to dot "a", "b"
+
+blend mix to code 0
+
+end program "InvalidDotMismatch"

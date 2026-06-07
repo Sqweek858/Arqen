@@ -1,0 +1,11 @@
+program "InvalidCrossVec2"
+
+define vec2 called "a" be [1, 0]
+define vec2 called "b" be [0, 1]
+define vec3 called "c" be [0, 0, 0]
+
+set "c" to cross "a", "b"
+
+blend mix to code 0
+
+end program "InvalidCrossVec2"

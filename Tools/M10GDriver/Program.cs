@@ -337,7 +337,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -426,6 +426,22 @@ static class Program
             if (ch == ',')
             {
                 tokens.Add(new Token("COMMA", ",", line, col));
+                i++;
+                col++;
+                continue;
+            }
+
+            if (ch == '[')
+            {
+                tokens.Add(new Token("LBRACKET", "[", line, col));
+                i++;
+                col++;
+                continue;
+            }
+
+            if (ch == ']')
+            {
+                tokens.Add(new Token("RBRACKET", "]", line, col));
                 i++;
                 col++;
                 continue;
@@ -2989,7 +3005,7 @@ static class Program
                 ExpectKeyword("const");
             }
 
-            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "var"))
+            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "var"))
                 throw new CompileError("PARSE", "P070", Current.Line, Current.Column, "Expected canonical type after \"define\".");
             var declaredType = Advance();
 
@@ -3101,6 +3117,16 @@ static class Program
                 return ParseBoolLiteral();
             }
 
+            if (IsVector(declaredType))
+            {
+                if (!CurrentIs("LBRACKET"))
+                    throw new CompileError("SEMANTIC", "S100", Current.Line, Current.Column, $"define {declaredType} requires vector literal syntax.");
+                var vector = ParseVectorLiteral(legacyQuotedStrings: false);
+                if (vector.Type != declaredType)
+                    throw new CompileError("SEMANTIC", "S101", Current.Line, Current.Column, $"Cannot assign {vector.Type} literal to {declaredType} symbol.");
+                return vector;
+            }
+
             if (IsKeyword("string"))
                 return ParseCanonicalStringLiteral();
 
@@ -3113,7 +3139,10 @@ static class Program
             if (CurrentIs("BOOL"))
                 return ParseBoolLiteral();
 
-            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, or bool literal value.");
+            if (CurrentIs("LBRACKET"))
+                return ParseVectorLiteral(legacyQuotedStrings: false);
+
+            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, bool, or vector literal value.");
         }
 
         ExprResult ParseCanonicalStringLiteral()
@@ -3148,9 +3177,33 @@ static class Program
         }
 
         static bool IsNumeric(string type) => type is "int" or "float" or "double";
+        static bool IsVector(string type) => type is "vec2" or "vec3" or "vec4";
 
         static double ToNumber(ExprResult expr)
             => double.Parse(expr.Value, CultureInfo.InvariantCulture);
+
+        static double[] ToVector(ExprResult expr)
+        {
+            if (!IsVector(expr.Type))
+                throw new CompileError("SEMANTIC", "S102", 0, 0, "Expected vector value.");
+            var inner = expr.Value.Trim();
+            if (inner.StartsWith("[") && inner.EndsWith("]"))
+                inner = inner[1..^1];
+            if (string.IsNullOrWhiteSpace(inner))
+                return Array.Empty<double>();
+            return inner.Split(',').Select(part => double.Parse(part.Trim(), CultureInfo.InvariantCulture)).ToArray();
+        }
+
+        static string FormatVector(double[] values)
+            => "[" + string.Join(",", values.Select(value => FormatNumber(value, "double"))) + "]";
+
+        static string VectorTypeForCount(int count) => count switch
+        {
+            2 => "vec2",
+            3 => "vec3",
+            4 => "vec4",
+            _ => "",
+        };
 
         static string PromoteNumericType(string left, string right, string op)
         {
@@ -3186,13 +3239,60 @@ static class Program
         {
             if (left.Type == "text" && right.Type == "text")
                 return new ExprResult("text", left.Value + right.Value, $"plus({left.Repr},{right.Repr})");
+            if (IsVector(left.Type) || IsVector(right.Type))
+                return ApplyVectorBinary("+", left, right);
             if (IsNumeric(left.Type) && IsNumeric(right.Type))
                 return ApplyNumericBinary("+", left, right);
             throw new CompileError("SEMANTIC", "S011", Current.Line, Current.Column, "Type mismatch in expression.");
         }
 
+        ExprResult ApplyVectorBinary(string op, ExprResult left, ExprResult right)
+        {
+            if (op is "+" or "-")
+            {
+                if (!IsVector(left.Type) || !IsVector(right.Type) || left.Type != right.Type)
+                    throw new CompileError("SEMANTIC", "S102", Current.Line, Current.Column, $"Vector {op} requires matching vector operands.");
+                var l = ToVector(left);
+                var r = ToVector(right);
+                var result = l.Select((value, index) => op == "+" ? value + r[index] : value - r[index]).ToArray();
+                return new ExprResult(left.Type, FormatVector(result), $"{op}({left.Repr},{right.Repr})");
+            }
+
+            if (op == "*")
+            {
+                if (IsVector(left.Type) && IsNumeric(right.Type))
+                {
+                    var scalar = ToNumber(right);
+                    var result = ToVector(left).Select(value => value * scalar).ToArray();
+                    return new ExprResult(left.Type, FormatVector(result), $"mul({left.Repr},{right.Repr})");
+                }
+                if (IsNumeric(left.Type) && IsVector(right.Type))
+                {
+                    var scalar = ToNumber(left);
+                    var result = ToVector(right).Select(value => scalar * value).ToArray();
+                    return new ExprResult(right.Type, FormatVector(result), $"mul({left.Repr},{right.Repr})");
+                }
+            }
+
+            if (op == "/")
+            {
+                if (!IsVector(left.Type) || !IsNumeric(right.Type))
+                    throw new CompileError("SEMANTIC", "S102", Current.Line, Current.Column, "Vector division requires vector / numeric scalar.");
+                var scalar = ToNumber(right);
+                if (Math.Abs(scalar) < 0.0000000001)
+                    throw new CompileError("SEMANTIC", "S046", Current.Line, Current.Column, "Division by zero.");
+                var result = ToVector(left).Select(value => value / scalar).ToArray();
+                return new ExprResult(left.Type, FormatVector(result), $"div({left.Repr},{right.Repr})");
+            }
+
+            throw new CompileError("SEMANTIC", "S102", Current.Line, Current.Column, $"Unsupported vector operator {op}.");
+        }
+
         ExprResult ApplyNumericBinary(string op, ExprResult left, ExprResult right)
         {
+            if (IsVector(left.Type) || IsVector(right.Type))
+                return ApplyVectorBinary(op, left, right);
+
             if (!IsNumeric(left.Type) || !IsNumeric(right.Type))
                 throw new CompileError("SEMANTIC", "S044", Current.Line, Current.Column, "Numeric expression requires numeric operands.");
 
@@ -3295,6 +3395,86 @@ static class Program
 
         static bool IsMathConstantName(string value)
             => value is "pi" or "e";
+
+        static bool IsVectorUnaryFunctionName(string value)
+            => value is "length" or "normalize";
+
+        static bool IsVectorBinaryFunctionName(string value)
+            => value is "dot" or "cross";
+
+        ExprResult ApplyVectorUnaryFunction(Token functionTok, ExprResult value)
+        {
+            if (!IsVector(value.Type))
+                throw new CompileError("SEMANTIC", "S102", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires a vector operand.");
+
+            var vector = ToVector(value);
+            var len = Math.Sqrt(vector.Sum(component => component * component));
+
+            if (functionTok.Value == "length")
+                return new ExprResult("double", FormatNumber(len, "double"), $"length({value.Repr})");
+
+            if (functionTok.Value == "normalize")
+            {
+                if (Math.Abs(len) < 0.0000000001)
+                    throw new CompileError("SEMANTIC", "S103", functionTok.Line, functionTok.Column, "normalize requires a non-zero vector.");
+                var result = vector.Select(component => component / len).ToArray();
+                return new ExprResult(value.Type, FormatVector(result), $"normalize({value.Repr})");
+            }
+
+            throw new CompileError("SEMANTIC", "S102", functionTok.Line, functionTok.Column, $"Unknown vector math function \"{functionTok.Value}\".");
+        }
+
+        ExprResult ApplyVectorBinaryFunction(Token functionTok, ExprResult left, ExprResult right)
+        {
+            if (!IsVector(left.Type) || !IsVector(right.Type))
+                throw new CompileError("SEMANTIC", "S102", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires vector operands.");
+            if (left.Type != right.Type && functionTok.Value == "dot")
+                throw new CompileError("SEMANTIC", "S104", functionTok.Line, functionTok.Column, "dot requires matching vector dimensions.");
+
+            var l = ToVector(left);
+            var r = ToVector(right);
+
+            if (functionTok.Value == "dot")
+            {
+                var result = l.Select((value, index) => value * r[index]).Sum();
+                return new ExprResult("double", FormatNumber(result, "double"), $"dot({left.Repr},{right.Repr})");
+            }
+
+            if (functionTok.Value == "cross")
+            {
+                if (left.Type != "vec3" || right.Type != "vec3")
+                    throw new CompileError("SEMANTIC", "S105", functionTok.Line, functionTok.Column, "cross requires vec3 operands.");
+                var result = new[]
+                {
+                    l[1] * r[2] - l[2] * r[1],
+                    l[2] * r[0] - l[0] * r[2],
+                    l[0] * r[1] - l[1] * r[0],
+                };
+                return new ExprResult("vec3", FormatVector(result), $"cross({left.Repr},{right.Repr})");
+            }
+
+            throw new CompileError("SEMANTIC", "S102", functionTok.Line, functionTok.Column, $"Unknown vector math function \"{functionTok.Value}\".");
+        }
+
+        ExprResult ParseVectorMathFunction(bool legacyQuotedStrings)
+        {
+            var functionTok = Advance();
+            if (IsVectorBinaryFunctionName(functionTok.Value))
+            {
+                var left = ParseAddExpression(legacyQuotedStrings);
+                Expect("COMMA", "comma between vector math arguments");
+                var right = ParseAddExpression(legacyQuotedStrings);
+                return ApplyVectorBinaryFunction(functionTok, left, right);
+            }
+
+            if (IsVectorUnaryFunctionName(functionTok.Value))
+            {
+                var value = ParseUnaryExpression(legacyQuotedStrings);
+                return ApplyVectorUnaryFunction(functionTok, value);
+            }
+
+            throw new CompileError("SEMANTIC", "S102", functionTok.Line, functionTok.Column, $"Unknown vector math function \"{functionTok.Value}\".");
+        }
 
         ExprResult ParseScalarMathFunction(bool legacyQuotedStrings)
         {
@@ -3433,6 +3613,8 @@ static class Program
         {
             if (targetType == valueType)
                 return true;
+            if (IsVector(targetType) || IsVector(valueType))
+                return false;
             return targetType switch
             {
                 "int" => IsNumeric(valueType),
@@ -3444,6 +3626,8 @@ static class Program
 
         static string CoerceValue(ExprResult value, string targetType)
         {
+            if (IsVector(targetType))
+                return value.Value;
             if (!IsNumeric(targetType))
                 return value.Value;
             return FormatNumber(ToNumber(value), targetType);
@@ -3753,7 +3937,43 @@ static class Program
             if (CurrentIs("IDENT") && (IsScalarUnaryFunctionName(Current.Value) || IsScalarBinaryFunctionName(Current.Value) || Current.Value == "clamp"))
                 return ParseScalarMathFunction(legacyQuotedStrings);
 
+            if (CurrentIs("IDENT") && (IsVectorUnaryFunctionName(Current.Value) || IsVectorBinaryFunctionName(Current.Value)))
+                return ParseVectorMathFunction(legacyQuotedStrings);
+
             return ParsePrimaryExpression(legacyQuotedStrings);
+        }
+
+        ExprResult ParseVectorLiteral(bool legacyQuotedStrings)
+        {
+            var startTok = Expect("LBRACKET", "vector literal start");
+            var values = new List<double>();
+
+            if (CurrentIs("RBRACKET"))
+                throw new CompileError("SEMANTIC", "S106", startTok.Line, startTok.Column, "Vector literal cannot be empty.");
+
+            while (true)
+            {
+                var component = ParseAddExpression(legacyQuotedStrings);
+                if (!IsNumeric(component.Type))
+                    throw new CompileError("SEMANTIC", "S107", startTok.Line, startTok.Column, "Vector literal components must be numeric.");
+                values.Add(ToNumber(component));
+
+                if (CurrentIs("COMMA"))
+                {
+                    Advance();
+                    if (CurrentIs("RBRACKET"))
+                        throw new CompileError("PARSE", "P130", Current.Line, Current.Column, "Expected vector component after comma.");
+                    continue;
+                }
+
+                break;
+            }
+
+            Expect("RBRACKET", "vector literal end");
+            var type = VectorTypeForCount(values.Count);
+            if (string.IsNullOrEmpty(type))
+                throw new CompileError("SEMANTIC", "S106", startTok.Line, startTok.Column, "Vector literal must have 2, 3, or 4 components.");
+            return new ExprResult(type, FormatVector(values.ToArray()), $"{type}({FormatVector(values.ToArray())})");
         }
 
         ExprResult ParsePrimaryExpression(bool legacyQuotedStrings)
@@ -3768,6 +3988,9 @@ static class Program
                 Expect("RPAREN", "closing parenthesis");
                 return expr;
             }
+
+            if (CurrentIs("LBRACKET"))
+                return ParseVectorLiteral(legacyQuotedStrings);
 
             if (CurrentIs("STRING"))
             {
@@ -3868,7 +4091,7 @@ static class Program
 
         bool IsEndProgram() => IsKeyword("end") && PeekKeyword("program");
         bool IsEndIf() => IsKeyword("end") && PeekKeyword("if");
-        bool IsExpressionEnd() => CurrentIs("NEWLINE") || CurrentIs("EOF") || CurrentIs("RPAREN") || IsKeyword("to") || IsKeyword("from") || IsKeyword("by") || IsKeyword("else") || IsKeyword("end");
+        bool IsExpressionEnd() => CurrentIs("NEWLINE") || CurrentIs("EOF") || CurrentIs("RPAREN") || CurrentIs("RBRACKET") || IsKeyword("to") || IsKeyword("from") || IsKeyword("by") || IsKeyword("else") || IsKeyword("end");
         static bool IsSymbolName(string value)
         {
             if (string.IsNullOrWhiteSpace(value))

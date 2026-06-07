@@ -1,0 +1,7 @@
+program "InvalidVectorLiteralBadCount"
+
+define var called "bad" be [1]
+
+blend mix to code 0
+
+end program "InvalidVectorLiteralBadCount"

@@ -1,0 +1,7 @@
+program "InvalidVectorComponentText"
+
+define vec2 called "bad" be [1, string "oops"]
+
+blend mix to code 0
+
+end program "InvalidVectorComponentText"
