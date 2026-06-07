@@ -4,6 +4,8 @@ print_runtime_slot|supported
 file_write|supported
 file_append|supported
 file_load|supported
+command_arg_count|supported
+command_arg_index|supported
 exit|supported
 print|unsupported
 branch|unsupported

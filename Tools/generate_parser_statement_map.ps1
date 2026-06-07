@@ -12,6 +12,7 @@ $statementRows = @(
     @{ Rule = "program_end"; Command = "program"; Keywords = "end,program" },
     @{ Rule = "let_statement"; Command = "let"; Keywords = "let,be" },
     @{ Rule = "define_statement"; Command = "define"; Keywords = "define,called,be"; TestFolder = "canonical_define" },
+    @{ Rule = "command_args_statement"; Command = "command_args"; Keywords = "define,called,be,command,arg,count"; TestFolder = "command_args" },
     @{ Rule = "rename_statement"; Command = "rename"; Keywords = "rename,to"; TestFolder = "rename" },
     @{ Rule = "title_statement"; Command = "title"; Keywords = "title" },
     @{ Rule = "set_title_statement"; Command = "set_title_to"; Keywords = "set,title,to" },

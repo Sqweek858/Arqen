@@ -1,0 +1,7 @@
+program "ArgsCountExit"
+
+define int called "count" be command arg count
+
+blend mix to code 0
+
+end program "ArgsCountExit"

@@ -1,0 +1,7 @@
+program "BadArgs"
+
+define int called "bad" be command arg count extra
+
+blend mix to code 0
+
+end program "BadArgs"

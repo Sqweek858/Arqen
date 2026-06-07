@@ -1,0 +1,11 @@
+program "ArgsDemo"
+
+define int called "count" be command arg count
+define string called "first" be command arg 0
+
+print "count"
+print "first"
+
+blend mix to code 0
+
+end program "ArgsDemo"

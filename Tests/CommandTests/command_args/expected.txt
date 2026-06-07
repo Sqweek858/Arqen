@@ -1,0 +1,15 @@
+valid_args_count_exit.arq|0|MESSAGE|
+valid_args_demo.arq|0|MESSAGE|
+valid_args_two_demo.arq|0|MESSAGE|
+valid_args_out_of_range.arq|0|MESSAGE|
+invalid_int_arg_index.arq|1|ERROR|S070|semantic
+invalid_string_arg_count.arq|1|ERROR|S070|semantic
+invalid_bool_arg_count.arq|1|ERROR|S070|semantic
+invalid_non_int_index.arq|1|ERROR|P111|parse
+invalid_negative_index.arq|1|ERROR|S072|semantic
+invalid_malformed_count.arq|1|ERROR|P110|parse
+invalid_malformed_index.arq|1|ERROR|P110|parse
+invalid_index_missing.arq|1|ERROR|P111|parse
+invalid_count_extra_tokens.arq|1|ERROR|P114|parse
+invalid_duplicate_symbol.arq|1|ERROR|S001|semantic
+invalid_const_arg_target.arq|1|ERROR|S071|semantic

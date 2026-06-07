@@ -1156,6 +1156,57 @@ function Test-M15C-Runtime {
     Add-Check $Name ($exit -eq 0 -and $stdout -eq $ExpectedStdout -and $fileText -eq $ExpectedFile)
 }
 
+function Run-M15D-Tests {
+    Write-Host ""
+    Write-Host "M15D runtime command args tests"
+
+    $oneExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\command_args\valid_args_demo.arq", "--rebuild")
+    $twoExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\command_args\valid_args_two_demo.arq", "--rebuild")
+    $rangeExit = Invoke-Stage $RepoRoot ".\Tools\arqc_m10jk.ps1" @(".\Tests\CommandTests\command_args\valid_args_out_of_range.arq", "--rebuild")
+
+    $twoIr = Get-Content (Join-Path $RepoRoot "Build\IR\valid_args_two_demo.arqir") -Raw
+    Add-Check "M15D_command_args_ir" ($twoExit -eq 0 -and $twoIr.Contains("value=runtime(command_arg_count)") -and $twoIr.Contains("op=command_arg_count") -and $twoIr.Contains("op=command_arg_index") -and $twoIr.Contains("op=print_runtime_slot"))
+
+    Add-Check "M15D_command_args_manifest" ((Get-Content (Join-Path $RepoRoot "Build\Manifests\valid_args_two_demo.manifest.txt") -Raw).Contains("BACKEND|WindowsX64PE_FileIoBackend"))
+
+    Test-M15D-Runtime "M15D_args_one_runtime" "valid_args_demo.exe" @("hello") "1`nhello"
+    Test-M15D-Runtime "M15D_args_two_runtime" "valid_args_two_demo.exe" @("hello", "world") "2`nhello`nworld"
+    Test-M15D-Runtime "M15D_args_out_of_range_runtime" "valid_args_out_of_range.exe" @("hello") "1`n"
+    Test-M15D-Runtime "M15D_args_quoted_runtime" "valid_args_demo.exe" @("hello world") "1`nhello world"
+
+    $expectedIrExit = Invoke-Stage $RepoRoot "powershell" @("-ExecutionPolicy", "Bypass", "-File", ".\Tools\verify_expected_ir.ps1")
+    $expectedIrText = Get-Content (Join-Path $RepoRoot "Build\Generated\expected_ir_validation.txt") -Raw
+    Add-Check "M15D_expected_ir" ($expectedIrExit -eq 0 -and $expectedIrText.Contains("PASS|m15d_command_args_two|"))
+
+    $mapExit = Invoke-Stage $RepoRoot ".\Tools\generate_parser_statement_map.ps1"
+    $mapText = Get-Content (Join-Path $RepoRoot "Build\Generated\parser_statement_map.txt") -Raw
+    Add-Check "M15D_parser_statement_map" ($mapExit -eq 0 -and $mapText.Contains("RULE_ID|command_args_statement|COMMAND_ID|command_args"))
+
+    Invoke-Stage $RepoRoot ".\Tools\generate_parser_rule_registry.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_test_index.ps1" | Out-Null
+    Invoke-Stage $RepoRoot ".\Tools\generate_command_status.ps1" | Out-Null
+}
+
+function Test-M15D-Runtime {
+    param(
+        [string]$Name,
+        [string]$ExeName,
+        [string[]]$ExeArgs,
+        [string]$ExpectedStdout
+    )
+
+    $tmp = Join-Path $env:TEMP ("arqen_m15d_" + [IO.Path]::GetFileNameWithoutExtension($ExeName) + "_" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $tmp | Out-Null
+    Copy-Item (Join-Path $RepoRoot "Build\EXE\$ExeName") $tmp -Force
+    Push-Location $tmp
+    $stdout = (& ".\$ExeName" @ExeArgs) -join "`n"
+    $exit = $LASTEXITCODE
+    Pop-Location
+    Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
+
+    Add-Check $Name ($exit -eq 0 -and $stdout -eq $ExpectedStdout)
+}
+
 Write-Host "=== Smoke tests ==="
 Write-Host "Arqen smoke tests"
 Write-Host "Root: $RepoRoot"
@@ -1265,6 +1316,8 @@ Run-M15-Tests
 Run-M15B-Tests
 
 Run-M15C-Tests
+
+Run-M15D-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

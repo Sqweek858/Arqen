@@ -1,0 +1,13 @@
+program "ArgsTwoDemo"
+
+define int called "count" be command arg count
+define string called "first" be command arg 0
+define string called "second" be command arg 1
+
+print "count"
+print "first"
+print "second"
+
+blend mix to code 0
+
+end program "ArgsTwoDemo"

@@ -1,0 +1,11 @@
+COMMAND_ID|command_args
+CANONICAL|define int called "<name>" be command arg count; define string called "<name>" be command arg <index>
+CATEGORY|runtime
+TOKENS|KEYWORD(define) KEYWORD(string) KEYWORD(int) KEYWORD(var) KEYWORD(called) STRING KEYWORD(be) KEYWORD(command) KEYWORD(arg) KEYWORD(count) INT
+AST_NODE|CommandArgs
+SEMANTIC|creates runtime-backed int/string symbols from generated executable command-line args
+IR|command_arg_count;command_arg_index;print_runtime_slot
+BACKEND|WindowsX64PE_FileIoBackend
+VALID_TEST|Tests\CommandTests\command_args\valid_args_demo.arq;Tests\CommandTests\command_args\valid_args_two_demo.arq;Tests\CommandTests\command_args\valid_args_out_of_range.arq
+INVALID_TEST|Tests\CommandTests\command_args\invalid_int_arg_index.arq;Tests\CommandTests\command_args\invalid_string_arg_count.arq;Tests\CommandTests\command_args\invalid_index_missing.arq
+STATUS|stable

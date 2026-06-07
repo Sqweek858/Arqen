@@ -337,7 +337,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -792,12 +792,13 @@ static class Program
         const int sectionSize = 0xC000;
         const int importRva = 0x1800;
         const int iltRva = 0x1900;
-        const int iatRva = 0x1940;
-        const int dllNameRva = 0x1980;
+        const int iatRva = 0x1960;
+        const int kernelDllNameRva = 0x1A00;
         const int dataStartRva = 0x3000;
         const int slotLenStartRva = 0x8F00;
         const int slotStartRva = 0x9000;
         const int runtimeSlotBytes = 0x1000;
+        const int bytesWrittenRva = slotLenStartRva - 8;
 
         var actions = OrderedActionMaps(ir);
         if (actions.Count == 0 || actions[^1].GetValueOrDefault("op") != "exit")
@@ -807,7 +808,7 @@ static class Program
         WritePeHeader(pe, sectionSize, importRva, 0x600, subsystem: 3);
 
         var slotNames = actions
-            .Where(a => a.GetValueOrDefault("value_kind") == "slot" || a.GetValueOrDefault("op") == "file_load" || a.GetValueOrDefault("op") == "print_runtime_slot")
+            .Where(a => a.GetValueOrDefault("value_kind") == "slot" || a.GetValueOrDefault("op") == "file_load" || a.GetValueOrDefault("op") == "print_runtime_slot" || a.GetValueOrDefault("op") == "command_arg_count" || a.GetValueOrDefault("op") == "command_arg_index")
             .Select(a => a.GetValueOrDefault("target") != "" ? a.GetValueOrDefault("target")! : a.GetValueOrDefault("value")!)
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Distinct(StringComparer.Ordinal)
@@ -830,17 +831,17 @@ static class Program
                 GetValue(action.GetValueOrDefault("value") ?? "");
         }
 
-        var importNameCursor = 0x19A0;
-        var imports = new[] { "CreateFileW", "WriteFile", "ReadFile", "CloseHandle", "SetFilePointer", "GetStdHandle", "ExitProcess" };
-        for (var i = 0; i < imports.Length; i++)
+        var importNameCursor = 0x1A20;
+        var kernelImports = new[] { "CreateFileW", "WriteFile", "ReadFile", "CloseHandle", "SetFilePointer", "GetStdHandle", "GetCommandLineW", "ExitProcess" };
+        for (var i = 0; i < kernelImports.Length; i++)
         {
-            AddImport(pe, iltRva, iatRva, i, importNameCursor, imports[i]);
+            AddImport(pe, iltRva, iatRva, i, importNameCursor, kernelImports[i]);
             importNameCursor += 0x20;
         }
-        WriteAscii(pe, RvaToRaw(dllNameRva), "kernel32.dll\0");
+        WriteAscii(pe, RvaToRaw(kernelDllNameRva), "kernel32.dll\0");
         var importRaw = RvaToRaw(importRva);
         WriteUInt32(pe, importRaw, iltRva);
-        WriteUInt32(pe, importRaw + 12, dllNameRva);
+        WriteUInt32(pe, importRaw + 12, kernelDllNameRva);
         WriteUInt32(pe, importRaw + 16, iatRva);
 
         var code = new List<byte>();
@@ -866,6 +867,73 @@ static class Program
             Emit(0x44, 0x8B, 0x05);
             EmitUInt32(unchecked((uint)(targetRva - nextRva)));
         }
+        void StoreR8dToMem(int targetRva)
+        {
+            var nextRva = sectionRva + code.Count + 7;
+            Emit(0x44, 0x89, 0x05);
+            EmitUInt32(unchecked((uint)(targetRva - nextRva)));
+        }
+        void StoreDwordMem(int targetRva, uint value)
+        {
+            var nextRva = sectionRva + code.Count + 10;
+            Emit(0xC7, 0x05);
+            EmitUInt32(unchecked((uint)(targetRva - nextRva)));
+            EmitUInt32(value);
+        }
+        void StoreByteFromAl(int targetRva)
+        {
+            var nextRva = sectionRva + code.Count + 6;
+            Emit(0x88, 0x05);
+            EmitUInt32(unchecked((uint)(targetRva - nextRva)));
+        }
+        void StoreByteFromBl(int targetRva)
+        {
+            var nextRva = sectionRva + code.Count + 6;
+            Emit(0x88, 0x1D);
+            EmitUInt32(unchecked((uint)(targetRva - nextRva)));
+        }
+        void StoreByteFromDl(int targetRva)
+        {
+            var nextRva = sectionRva + code.Count + 6;
+            Emit(0x88, 0x15);
+            EmitUInt32(unchecked((uint)(targetRva - nextRva)));
+        }
+        int EmitNearJump2(byte op1, byte op2)
+        {
+            Emit(op1, op2);
+            var pos = code.Count;
+            EmitUInt32(0);
+            return pos;
+        }
+        int EmitShortJump(byte op)
+        {
+            Emit(op);
+            var pos = code.Count;
+            Emit(0);
+            return pos;
+        }
+        int EmitNearJump(byte op)
+        {
+            Emit(op);
+            var pos = code.Count;
+            EmitUInt32(0);
+            return pos;
+        }
+        void PatchRel32(int offsetPos, int targetRva)
+        {
+            var nextRva = sectionRva + offsetPos + 4;
+            var bytes = BitConverter.GetBytes(targetRva - nextRva);
+            for (var i = 0; i < 4; i++)
+                code[offsetPos + i] = bytes[i];
+        }
+        void PatchShort(int offsetPos, int targetRva)
+        {
+            var nextRva = sectionRva + offsetPos + 1;
+            var rel = targetRva - nextRva;
+            if (rel < sbyte.MinValue || rel > sbyte.MaxValue)
+                throw new CompileError("BACKEND", "B001", 0, 0, "Internal jump too far.");
+            code[offsetPos] = unchecked((byte)(sbyte)rel);
+        }
         void JeFail()
         {
             Emit(0x0F, 0x84);
@@ -880,6 +948,11 @@ static class Program
         void CheckEaxZero()
         {
             Emit(0x85, 0xC0);
+            JeFail();
+        }
+        void CheckRaxZero()
+        {
+            Emit(0x48, 0x85, 0xC0);
             JeFail();
         }
         void StoreStack32(byte offset, uint value)
@@ -906,7 +979,7 @@ static class Program
             Emit(0x48, 0x89, 0xD9);
             Lea(new byte[] { 0x48, 0x8D, 0x15 }, data.Rva, 7);
             Emit(0x41, 0xB8); EmitUInt32((uint)data.Length);
-            Lea(new byte[] { 0x4C, 0x8D, 0x0D }, slotLenStartRva - 8, 7);
+            Lea(new byte[] { 0x4C, 0x8D, 0x0D }, bytesWrittenRva, 7);
             StoreStack32(0x20, 0);
             CallIat(1);
             CheckEaxZero();
@@ -917,10 +990,169 @@ static class Program
             Emit(0x48, 0x89, 0xD9);
             Lea(new byte[] { 0x48, 0x8D, 0x15 }, s.BufferRva, 7);
             MovR8dFromMem(s.LenRva);
-            Lea(new byte[] { 0x4C, 0x8D, 0x0D }, slotLenStartRva - 8, 7);
+            Lea(new byte[] { 0x4C, 0x8D, 0x0D }, bytesWrittenRva, 7);
             StoreStack32(0x20, 0);
             CallIat(1);
             CheckEaxZero();
+        }
+        void SkipCommandLineSpaces()
+        {
+            var loopRva = sectionRva + code.Count;
+            Emit(0x66, 0x83, 0x3E, 0x20);
+            var done = EmitNearJump2(0x0F, 0x85);
+            Emit(0x48, 0x83, 0xC6, 0x02);
+            var back = EmitNearJump(0xE9);
+            var doneRva = sectionRva + code.Count;
+            PatchRel32(done, doneRva);
+            PatchRel32(back, loopRva);
+        }
+        void SkipCommandLineArg()
+        {
+            SkipCommandLineSpaces();
+            Emit(0x66, 0x83, 0x3E, 0x00);
+            var doneAtZero = EmitNearJump2(0x0F, 0x84);
+            Emit(0x66, 0x83, 0x3E, 0x22);
+            var unquoted = EmitNearJump2(0x0F, 0x85);
+            Emit(0x48, 0x83, 0xC6, 0x02);
+            var quotedLoopRva = sectionRva + code.Count;
+            Emit(0x66, 0x83, 0x3E, 0x00);
+            var quotedDoneZero = EmitNearJump2(0x0F, 0x84);
+            Emit(0x66, 0x83, 0x3E, 0x22);
+            var quotedEnd = EmitNearJump2(0x0F, 0x84);
+            Emit(0x48, 0x83, 0xC6, 0x02);
+            var quotedBack = EmitNearJump(0xE9);
+            var quotedEndRva = sectionRva + code.Count;
+            Emit(0x48, 0x83, 0xC6, 0x02);
+            var quotedDoneJump = EmitNearJump(0xE9);
+            var unquotedRva = sectionRva + code.Count;
+            var unquotedLoopRva = sectionRva + code.Count;
+            Emit(0x66, 0x83, 0x3E, 0x00);
+            var unquotedDoneZero = EmitNearJump2(0x0F, 0x84);
+            Emit(0x66, 0x83, 0x3E, 0x20);
+            var unquotedDoneSpace = EmitNearJump2(0x0F, 0x84);
+            Emit(0x48, 0x83, 0xC6, 0x02);
+            var unquotedBack = EmitNearJump(0xE9);
+            var doneRva = sectionRva + code.Count;
+            PatchRel32(doneAtZero, doneRva);
+            PatchRel32(unquoted, unquotedRva);
+            PatchRel32(quotedDoneZero, doneRva);
+            PatchRel32(quotedEnd, quotedEndRva);
+            PatchRel32(quotedBack, quotedLoopRva);
+            PatchRel32(quotedDoneJump, doneRva);
+            PatchRel32(unquotedDoneZero, doneRva);
+            PatchRel32(unquotedDoneSpace, doneRva);
+            PatchRel32(unquotedBack, unquotedLoopRva);
+        }
+        void InitCommandLine()
+        {
+            CallIat(6);
+            CheckRaxZero();
+            Emit(0x48, 0x89, 0xC6);
+            SkipCommandLineArg();
+        }
+        void StoreRuntimeArgCount(string target)
+        {
+            var slot = slots[target];
+            InitCommandLine();
+            Emit(0x45, 0x31, 0xC9);
+            var loopRva = sectionRva + code.Count;
+            SkipCommandLineSpaces();
+            Emit(0x66, 0x83, 0x3E, 0x00);
+            var doneCount = EmitNearJump2(0x0F, 0x84);
+            Emit(0x41, 0xFF, 0xC1);
+            SkipCommandLineArg();
+            var back = EmitNearJump(0xE9);
+            var doneCountRva = sectionRva + code.Count;
+            PatchRel32(doneCount, doneCountRva);
+            PatchRel32(back, loopRva);
+            Emit(0x44, 0x89, 0xC8);
+
+            Emit(0x89, 0xC3);
+            Emit(0x83, 0xF8, 0x0A);
+            var oneDigit = EmitNearJump2(0x0F, 0x8C);
+            Emit(0x31, 0xD2);
+            Emit(0xB9, 0x0A, 0x00, 0x00, 0x00);
+            Emit(0xF7, 0xF1);
+            Emit(0x04, 0x30);
+            StoreByteFromAl(slot.BufferRva);
+            Emit(0x80, 0xC2, 0x30);
+            StoreByteFromDl(slot.BufferRva + 1);
+            StoreDwordMem(slot.LenRva, 2);
+            var done = EmitShortJump(0xEB);
+            var oneDigitRva = sectionRva + code.Count;
+            Emit(0x80, 0xC3, 0x30);
+            StoreByteFromBl(slot.BufferRva);
+            StoreDwordMem(slot.LenRva, 1);
+            var doneRva = sectionRva + code.Count;
+            PatchRel32(oneDigit, oneDigitRva);
+            PatchShort(done, doneRva);
+        }
+        void StoreRuntimeArgValue(int index, string target)
+        {
+            var slot = slots[target];
+            InitCommandLine();
+            Emit(0x45, 0x31, 0xC9);
+            var findLoopRva = sectionRva + code.Count;
+            SkipCommandLineSpaces();
+            Emit(0x66, 0x83, 0x3E, 0x00);
+            var outOfRange = EmitNearJump2(0x0F, 0x84);
+            Emit(0x41, 0x83, 0xF9, unchecked((byte)index));
+            var found = EmitNearJump2(0x0F, 0x84);
+            SkipCommandLineArg();
+            Emit(0x41, 0xFF, 0xC1);
+            var findBack = EmitNearJump(0xE9);
+            var foundRva = sectionRva + code.Count;
+            PatchRel32(found, foundRva);
+            Emit(0x66, 0x83, 0x3E, 0x22);
+            var unquotedCopy = EmitNearJump2(0x0F, 0x85);
+            Emit(0x48, 0x83, 0xC6, 0x02);
+            Lea(new byte[] { 0x48, 0x8D, 0x3D }, slot.BufferRva, 7);
+            Emit(0x45, 0x31, 0xC0);
+            var quotedLoopRva = sectionRva + code.Count;
+            Emit(0x41, 0x81, 0xF8);
+            EmitUInt32(runtimeSlotBytes - 1);
+            var quotedDoneByCap = EmitNearJump2(0x0F, 0x8D);
+            Emit(0x66, 0x42, 0x8B, 0x04, 0x46);
+            Emit(0x66, 0x85, 0xC0);
+            var quotedDoneByNull = EmitNearJump2(0x0F, 0x84);
+            Emit(0x66, 0x83, 0xF8, 0x22);
+            var quotedDoneByQuote = EmitNearJump2(0x0F, 0x84);
+            Emit(0x42, 0x88, 0x04, 0x07);
+            Emit(0x41, 0xFF, 0xC0);
+            var quotedBack = EmitNearJump(0xE9);
+            var unquotedCopyRva = sectionRva + code.Count;
+            PatchRel32(unquotedCopy, unquotedCopyRva);
+            Lea(new byte[] { 0x48, 0x8D, 0x3D }, slot.BufferRva, 7);
+            Emit(0x45, 0x31, 0xC0);
+            var unquotedLoopRva = sectionRva + code.Count;
+            Emit(0x41, 0x81, 0xF8);
+            EmitUInt32(runtimeSlotBytes - 1);
+            var unquotedDoneByCap = EmitNearJump2(0x0F, 0x8D);
+            Emit(0x66, 0x42, 0x8B, 0x04, 0x46);
+            Emit(0x66, 0x85, 0xC0);
+            var unquotedDoneByNull = EmitNearJump2(0x0F, 0x84);
+            Emit(0x66, 0x83, 0xF8, 0x20);
+            var unquotedDoneBySpace = EmitNearJump2(0x0F, 0x84);
+            Emit(0x42, 0x88, 0x04, 0x07);
+            Emit(0x41, 0xFF, 0xC0);
+            var unquotedBack = EmitNearJump(0xE9);
+            var doneRva = sectionRva + code.Count;
+            StoreR8dToMem(slot.LenRva);
+            var afterDone = EmitShortJump(0xEB);
+            var emptyRva = sectionRva + code.Count;
+            StoreDwordMem(slot.LenRva, 0);
+            var afterEmptyRva = sectionRva + code.Count;
+            PatchRel32(findBack, findLoopRva);
+            PatchRel32(outOfRange, emptyRva);
+            PatchRel32(quotedDoneByCap, doneRva);
+            PatchRel32(quotedDoneByNull, doneRva);
+            PatchRel32(quotedDoneByQuote, doneRva);
+            PatchRel32(quotedBack, quotedLoopRva);
+            PatchRel32(unquotedDoneByCap, doneRva);
+            PatchRel32(unquotedDoneByNull, doneRva);
+            PatchRel32(unquotedDoneBySpace, doneRva);
+            PatchRel32(unquotedBack, unquotedLoopRva);
+            PatchShort(afterDone, afterEmptyRva);
         }
         void CloseRbx()
         {
@@ -978,6 +1210,14 @@ static class Program
                 WriteHandleFromSlot(action["target"]);
                 WriteHandleFromStatic("\n");
             }
+            else if (op == "command_arg_count")
+            {
+                StoreRuntimeArgCount(action["target"]);
+            }
+            else if (op == "command_arg_index")
+            {
+                StoreRuntimeArgValue(int.Parse(action["value"], CultureInfo.InvariantCulture), action["target"]);
+            }
             else if (op == "exit")
             {
                 // Emitted once at the end.
@@ -989,10 +1229,10 @@ static class Program
         }
 
         Emit(0x31, 0xC9);
-        CallIat(6);
+        CallIat(7);
         var failRva = sectionRva + code.Count;
         Emit(0xB9, 0x01, 0x00, 0x00, 0x00);
-        CallIat(6);
+        CallIat(7);
         foreach (var offsetPos in failJumps)
         {
             var nextRva = sectionRva + offsetPos + 4;
@@ -1108,7 +1348,7 @@ static class Program
     static bool HasFileIoActions(IrModel ir)
         => ir.Actions.Values.Any(action =>
             action.TryGetValue("op", out var op) &&
-            op is "file_write" or "file_append" or "file_load" or "print_runtime_slot");
+            op is "file_write" or "file_append" or "file_load" or "print_runtime_slot" or "command_arg_count" or "command_arg_index");
 
     static byte[] BuildStdoutPe(string text)
     {
@@ -2128,9 +2368,60 @@ static class Program
                 throw new CompileError("PARSE", "P073", Current.Line, Current.Column, "Expected keyword \"be\" after symbol name.");
             ExpectKeyword("be");
 
+            if (IsKeyword("command"))
+            {
+                ParseCommandArgDefinition(declaredType.Value, nameTok, isConst);
+                ExpectLine();
+                return;
+            }
+
             var value = ParseCanonicalValue(declaredType.Value);
             DefineSymbol(nameTok.Value, value.Type, value.Value, isConst);
             ExpectLine();
+        }
+
+        void ParseCommandArgDefinition(string declaredType, Token nameTok, bool isConst)
+        {
+            if (isConst)
+                throw new CompileError("SEMANTIC", "S071", nameTok.Line, nameTok.Column, "const command arg targets are not supported.");
+
+            ExpectKeyword("command");
+            if (!IsKeyword("arg"))
+                throw new CompileError("PARSE", "P110", Current.Line, Current.Column, "Expected keyword \"arg\" after \"command\".");
+            ExpectKeyword("arg");
+
+            if (IsKeyword("count"))
+            {
+                if (declaredType != "int" && declaredType != "var")
+                    throw new CompileError("SEMANTIC", "S070", Current.Line, Current.Column, "command arg count must be defined as int.");
+                ExpectKeyword("count");
+                if (!IsExpressionEnd())
+                    throw new CompileError("PARSE", "P114", Current.Line, Current.Column, "Unexpected tokens after command arg count.");
+                DefineRuntimeSymbol(nameTok.Value, "int", "runtime(command_arg_count)", isConst: false);
+                _runtimeActions.Add(new RuntimeAction("command_arg_count", "", "slot", nameTok.Value, nameTok.Value));
+                return;
+            }
+
+            if (declaredType != "string" && declaredType != "var")
+                throw new CompileError("SEMANTIC", "S070", Current.Line, Current.Column, "command arg index must be defined as string.");
+
+            if (!CurrentIs("INT"))
+            {
+                if (CurrentIs("MINUS"))
+                    throw new CompileError("SEMANTIC", "S072", Current.Line, Current.Column, "command arg index cannot be negative.");
+                throw new CompileError("PARSE", "P111", Current.Line, Current.Column, "Expected integer command arg index.");
+            }
+
+            var indexTok = Advance();
+            if (!int.TryParse(indexTok.Value, NumberStyles.None, CultureInfo.InvariantCulture, out var index))
+                throw new CompileError("PARSE", "P111", indexTok.Line, indexTok.Column, "Expected integer command arg index.");
+            if (index < 0)
+                throw new CompileError("SEMANTIC", "S072", indexTok.Line, indexTok.Column, "command arg index cannot be negative.");
+            if (!IsExpressionEnd())
+                throw new CompileError("PARSE", "P113", Current.Line, Current.Column, "Unexpected tokens after command arg index.");
+
+            DefineRuntimeSymbol(nameTok.Value, "text", $"runtime(command_arg_{index})", isConst: false);
+            _runtimeActions.Add(new RuntimeAction("command_arg_index", "", "index", index.ToString(CultureInfo.InvariantCulture), nameTok.Value));
         }
 
         ExprResult ParseCanonicalValue(string declaredType)
@@ -2338,6 +2629,13 @@ static class Program
         void DefineSymbol(string name, string type, string value, bool isConst = false)
         {
             _vars[name] = new VarInfo(type, value, isConst);
+            _varList.Add((name, isConst ? $"const {type}" : type, value));
+        }
+
+        void DefineRuntimeSymbol(string name, string type, string value, bool isConst = false)
+        {
+            _vars[name] = new VarInfo(type, value, isConst, IsRuntime: true);
+            _runtimeSymbols.Add(name);
             _varList.Add((name, isConst ? $"const {type}" : type, value));
         }
 
