@@ -1,0 +1,5 @@
+﻿program "InvalidMissingWindow"
+when closed "Window"
+close window "Window"
+end when
+end program "InvalidMissingWindow"

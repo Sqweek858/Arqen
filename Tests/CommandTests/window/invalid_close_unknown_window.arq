@@ -1,0 +1,3 @@
+﻿program "InvalidCloseUnknownWindow"
+close window "Window"
+end program "InvalidCloseUnknownWindow"

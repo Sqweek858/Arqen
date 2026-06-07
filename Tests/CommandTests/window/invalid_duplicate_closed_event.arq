@@ -1,0 +1,9 @@
+﻿program "InvalidDuplicateClosed"
+define window called "Window"
+when closed "Window"
+close window "Window"
+end when
+when closed "Window"
+close window "Window"
+end when
+end program "InvalidDuplicateClosed"

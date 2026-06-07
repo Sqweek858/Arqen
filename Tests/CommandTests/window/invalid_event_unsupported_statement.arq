@@ -1,0 +1,6 @@
+﻿program "InvalidEventUnsupportedStatement"
+define window called "Window"
+when closed "Window"
+let x be 10
+end when
+end program "InvalidEventUnsupportedStatement"

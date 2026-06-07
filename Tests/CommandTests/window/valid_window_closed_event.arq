@@ -1,0 +1,10 @@
+﻿program "WindowCloseEventDemo"
+define window called "Window"
+set title of "Window" to string "Close Event"
+set resolution of "Window" to 800 x 600
+show window "Window"
+when closed "Window"
+close window "Window"
+end when
+run window "Window"
+end program "WindowCloseEventDemo"

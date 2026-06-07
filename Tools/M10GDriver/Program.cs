@@ -337,7 +337,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -842,29 +842,54 @@ static class Program
         bool hasShow = false;
         bool hasRun = false;
 
+        var closedHandlers = new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.Ordinal);
+        var keyHandlers = new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.Ordinal);
+        List<Dictionary<string, string>>? currentEventBlock = null;
+
         foreach (var action in actions)
         {
             var op = action.GetValueOrDefault("op");
-            if (op == "window_set_title") windowTitle = action.GetValueOrDefault("value") ?? windowTitle;
-            if (op == "window_set_resolution")
+            if (op == "event_window_closed")
             {
-                var val = action.GetValueOrDefault("value") ?? "";
-                var parts = val.Split('x');
-                if (parts.Length == 2 && int.TryParse(parts[0], out var w) && int.TryParse(parts[1], out var h))
-                {
-                    width = w;
-                    height = h;
-                }
+                currentEventBlock = new List<Dictionary<string, string>>();
+                closedHandlers[action.GetValueOrDefault("target") ?? ""] = currentEventBlock;
             }
-            if (op == "window_set_resizable") resizable = (action.GetValueOrDefault("value") ?? "") == "true";
-            if (op == "window_show") hasShow = true;
-            if (op == "window_run") hasRun = true;
+            else if (op == "event_key_pressed")
+            {
+                currentEventBlock = new List<Dictionary<string, string>>();
+                keyHandlers[action.GetValueOrDefault("value") ?? ""] = currentEventBlock;
+            }
+            else if (op == "event_end")
+            {
+                currentEventBlock = null;
+            }
+            else if (currentEventBlock != null)
+            {
+                currentEventBlock.Add(action);
+            }
+            else
+            {
+                if (op == "window_set_title") windowTitle = action.GetValueOrDefault("value") ?? windowTitle;
+                if (op == "window_set_resolution")
+                {
+                    var val = action.GetValueOrDefault("value") ?? "";
+                    var parts = val.Split('x');
+                    if (parts.Length == 2 && int.TryParse(parts[0], out var w) && int.TryParse(parts[1], out var h))
+                    {
+                        width = w;
+                        height = h;
+                    }
+                }
+                if (op == "window_set_resizable") resizable = (action.GetValueOrDefault("value") ?? "") == "true";
+                if (op == "window_show") hasShow = true;
+                if (op == "window_run") hasRun = true;
+            }
         }
 
         var titleRva = AddUtf16(windowTitle);
 
         var kernelImports = new[] { "ExitProcess", "GetModuleHandleW" };
-        var userImports = new[] { "RegisterClassW", "CreateWindowExW", "ShowWindow", "UpdateWindow", "GetMessageW", "TranslateMessage", "DispatchMessageW", "DefWindowProcW", "PostQuitMessage" };
+        var userImports = new[] { "RegisterClassW", "CreateWindowExW", "ShowWindow", "UpdateWindow", "GetMessageW", "TranslateMessage", "DispatchMessageW", "DefWindowProcW", "PostQuitMessage", "DestroyWindow", "PostMessageW" };
         
         var importNameCursor = importNameCursorStart;
         for (var i = 0; i < kernelImports.Length; i++)
@@ -918,18 +943,91 @@ static class Program
             EmitProc((byte)(offset & 0xFF), (byte)((offset >> 8) & 0xFF), (byte)((offset >> 16) & 0xFF), (byte)((offset >> 24) & 0xFF));
         }
 
+        int EmitShortJumpProc(byte op)
+        {
+            EmitProc(op, 0x00);
+            return wndProcCode.Count - 1;
+        }
+
+        void PatchShortProc(int offset)
+        {
+            int diff = wndProcCode.Count - (offset + 1);
+            if (diff > 127) throw new CompileError("BACKEND", "B007", 0, 0, "Event block too large for short jump.");
+            wndProcCode[offset] = (byte)diff;
+        }
+
         EmitProc(0x48, 0x89, 0x4C, 0x24, 0x08); // rcx -> shadow
         EmitProc(0x89, 0x54, 0x24, 0x10);       // rdx -> shadow
         EmitProc(0x4C, 0x89, 0x44, 0x24, 0x18); // r8 -> shadow
         EmitProc(0x4C, 0x89, 0x4C, 0x24, 0x20); // r9 -> shadow
         EmitProc(0x48, 0x83, 0xEC, 0x28);       // sub rsp, 40
-        EmitProc(0x81, 0xFA, 0x02, 0x00, 0x00, 0x00); // cmp edx, 2 (WM_DESTROY)
-        EmitProc(0x75, 0x0F); // jne +15
+
+        // WM_DESTROY (2)
+        EmitProc(0x81, 0xFA, 0x02, 0x00, 0x00, 0x00); // cmp edx, 2
+        var jneDestroy = EmitShortJumpProc(0x75);
         EmitProc(0x31, 0xC9); // xor ecx, ecx
         CallProcIat(userIatRva + 8 * 8); // PostQuitMessage
         EmitProc(0x31, 0xC0); // xor eax, eax
         EmitProc(0x48, 0x83, 0xC4, 0x28); // add rsp, 40
         EmitProc(0xC3); // ret
+        PatchShortProc(jneDestroy);
+
+        // WM_CLOSE (16)
+        if (closedHandlers.TryGetValue("Window", out var cActions))
+        {
+            EmitProc(0x81, 0xFA, 0x10, 0x00, 0x00, 0x00); // cmp edx, 16
+            var jneClose = EmitShortJumpProc(0x75);
+            bool explicitlyClosed = false;
+            foreach (var act in cActions)
+            {
+                if (act.GetValueOrDefault("op") == "window_close")
+                {
+                    EmitProc(0x48, 0x8B, 0x4C, 0x24, 0x30); // mov rcx, [rsp+48] (hWnd)
+                    CallProcIat(userIatRva + 9 * 8); // DestroyWindow
+                    explicitlyClosed = true;
+                }
+            }
+            if (explicitlyClosed)
+            {
+                EmitProc(0x31, 0xC0); // xor eax, eax
+                EmitProc(0x48, 0x83, 0xC4, 0x28); // add rsp, 40
+                EmitProc(0xC3); // ret
+            }
+            PatchShortProc(jneClose);
+        }
+
+        // WM_KEYDOWN (256 / 0x0100)
+        if (keyHandlers.TryGetValue("Escape", out var kActions))
+        {
+            EmitProc(0x81, 0xFA, 0x00, 0x01, 0x00, 0x00); // cmp edx, 0x0100
+            var jneKey = EmitShortJumpProc(0x75);
+            EmitProc(0x49, 0x81, 0xF8, 0x1B, 0x00, 0x00, 0x00); // cmp r8, 0x1B (VK_ESCAPE)
+            var jneEsc = EmitShortJumpProc(0x75);
+            
+            bool explicitlyClosed = false;
+            foreach (var act in kActions)
+            {
+                if (act.GetValueOrDefault("op") == "window_close")
+                {
+                    EmitProc(0x48, 0x8B, 0x4C, 0x24, 0x30); // mov rcx, [rsp+48] (hWnd)
+                    EmitProc(0xBA, 0x10, 0x00, 0x00, 0x00); // mov edx, 0x0010 (WM_CLOSE)
+                    EmitProc(0x45, 0x31, 0xC0); // xor r8d, r8d
+                    EmitProc(0x45, 0x31, 0xC9); // xor r9d, r9d
+                    CallProcIat(userIatRva + 10 * 8); // PostMessageW
+                    explicitlyClosed = true;
+                }
+            }
+            if (explicitlyClosed)
+            {
+                EmitProc(0x31, 0xC0); // xor eax, eax
+                EmitProc(0x48, 0x83, 0xC4, 0x28); // add rsp, 40
+                EmitProc(0xC3); // ret
+            }
+            PatchShortProc(jneEsc);
+            PatchShortProc(jneKey);
+        }
+
+        // DefWindowProcW
         EmitProc(0x48, 0x8B, 0x4C, 0x24, 0x30); // mov rcx, [rsp+48]
         EmitProc(0x8B, 0x54, 0x24, 0x38); // mov edx, [rsp+56]
         EmitProc(0x4C, 0x8B, 0x44, 0x24, 0x40); // mov r8, [rsp+64]
@@ -937,6 +1035,7 @@ static class Program
         CallProcIat(userIatRva + 7 * 8); // DefWindowProcW
         EmitProc(0x48, 0x83, 0xC4, 0x28); // add rsp, 40
         EmitProc(0xC3); // ret
+
         Array.Copy(wndProcCode.ToArray(), 0, pe, RvaToRaw(wndProcRva), wndProcCode.Count);
 
         Emit(0x48, 0x83, 0xEC, 0x68); // sub rsp, 104
@@ -1625,7 +1724,7 @@ static class Program
     static bool HasWindowActions(IrModel ir)
         => ir.Actions.Values.Any(action =>
             action.TryGetValue("op", out var op) &&
-            op.StartsWith("window_", StringComparison.Ordinal));
+            (op.StartsWith("window_", StringComparison.Ordinal) || op.StartsWith("event_", StringComparison.Ordinal)));
 
     static byte[] BuildStdoutPe(string text)
     {
@@ -1921,7 +2020,9 @@ static class Program
         readonly HashSet<string> _callStack = new(StringComparer.Ordinal);
         readonly HashSet<string> _definedWindows = new(StringComparer.Ordinal);
         readonly HashSet<string> _shownWindows = new(StringComparer.Ordinal);
+        readonly HashSet<string> _definedEvents = new(StringComparer.Ordinal);
         readonly List<StatementRule> _statementRules;
+        bool _inEvent = false;
         int _pos;
         string? _title;
         string _titleExpr = "";
@@ -1941,7 +2042,7 @@ static class Program
             [
                 new StatementRule(() => IsKeyword("define") && PeekKeyword("window"), ParseWindowStatement),
                 new StatementRule(() => IsKeyword("set") && (PeekKeyword("title") || PeekKeyword("resolution") || PeekKeyword("resizable")) && PeekKeyword("of", 2), ParseWindowStatement),
-                new StatementRule(() => (IsKeyword("show") || IsKeyword("run")) && PeekKeyword("window"), ParseWindowStatement),
+                new StatementRule(() => (IsKeyword("show") || IsKeyword("run") || IsKeyword("close")) && PeekKeyword("window"), ParseWindowStatement),
                 new StatementRule(() => IsKeyword("let"), ParseLegacyLetStatement),
                 new StatementRule(() => IsKeyword("define"), ParseCanonicalDefineStatement),
                 new StatementRule(() => IsKeyword("rename"), ParseRenameStatement),
@@ -1955,6 +2056,7 @@ static class Program
                 new StatementRule(() => IsKeyword("if"), ParseIfStatement),
                 new StatementRule(() => IsKeyword("while"), ParseWhileStatement),
                 new StatementRule(() => IsKeyword("call"), ParseFunctionCallStatement),
+                new StatementRule(() => IsKeyword("when"), ParseWhenStatement),
             ];
         }
 
@@ -2017,6 +2119,9 @@ static class Program
 
             if (CurrentIs("EOF"))
                 throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected statement.");
+
+            if (_inEvent && !(IsKeyword("close") && PeekKeyword("window")))
+                throw new CompileError("SEMANTIC", "S081", Current.Line, Current.Column, $"Unsupported statement inside event block: '{Current.Value}'.");
 
             foreach (var rule in _statementRules)
                 if (rule.Matches())
@@ -2161,12 +2266,27 @@ static class Program
                 if (!_definedWindows.Contains(nameTok.Value))
                     throw new CompileError("SEMANTIC", "S072", nameTok.Line, nameTok.Column, $"Window '{nameTok.Value}' is not defined.");
                 
-                if (Current.Type != "BOOL")
-                    throw new CompileError("PARSE", "P110", Current.Line, Current.Column, "Expected boolean true/false for resizable.");
-                var valTok = Advance();
+                var boolTok = Current;
+                if (boolTok.Type != "BOOL")
+                    throw new CompileError("PARSE", "P110", Current.Line, Current.Column, "Expected boolean for resizable value.");
+                Advance();
                 ExpectLine();
+
                 if (apply)
-                    _runtimeActions.Add(new RuntimeAction("window_set_resizable", "", "static", valTok.Value, nameTok.Value));
+                    _runtimeActions.Add(new RuntimeAction("window_set_resizable", "", "static", boolTok.Value, nameTok.Value));
+            }
+            else if (IsKeyword("close") && PeekKeyword("window"))
+            {
+                ExpectKeyword("close");
+                ExpectKeyword("window");
+                var nameTok = Expect("STRING", "window name");
+                ExpectLine();
+
+                if (!_definedWindows.Contains(nameTok.Value))
+                    throw new CompileError("SEMANTIC", "S080", nameTok.Line, nameTok.Column, $"Cannot close missing window '{nameTok.Value}'.");
+
+                if (apply)
+                    _runtimeActions.Add(new RuntimeAction("window_close", "", "static", "", nameTok.Value));
             }
             else if (IsKeyword("show"))
             {
@@ -2622,6 +2742,84 @@ static class Program
             ExpectLine();
             if (apply)
                 ApplyNumericUpdate(divideTarget, divideValue, "/");
+        }
+
+        void ParseWhenStatement(bool apply, bool inIf)
+        {
+            ExpectKeyword("when");
+            if (IsKeyword("closed"))
+            {
+                ExpectKeyword("closed");
+                var nameTok = Expect("STRING", "window name");
+                ExpectLine();
+
+                if (!_definedWindows.Contains(nameTok.Value))
+                    throw new CompileError("SEMANTIC", "S076", nameTok.Line, nameTok.Column, $"Cannot attach closed event to missing window '{nameTok.Value}'.");
+                
+                var eventId = "closed_" + nameTok.Value;
+                if (_definedEvents.Contains(eventId))
+                    throw new CompileError("SEMANTIC", "S077", nameTok.Line, nameTok.Column, $"Duplicate closed event for window '{nameTok.Value}'.");
+                _definedEvents.Add(eventId);
+
+                if (apply) _runtimeActions.Add(new RuntimeAction("event_window_closed", "", "static", "", nameTok.Value));
+
+                bool prevInEvent = _inEvent;
+                _inEvent = true;
+
+                SkipNewlines();
+                while (!CurrentIs("EOF") && !(IsKeyword("end") && PeekKeyword("when")))
+                {
+                    ParseStatement(apply, inIf);
+                    SkipNewlines();
+                }
+
+                _inEvent = prevInEvent;
+
+                ExpectKeyword("end");
+                ExpectKeyword("when");
+                ExpectLine();
+
+                if (apply) _runtimeActions.Add(new RuntimeAction("event_end", "", "static", "", nameTok.Value));
+            }
+            else if (IsKeyword("key") && PeekKeyword("pressed"))
+            {
+                ExpectKeyword("key");
+                ExpectKeyword("pressed");
+                var keyTok = Expect("STRING", "key name");
+                ExpectLine();
+
+                if (keyTok.Value != "Escape")
+                    throw new CompileError("SEMANTIC", "S078", keyTok.Line, keyTok.Column, $"Unsupported key name '{keyTok.Value}'.");
+
+                var eventId = "key_" + keyTok.Value;
+                if (_definedEvents.Contains(eventId))
+                    throw new CompileError("SEMANTIC", "S079", keyTok.Line, keyTok.Column, $"Duplicate key event for '{keyTok.Value}'.");
+                _definedEvents.Add(eventId);
+
+                if (apply) _runtimeActions.Add(new RuntimeAction("event_key_pressed", "", "static", keyTok.Value, ""));
+
+                bool prevInEvent = _inEvent;
+                _inEvent = true;
+
+                SkipNewlines();
+                while (!CurrentIs("EOF") && !(IsKeyword("end") && PeekKeyword("when")))
+                {
+                    ParseStatement(apply, inIf);
+                    SkipNewlines();
+                }
+
+                _inEvent = prevInEvent;
+
+                ExpectKeyword("end");
+                ExpectKeyword("when");
+                ExpectLine();
+
+                if (apply) _runtimeActions.Add(new RuntimeAction("event_end", "", "static", keyTok.Value, ""));
+            }
+            else
+            {
+                throw new CompileError("PARSE", "P110", Current.Line, Current.Column, "Expected 'closed' or 'key pressed' after 'when'.");
+            }
         }
 
         void ParseWhile(bool apply)
