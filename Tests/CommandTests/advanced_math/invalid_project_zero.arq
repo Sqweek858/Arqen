@@ -1,0 +1,9 @@
+program "InvalidProjectZero"
+
+define vec3 called "out" be [0, 0, 0]
+
+set "out" to project [1, 2, 3] onto [0, 0, 0]
+
+blend mix to code 0
+
+end program "InvalidProjectZero"

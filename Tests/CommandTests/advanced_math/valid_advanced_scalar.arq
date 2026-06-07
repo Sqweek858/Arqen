@@ -1,0 +1,31 @@
+program "AdvancedScalar"
+
+define double called "x" be 0
+
+set "x" to saturate 1.5
+print "x"
+
+set "x" to saturate -0.5
+print "x"
+
+set "x" to sign -20
+print "x"
+
+set "x" to fract 4.75
+print "x"
+
+set "x" to step 0.5, 0.8
+print "x"
+
+set "x" to smoothstep 0, 1, 0.5
+print "x"
+
+set "x" to inverse lerp 0, 100, 25
+print "x"
+
+set "x" to remap 25 from 0, 100 to 0, 1
+print "x"
+
+blend mix to code 0
+
+end program "AdvancedScalar"

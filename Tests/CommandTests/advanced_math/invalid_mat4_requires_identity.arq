@@ -1,0 +1,7 @@
+program "InvalidMat4RequiresIdentity"
+
+define mat4 called "m" be [1, 0, 0]
+
+blend mix to code 0
+
+end program "InvalidMat4RequiresIdentity"

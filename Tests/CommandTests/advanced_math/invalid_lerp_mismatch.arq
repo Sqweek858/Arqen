@@ -1,0 +1,11 @@
+program "InvalidLerpMismatch"
+
+define vec2 called "a" be [1, 2]
+define vec3 called "b" be [1, 2, 3]
+define vec2 called "out" be [0, 0]
+
+set "out" to lerp "a", "b", 0.5
+
+blend mix to code 0
+
+end program "InvalidLerpMismatch"

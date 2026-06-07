@@ -1,0 +1,20 @@
+program "MatrixTransform"
+
+define mat4 called "m" be identity
+define vec3 called "p" be [0, 0, 0]
+
+set "m" to translate [10, 0, 0]
+set "p" to transform point "m", [1, 2, 3]
+print "p"
+
+set "m" to scale [2, 3, 4]
+set "p" to transform point "m", [1, 2, 3]
+print "p"
+
+set "m" to rotate z 90 deg
+set "p" to transform point "m", [1, 0, 0]
+print "p"
+
+blend mix to code 0
+
+end program "MatrixTransform"

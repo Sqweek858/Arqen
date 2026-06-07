@@ -337,7 +337,7 @@ static class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -3005,7 +3005,7 @@ static class Program
                 ExpectKeyword("const");
             }
 
-            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "color" or "angle" or "var"))
+            if (!CurrentIs("KEYWORD") || Current.Value is not ("string" or "int" or "float" or "double" or "bool" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "color" or "angle" or "var"))
                 throw new CompileError("PARSE", "P070", Current.Line, Current.Column, "Expected canonical type after \"define\".");
             var declaredType = Advance();
 
@@ -3127,6 +3127,14 @@ static class Program
                 return vector;
             }
 
+            if (IsMatrixType(declaredType))
+            {
+                if (!CurrentWordIs("identity"))
+                    throw new CompileError("SEMANTIC", "S130", Current.Line, Current.Column, $"define {declaredType} requires identity for now.");
+                var idTok = Advance();
+                return new ExprResult(declaredType, FormatMatrix(IdentityMatrix()), $"identity({idTok.Value})");
+            }
+
             if (declaredType == "color")
                 return ParseColorLiteralExpression();
 
@@ -3153,7 +3161,13 @@ static class Program
             if (CurrentIs("LBRACKET"))
                 return ParseVectorLiteral(legacyQuotedStrings: false);
 
-            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, bool, vector, color, or angle literal value.");
+            if (CurrentWordIs("identity"))
+            {
+                var idTok = Advance();
+                return new ExprResult("mat4", FormatMatrix(IdentityMatrix()), $"identity({idTok.Value})");
+            }
+
+            throw new CompileError("SEMANTIC", "S033", Current.Line, Current.Column, "define var requires string, int, bool, vector, matrix, transform, color, or angle literal value.");
         }
 
         ExprResult ParseCanonicalStringLiteral()
@@ -3259,6 +3273,7 @@ static class Program
 
         static bool IsNumeric(string type) => type is "int" or "float" or "double";
         static bool IsVector(string type) => type is "vec2" or "vec3" or "vec4";
+        static bool IsMatrixType(string type) => type is "mat4" or "transform";
         static bool IsColor(string type) => type == "color";
         static bool IsAngle(string type) => type == "angle";
 
@@ -3340,6 +3355,101 @@ static class Program
             4 => "vec4",
             _ => "",
         };
+
+        static double[] IdentityMatrix()
+            => new double[]
+            {
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            };
+
+        static double[] ToMatrix(ExprResult expr)
+        {
+            if (!IsMatrixType(expr.Type))
+                throw new CompileError("SEMANTIC", "S130", 0, 0, "Expected mat4 or transform value.");
+            var inner = expr.Value.Trim();
+            if (inner.StartsWith("[") && inner.EndsWith("]"))
+                inner = inner[1..^1];
+            var values = inner.Split(',').Select(part => double.Parse(part.Trim(), CultureInfo.InvariantCulture)).ToArray();
+            if (values.Length != 16)
+                throw new CompileError("SEMANTIC", "S130", 0, 0, "mat4 value must have 16 components.");
+            return values;
+        }
+
+        static string FormatMatrix(double[] values)
+            => "[" + string.Join(",", values.Select(value => FormatNumber(value, "double"))) + "]";
+
+        static double[] MultiplyMatrix(double[] a, double[] b)
+        {
+            var result = new double[16];
+            for (var row = 0; row < 4; row++)
+                for (var col = 0; col < 4; col++)
+                    result[row * 4 + col] =
+                        a[row * 4 + 0] * b[0 * 4 + col] +
+                        a[row * 4 + 1] * b[1 * 4 + col] +
+                        a[row * 4 + 2] * b[2 * 4 + col] +
+                        a[row * 4 + 3] * b[3 * 4 + col];
+            return result;
+        }
+
+        static double[] TranslationMatrix(double[] v)
+        {
+            if (v.Length != 3)
+                throw new CompileError("SEMANTIC", "S131", 0, 0, "translate requires vec3 value.");
+            var m = IdentityMatrix();
+            m[3] = v[0];
+            m[7] = v[1];
+            m[11] = v[2];
+            return m;
+        }
+
+        static double[] ScaleMatrix(double[] v)
+        {
+            if (v.Length != 3)
+                throw new CompileError("SEMANTIC", "S131", 0, 0, "scale requires vec3 value.");
+            var m = IdentityMatrix();
+            m[0] = v[0];
+            m[5] = v[1];
+            m[10] = v[2];
+            return m;
+        }
+
+        static double[] RotationMatrix(string axis, double radians)
+        {
+            var c = Math.Cos(radians);
+            var s = Math.Sin(radians);
+            var m = IdentityMatrix();
+            switch (axis)
+            {
+                case "x":
+                    m[5] = c; m[6] = -s; m[9] = s; m[10] = c;
+                    break;
+                case "y":
+                    m[0] = c; m[2] = s; m[8] = -s; m[10] = c;
+                    break;
+                case "z":
+                    m[0] = c; m[1] = -s; m[4] = s; m[5] = c;
+                    break;
+                default:
+                    throw new CompileError("SEMANTIC", "S132", 0, 0, "rotate axis must be x, y, or z.");
+            }
+            return m;
+        }
+
+        static double[] TransformVector(double[] m, double[] v, bool point)
+        {
+            if (v.Length != 3)
+                throw new CompileError("SEMANTIC", "S133", 0, 0, "transform point/direction requires vec3 value.");
+            var w = point ? 1.0 : 0.0;
+            return new[]
+            {
+                m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * w,
+                m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * w,
+                m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * w,
+            };
+        }
 
         static string PromoteNumericType(string left, string right, string op)
         {
@@ -3528,6 +3638,214 @@ static class Program
             return new ExprResult(type, FormatNumber(result, type), $"clamp({value.Repr},{min.Repr},{max.Repr})");
         }
 
+        ExprResult ApplyAdvancedScalarUnary(Token functionTok, ExprResult value)
+        {
+            if (!IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, $"{functionTok.Value} requires a numeric operand.");
+            var n = ToNumber(value);
+            var result = functionTok.Value switch
+            {
+                "saturate" => Math.Min(Math.Max(n, 0), 1),
+                "sign" => Math.Sign(n),
+                "fract" => n - Math.Floor(n),
+                _ => throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, $"Unknown advanced scalar function \"{functionTok.Value}\"."),
+            };
+            return new ExprResult("double", FormatNumber(result, "double"), $"{functionTok.Value}({value.Repr})");
+        }
+
+        ExprResult ApplyStepFunction(Token functionTok, ExprResult edge, ExprResult value)
+        {
+            if (!IsNumeric(edge.Type) || !IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, "step requires numeric operands.");
+            return new ExprResult("double", ToNumber(value) < ToNumber(edge) ? "0" : "1", $"step({edge.Repr},{value.Repr})");
+        }
+
+        ExprResult ApplySmoothStepFunction(Token functionTok, ExprResult edge0, ExprResult edge1, ExprResult value)
+        {
+            if (!IsNumeric(edge0.Type) || !IsNumeric(edge1.Type) || !IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, "smoothstep requires numeric operands.");
+            var lo = ToNumber(edge0);
+            var hi = ToNumber(edge1);
+            if (Math.Abs(hi - lo) < 0.0000000001)
+                throw new CompileError("SEMANTIC", "S121", functionTok.Line, functionTok.Column, "smoothstep edges cannot be equal.");
+            var t = Math.Min(Math.Max((ToNumber(value) - lo) / (hi - lo), 0), 1);
+            var result = t * t * (3 - 2 * t);
+            return new ExprResult("double", FormatNumber(result, "double"), $"smoothstep({edge0.Repr},{edge1.Repr},{value.Repr})");
+        }
+
+        ExprResult ApplyInverseLerpFunction(Token functionTok, ExprResult a, ExprResult b, ExprResult value)
+        {
+            if (!IsNumeric(a.Type) || !IsNumeric(b.Type) || !IsNumeric(value.Type))
+                throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, "inverse lerp requires numeric operands.");
+            var start = ToNumber(a);
+            var end = ToNumber(b);
+            if (Math.Abs(end - start) < 0.0000000001)
+                throw new CompileError("SEMANTIC", "S121", functionTok.Line, functionTok.Column, "inverse lerp range cannot be zero.");
+            var result = (ToNumber(value) - start) / (end - start);
+            return new ExprResult("double", FormatNumber(result, "double"), $"inverse_lerp({a.Repr},{b.Repr},{value.Repr})");
+        }
+
+        ExprResult ApplyRemapFunction(Token functionTok, ExprResult value, ExprResult inMin, ExprResult inMax, ExprResult outMin, ExprResult outMax)
+        {
+            if (!IsNumeric(value.Type) || !IsNumeric(inMin.Type) || !IsNumeric(inMax.Type) || !IsNumeric(outMin.Type) || !IsNumeric(outMax.Type))
+                throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, "remap requires numeric operands.");
+            var a = ToNumber(inMin);
+            var b = ToNumber(inMax);
+            if (Math.Abs(b - a) < 0.0000000001)
+                throw new CompileError("SEMANTIC", "S121", functionTok.Line, functionTok.Column, "remap input range cannot be zero.");
+            var t = (ToNumber(value) - a) / (b - a);
+            var result = ToNumber(outMin) + (ToNumber(outMax) - ToNumber(outMin)) * t;
+            return new ExprResult("double", FormatNumber(result, "double"), $"remap({value.Repr},{inMin.Repr},{inMax.Repr},{outMin.Repr},{outMax.Repr})");
+        }
+
+        ExprResult ApplyLerpFunction(Token functionTok, ExprResult a, ExprResult b, ExprResult t)
+        {
+            if (!IsNumeric(t.Type))
+                throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, "lerp factor must be numeric.");
+            var factor = ToNumber(t);
+            if (IsNumeric(a.Type) && IsNumeric(b.Type))
+            {
+                var result = ToNumber(a) + (ToNumber(b) - ToNumber(a)) * factor;
+                return new ExprResult("double", FormatNumber(result, "double"), $"lerp({a.Repr},{b.Repr},{t.Repr})");
+            }
+            if (IsVector(a.Type) && IsVector(b.Type) && a.Type == b.Type)
+            {
+                var av = ToVector(a);
+                var bv = ToVector(b);
+                var result = av.Select((component, index) => component + (bv[index] - component) * factor).ToArray();
+                return new ExprResult(a.Type, FormatVector(result), $"lerp({a.Repr},{b.Repr},{t.Repr})");
+            }
+            throw new CompileError("SEMANTIC", "S122", functionTok.Line, functionTok.Column, "lerp requires matching numeric or vector endpoints.");
+        }
+
+        ExprResult ApplyDistanceFunction(Token functionTok, ExprResult a, ExprResult b)
+        {
+            if (!IsVector(a.Type) || !IsVector(b.Type) || a.Type != b.Type)
+                throw new CompileError("SEMANTIC", "S122", functionTok.Line, functionTok.Column, "distance requires matching vector operands.");
+            var av = ToVector(a);
+            var bv = ToVector(b);
+            var result = Math.Sqrt(av.Select((component, index) => component - bv[index]).Sum(delta => delta * delta));
+            return new ExprResult("double", FormatNumber(result, "double"), $"distance({a.Repr},{b.Repr})");
+        }
+
+        ExprResult ApplyReflectFunction(Token functionTok, ExprResult dir, ExprResult normal)
+        {
+            if (!IsVector(dir.Type) || !IsVector(normal.Type) || dir.Type != normal.Type)
+                throw new CompileError("SEMANTIC", "S122", functionTok.Line, functionTok.Column, "reflect requires matching vector operands.");
+            var d = ToVector(dir);
+            var n = ToVector(normal);
+            var dot = d.Select((component, index) => component * n[index]).Sum();
+            var result = d.Select((component, index) => component - 2 * dot * n[index]).ToArray();
+            return new ExprResult(dir.Type, FormatVector(result), $"reflect({dir.Repr},{normal.Repr})");
+        }
+
+        ExprResult ApplyProjectFunction(Token functionTok, ExprResult value, ExprResult onto)
+        {
+            if (!IsVector(value.Type) || !IsVector(onto.Type) || value.Type != onto.Type)
+                throw new CompileError("SEMANTIC", "S122", functionTok.Line, functionTok.Column, "project requires matching vector operands.");
+            var v = ToVector(value);
+            var o = ToVector(onto);
+            var denom = o.Sum(component => component * component);
+            if (Math.Abs(denom) < 0.0000000001)
+                throw new CompileError("SEMANTIC", "S123", functionTok.Line, functionTok.Column, "project target vector cannot be zero.");
+            var scale = v.Select((component, index) => component * o[index]).Sum() / denom;
+            var result = o.Select(component => component * scale).ToArray();
+            return new ExprResult(value.Type, FormatVector(result), $"project({value.Repr},{onto.Repr})");
+        }
+
+        ExprResult ApplyClampLengthFunction(Token functionTok, ExprResult value, ExprResult max)
+        {
+            if (!IsVector(value.Type) || !IsNumeric(max.Type))
+                throw new CompileError("SEMANTIC", "S122", functionTok.Line, functionTok.Column, "clamp length requires vector and numeric max length.");
+            var limit = ToNumber(max);
+            if (limit < 0)
+                throw new CompileError("SEMANTIC", "S124", functionTok.Line, functionTok.Column, "clamp length max cannot be negative.");
+            var vector = ToVector(value);
+            var len = Math.Sqrt(vector.Sum(component => component * component));
+            if (len <= limit || Math.Abs(len) < 0.0000000001)
+                return value;
+            var result = vector.Select(component => component / len * limit).ToArray();
+            return new ExprResult(value.Type, FormatVector(result), $"clamp_length({value.Repr},{max.Repr})");
+        }
+
+        ExprResult ApplyMatrixFunction(Token functionTok)
+        {
+            var name = functionTok.Value;
+            if (name == "translate")
+            {
+                var v = ParseUnaryExpression(false);
+                if (v.Type != "vec3")
+                    throw new CompileError("SEMANTIC", "S131", functionTok.Line, functionTok.Column, "translate requires vec3 operand.");
+                return new ExprResult("mat4", FormatMatrix(TranslationMatrix(ToVector(v))), $"translate({v.Repr})");
+            }
+            if (name == "scale")
+            {
+                var v = ParseUnaryExpression(false);
+                if (v.Type != "vec3")
+                    throw new CompileError("SEMANTIC", "S131", functionTok.Line, functionTok.Column, "scale requires vec3 operand.");
+                return new ExprResult("mat4", FormatMatrix(ScaleMatrix(ToVector(v))), $"scale({v.Repr})");
+            }
+            if (name == "rotate")
+            {
+                if (!CurrentWordIs("x") && !CurrentWordIs("y") && !CurrentWordIs("z"))
+                    throw new CompileError("SEMANTIC", "S132", functionTok.Line, functionTok.Column, "rotate axis must be x, y, or z.");
+                var axis = Advance().Value;
+                var angle = ParseUnaryExpression(false);
+                if (!IsNumeric(angle.Type) && !IsAngle(angle.Type))
+                    throw new CompileError("SEMANTIC", "S132", functionTok.Line, functionTok.Column, "rotate angle must be numeric or angle.");
+                return new ExprResult("mat4", FormatMatrix(RotationMatrix(axis, ToNumber(angle))), $"rotate({axis},{angle.Repr})");
+            }
+            if (name == "matmul")
+            {
+                var left = ParseAddExpression(false);
+                Expect("COMMA", "comma between matmul arguments");
+                var right = ParseAddExpression(false);
+                if (!IsMatrixType(left.Type) || !IsMatrixType(right.Type))
+                    throw new CompileError("SEMANTIC", "S130", functionTok.Line, functionTok.Column, "matmul requires matrix or transform operands.");
+                return new ExprResult("mat4", FormatMatrix(MultiplyMatrix(ToMatrix(left), ToMatrix(right))), $"matmul({left.Repr},{right.Repr})");
+            }
+            throw new CompileError("SEMANTIC", "S130", functionTok.Line, functionTok.Column, $"Unknown matrix function \"{name}\".");
+        }
+
+        ExprResult ApplyTransformFunction(Token functionTok)
+        {
+            if (CurrentWordIs("point") || CurrentWordIs("direction"))
+            {
+                var isPoint = Current.Value == "point";
+                Advance();
+                var matrix = ParseAddExpression(false);
+                Expect("COMMA", "comma between transform arguments");
+                var value = ParseAddExpression(false);
+                if (!IsMatrixType(matrix.Type))
+                    throw new CompileError("SEMANTIC", "S133", functionTok.Line, functionTok.Column, "transform point/direction requires mat4 or transform operand.");
+                if (value.Type != "vec3")
+                    throw new CompileError("SEMANTIC", "S133", functionTok.Line, functionTok.Column, "transform point/direction value must be vec3.");
+                var result = TransformVector(ToMatrix(matrix), ToVector(value), isPoint);
+                return new ExprResult("vec3", FormatVector(result), $"transform_{(isPoint ? "point" : "direction")}({matrix.Repr},{value.Repr})");
+            }
+            throw new CompileError("SEMANTIC", "S133", functionTok.Line, functionTok.Column, "Expected point or direction after transform.");
+        }
+
+        ExprResult ApplyComposeTransform(Token functionTok)
+        {
+            ExpectWord("transform", "P150", "Expected transform after compose.");
+            ExpectWord("position", "P151", "Expected position in compose transform.");
+            var position = ParseAddExpression(false);
+            ExpectWord("rotation", "P152", "Expected rotation in compose transform.");
+            if (!CurrentWordIs("x") && !CurrentWordIs("y") && !CurrentWordIs("z"))
+                throw new CompileError("SEMANTIC", "S132", functionTok.Line, functionTok.Column, "compose transform rotation axis must be x, y, or z.");
+            var axis = Advance().Value;
+            var angle = ParseUnaryExpression(false);
+            ExpectWord("scale", "P153", "Expected scale in compose transform.");
+            var scale = ParseAddExpression(false);
+            if (position.Type != "vec3" || scale.Type != "vec3")
+                throw new CompileError("SEMANTIC", "S134", functionTok.Line, functionTok.Column, "compose transform requires vec3 position and vec3 scale.");
+            if (!IsNumeric(angle.Type) && !IsAngle(angle.Type))
+                throw new CompileError("SEMANTIC", "S132", functionTok.Line, functionTok.Column, "compose transform rotation angle must be numeric or angle.");
+            var matrix = MultiplyMatrix(MultiplyMatrix(TranslationMatrix(ToVector(position)), RotationMatrix(axis, ToNumber(angle))), ScaleMatrix(ToVector(scale)));
+            return new ExprResult("transform", FormatMatrix(matrix), $"compose_transform({position.Repr},{axis},{angle.Repr},{scale.Repr})");
+        }
+
         static bool IsScalarUnaryFunctionName(string value)
             => value is "abs" or "sqrt" or "floor" or "ceil" or "round" or "sin" or "cos" or "tan" or "log" or "log10" or "exp";
 
@@ -3542,6 +3860,9 @@ static class Program
 
         static bool IsVectorBinaryFunctionName(string value)
             => value is "dot" or "cross";
+
+        static bool IsAdvancedMathFunctionName(string value)
+            => value is "saturate" or "sign" or "fract" or "step" or "smoothstep" or "inverse" or "remap" or "lerp" or "distance" or "reflect" or "project" or "clamp" or "translate" or "scale" or "rotate" or "matmul" or "compose";
 
         ExprResult ApplyVectorUnaryFunction(Token functionTok, ExprResult value)
         {
@@ -3595,6 +3916,122 @@ static class Program
             }
 
             throw new CompileError("SEMANTIC", "S102", functionTok.Line, functionTok.Column, $"Unknown vector math function \"{functionTok.Value}\".");
+        }
+
+        ExprResult ParseAdvancedMathFunction(bool legacyQuotedStrings)
+        {
+            var functionTok = Advance();
+            switch (functionTok.Value)
+            {
+                case "saturate":
+                case "sign":
+                case "fract":
+                    return ApplyAdvancedScalarUnary(functionTok, ParseUnaryExpression(legacyQuotedStrings));
+                case "step":
+                {
+                    var edge = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between step arguments");
+                    var value = ParseAddExpression(legacyQuotedStrings);
+                    return ApplyStepFunction(functionTok, edge, value);
+                }
+                case "smoothstep":
+                {
+                    var edge0 = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between smoothstep arguments");
+                    var edge1 = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between smoothstep arguments");
+                    var value = ParseAddExpression(legacyQuotedStrings);
+                    return ApplySmoothStepFunction(functionTok, edge0, edge1, value);
+                }
+                case "inverse":
+                {
+                    ExpectWord("lerp", "P122", "Expected lerp after inverse.");
+                    var a = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between inverse lerp arguments");
+                    var b = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between inverse lerp arguments");
+                    var value = ParseAddExpression(legacyQuotedStrings);
+                    return ApplyInverseLerpFunction(functionTok, a, b, value);
+                }
+                case "remap":
+                {
+                    var value = ParseAddExpression(legacyQuotedStrings);
+                    ExpectWord("from", "P123", "Expected from in remap expression.");
+                    var inMin = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between remap input range values");
+                    var inMax = ParseAddExpression(legacyQuotedStrings);
+                    ExpectWord("to", "P124", "Expected to in remap expression.");
+                    var outMin = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between remap output range values");
+                    var outMax = ParseAddExpression(legacyQuotedStrings);
+                    return ApplyRemapFunction(functionTok, value, inMin, inMax, outMin, outMax);
+                }
+                case "lerp":
+                {
+                    var a = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between lerp arguments");
+                    var b = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between lerp arguments");
+                    var t = ParseAddExpression(legacyQuotedStrings);
+                    return ApplyLerpFunction(functionTok, a, b, t);
+                }
+                case "distance":
+                {
+                    var a = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between distance arguments");
+                    var b = ParseAddExpression(legacyQuotedStrings);
+                    return ApplyDistanceFunction(functionTok, a, b);
+                }
+                case "reflect":
+                {
+                    var dir = ParseAddExpression(legacyQuotedStrings);
+                    Expect("COMMA", "comma between reflect arguments");
+                    var normal = ParseAddExpression(legacyQuotedStrings);
+                    return ApplyReflectFunction(functionTok, dir, normal);
+                }
+                case "project":
+                {
+                    var value = ParseAddExpression(legacyQuotedStrings);
+                    ExpectWord("onto", "P125", "Expected onto in project expression.");
+                    var onto = ParseAddExpression(legacyQuotedStrings);
+                    return ApplyProjectFunction(functionTok, value, onto);
+                }
+                case "clamp":
+                {
+                    if (CurrentWordIs("length"))
+                    {
+                        Advance();
+                        var value = ParseAddExpression(legacyQuotedStrings);
+                        ExpectWord("to", "P126", "Expected to in clamp length expression.");
+                        var max = ParseAddExpression(legacyQuotedStrings);
+                        return ApplyClampLengthFunction(functionTok, value, max);
+                    }
+                    return ParseScalarMathFunctionStartingWith(functionTok, legacyQuotedStrings);
+                }
+                case "translate":
+                case "scale":
+                case "rotate":
+                case "matmul":
+                    return ApplyMatrixFunction(functionTok);
+                case "compose":
+                    return ApplyComposeTransform(functionTok);
+                default:
+                    throw new CompileError("SEMANTIC", "S120", functionTok.Line, functionTok.Column, $"Unknown advanced math function \"{functionTok.Value}\".");
+            }
+        }
+
+        ExprResult ParseScalarMathFunctionStartingWith(Token functionTok, bool legacyQuotedStrings)
+        {
+            if (functionTok.Value == "clamp")
+            {
+                var value = ParseAddExpression(legacyQuotedStrings);
+                ExpectWord("between", "P120", "Expected word \"between\" in clamp expression.");
+                var min = ParseAddExpression(legacyQuotedStrings);
+                ExpectWord("and", "P121", "Expected word \"and\" in clamp expression.");
+                var max = ParseAddExpression(legacyQuotedStrings);
+                return ApplyClampFunction(functionTok, value, min, max);
+            }
+            throw new CompileError("SEMANTIC", "S090", functionTok.Line, functionTok.Column, $"Unknown scalar math function \"{functionTok.Value}\".");
         }
 
         ExprResult ParseVectorMathFunction(bool legacyQuotedStrings)
@@ -3792,6 +4229,8 @@ static class Program
                 return true;
             if (IsVector(targetType) || IsVector(valueType))
                 return false;
+            if (IsMatrixType(targetType) || IsMatrixType(valueType))
+                return false;
             return targetType switch
             {
                 "int" => IsNumeric(valueType),
@@ -3803,7 +4242,7 @@ static class Program
 
         static string CoerceValue(ExprResult value, string targetType)
         {
-            if (IsVector(targetType) || IsColor(targetType) || IsAngle(targetType))
+            if (IsVector(targetType) || IsMatrixType(targetType) || IsColor(targetType) || IsAngle(targetType))
                 return value.Value;
             if (!IsNumeric(targetType))
                 return value.Value;
@@ -4111,6 +4550,12 @@ static class Program
                 return new ExprResult(type, FormatNumber(num, type), $"neg({value.Repr})");
             }
 
+            if (CurrentWordIs("transform"))
+                return ApplyTransformFunction(Advance());
+
+            if (CurrentIs("IDENT") && IsAdvancedMathFunctionName(Current.Value))
+                return ParseAdvancedMathFunction(legacyQuotedStrings);
+
             if (CurrentIs("IDENT") && (IsScalarUnaryFunctionName(Current.Value) || IsScalarBinaryFunctionName(Current.Value) || Current.Value == "clamp"))
                 return ParseScalarMathFunction(legacyQuotedStrings);
 
@@ -4208,6 +4653,9 @@ if (CurrentIs("STRING"))
                 return Advance().Value;
             throw new CompileError("PARSE", "P001", Current.Line, Current.Column, $"Expected {what}.");
         }
+
+        bool CurrentWordIs(string value)
+            => (Current.Type == "KEYWORD" || Current.Type == "IDENT") && Current.Value == value;
 
         void ExpectWord(string value, string code, string message)
         {

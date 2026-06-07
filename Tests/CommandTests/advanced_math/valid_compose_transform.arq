@@ -1,0 +1,16 @@
+program "ComposeTransform"
+
+define transform called "t" be identity
+define vec3 called "p" be [0, 0, 0]
+define vec3 called "d" be [0, 0, 0]
+
+set "t" to compose transform position [10, 0, 0] rotation z 90 deg scale [2, 2, 2]
+set "p" to transform point "t", [1, 0, 0]
+print "p"
+
+set "d" to transform direction "t", [1, 0, 0]
+print "d"
+
+blend mix to code 0
+
+end program "ComposeTransform"

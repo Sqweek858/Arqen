@@ -1,0 +1,11 @@
+COMMAND_ID|advanced_math
+CANONICAL|advanced scalar vector matrix and transform math
+CATEGORY|expression
+TOKENS|IDENT,COMMA,LBRACKET,RBRACKET,KEYWORD(mat4),KEYWORD(transform)
+AST_NODE|AdvancedMathExpression
+SEMANTIC|evaluates compile-time interpolation, vector helpers, mat4, and transform expressions
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\advanced_math\valid_advanced_scalar.arq
+INVALID_TEST|Tests\CommandTests\advanced_math\invalid_lerp_mismatch.arq
+STATUS|experimental

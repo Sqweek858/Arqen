@@ -1,0 +1,9 @@
+program "InvalidTransformPointNonMatrix"
+
+define vec3 called "p" be [0, 0, 0]
+
+set "p" to transform point [1, 2, 3], [1, 0, 0]
+
+blend mix to code 0
+
+end program "InvalidTransformPointNonMatrix"

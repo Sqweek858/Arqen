@@ -1,0 +1,9 @@
+program "InvalidRotateAxis"
+
+define mat4 called "m" be identity
+
+set "m" to rotate q 90 deg
+
+blend mix to code 0
+
+end program "InvalidRotateAxis"
