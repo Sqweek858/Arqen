@@ -1,0 +1,13 @@
+program "StyleColorVec4"
+
+set title to string "M19B Style"
+
+with style for "Panel"
+    color: [0.05, 0.08, 0.10, 1.0]
+    border color: color green
+end style
+
+show string "style color vec4"
+blend mix to code 0
+
+end program "StyleColorVec4"

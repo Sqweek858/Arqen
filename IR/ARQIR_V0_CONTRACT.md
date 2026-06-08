@@ -10,6 +10,17 @@ TARGET|kind=program|name=<program>
 META|source=<relative source path>
 ```
 
+
+## Style metadata
+
+M19B can emit style metadata lines before constants/actions:
+
+```text
+STYLE|target=<ui-object>|state=<default-or-state>|property=<style-property>|kind=<value-kind>|value=<escaped-value>|unit=<optional-unit>
+```
+
+`STYLE` lines are metadata, not executable backend actions. The WindowsX64PE backend must parse and preserve the strict IR boundary by accepting well-formed style metadata while ignoring it for current executable generation. Rendering these styles belongs to later UI/DX12 milestones.
+
 ## Constants
 
 ```text
@@ -54,7 +65,7 @@ M18I makes ARQIR v0 strict enough for pre-DX12 work:
 
 - `ARQIR`, `TARGET`, `ENTRY`, and `END` are required.
 - `ARQIR`, `TARGET`, and `ENTRY` may appear only once.
-- Unknown top-level line kinds are invalid.
+- Unknown top-level line kinds are invalid; currently recognized top-level metadata includes `META`, `SYMBOL`, and `STYLE`.
 - Duplicate `CONST` ids are invalid.
 - Duplicate `ACTION` ids are invalid.
 - Every `ACTION` must include both `id` and `op`.

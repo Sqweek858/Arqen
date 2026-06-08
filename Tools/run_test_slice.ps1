@@ -206,6 +206,10 @@ $ToolMap = [ordered]@{
     "cache" = "Tools\validate_wrapper_cache_contract.ps1"
     "dx12_readiness" = "Tools\validate_dx12_readiness.ps1"
     "dx12" = "Tools\validate_dx12_readiness.ps1"
+    "m19a_runtime_loop" = "Tools\validate_m19a_runtime_loop_contract.ps1"
+    "runtime_loop" = "Tools\validate_m19a_runtime_loop_contract.ps1"
+    "m19b_style" = "Tools\validate_m19b_style_contract.ps1"
+    "style_contract" = "Tools\validate_m19b_style_contract.ps1"
     "backend_docs" = "Tools\validate_backend_contract_docs.ps1"
     "docs" = "Tools\validate_backend_contract_docs.ps1"
     "parser_split" = "Tools\validate_parser_split.ps1"
@@ -275,6 +279,13 @@ function Expand-Group {
         "m18b" {
             foreach ($t in @("runtime_registry","ir_contract","wrapper_cache","dx12_readiness","backend_docs")) { Add-Unique $tools $t }
         }
+        "m19a" {
+            foreach ($t in @("runtime_registry","ir_contract","dx12_readiness","backend_docs","m19a_runtime_loop")) { Add-Unique $tools $t }
+        }
+        "m19b" {
+            foreach ($f in @("style")) { Add-Unique $folders $f }
+            foreach ($t in @("m19b_style","keyword_registry","parser_statement_map","command_coverage","ir_contract","backend_docs","test_slice_self")) { Add-Unique $tools $t }
+        }
         "m18fg" {
             foreach ($t in @("parser_split","ir_contract","runtime_registry")) { Add-Unique $tools $t }
         }
@@ -282,10 +293,10 @@ function Expand-Group {
             foreach ($t in @("parser_split","ir_contract","runtime_registry","backend_docs")) { Add-Unique $tools $t }
         }
         "tooling" {
-            foreach ($t in @("repo_hygiene","backend_capabilities","command_coverage","error_registry","runtime_registry","ir_contract","wrapper_cache","dx12_readiness","backend_docs","parser_split","strict_ir","keyword_registry","parser_statement_map","test_slice_self")) { Add-Unique $tools $t }
+            foreach ($t in @("repo_hygiene","backend_capabilities","command_coverage","error_registry","runtime_registry","ir_contract","wrapper_cache","dx12_readiness","m19a_runtime_loop","m19b_style","backend_docs","parser_split","strict_ir","keyword_registry","parser_statement_map","test_slice_self")) { Add-Unique $tools $t }
         }
         "core" {
-            foreach ($f in @("program","let","set_value","message_text","show_message","set_title_to","exit","blend_mix_to_code","comments","comparison_is","logical_condition","if_compile_time","while_compile_time","function")) { Add-Unique $folders $f }
+            foreach ($f in @("program","let","set_value","message_text","show_message","title","set_title_to","exit","blend_mix_to_code","comments","comparison_is","logical_condition","if_compile_time","while_compile_time","function")) { Add-Unique $folders $f }
         }
         "flow" {
             foreach ($f in @("comparison_is","logical_condition","if_compile_time","while_compile_time","function")) { Add-Unique $folders $f }
@@ -375,6 +386,8 @@ function Add-ChangedTargets {
             elseif ($file -like "*validate_ir_contract.ps1") { Add-Unique $Tools "ir_contract" }
             elseif ($file -like "*validate_wrapper_cache_contract.ps1") { Add-Unique $Tools "wrapper_cache" }
             elseif ($file -like "*validate_dx12_readiness.ps1") { Add-Unique $Tools "dx12_readiness" }
+            elseif ($file -like "*validate_m19a_runtime_loop_contract.ps1") { Add-Unique $Tools "m19a_runtime_loop" }
+            elseif ($file -like "*validate_m19b_style_contract.ps1") { Add-Unique $Tools "m19b_style" }
             elseif ($file -like "*validate_backend_contract_docs.ps1") { Add-Unique $Tools "backend_docs" }
             elseif ($file -like "*validate_parser_split.ps1") { Add-Unique $Tools "parser_split" }
             elseif ($file -like "*validate_strict_ir.ps1") { Add-Unique $Tools "strict_ir" }
@@ -397,6 +410,7 @@ function Add-ChangedTargets {
             Add-Unique $Tools "ir_contract"
             Add-Unique $Tools "dx12_readiness"
             Add-Unique $Tools "backend_docs"
+            Add-Unique $Tools "m19a_runtime_loop"
             continue
         }
         if ($file -match '^Tools/M10GDriver/Frontend/Lexer\.cs$' -or $file -match '^Specs/Commands/') {
@@ -436,7 +450,7 @@ if ($List) {
         Write-Host " - $key -> $($ToolMap[$key]) [$state]"
     }
     Write-Host ""
-    Write-Host "Groups: math, geometry, backend, m18a, m18b, m18fg, m18h, m18i, m18j, refactor, tooling, core, flow, commands"
+    Write-Host "Groups: math, geometry, backend, m18a, m18b, m18fg, m18h, m18i, m18j, m19a, m19b, refactor, tooling, core, flow, commands"
     exit 0
 }
 

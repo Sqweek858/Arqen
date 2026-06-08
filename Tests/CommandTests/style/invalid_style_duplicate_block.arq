@@ -1,0 +1,14 @@
+program "BadStyleDuplicateBlock"
+
+with style for "Panel"
+    color: black
+end style
+
+with style for "Panel"
+    opacity: 0.5
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleDuplicateBlock"

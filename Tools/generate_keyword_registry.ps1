@@ -12,7 +12,7 @@ foreach ($spec in Get-ArqenCommandSpecs) {
     }
 }
 
-$preferred = @("program", "end", "let", "define", "const", "called", "be", "rename", "title", "set", "to", "message", "text", "show", "print", "string", "int", "float", "double", "bool", "var", "command", "arg", "count", "write", "file", "with", "load", "add", "remove", "from", "multiply", "by", "divide", "while", "function", "call", "exit", "blend", "mix", "code", "if", "else", "is", "not", "and", "or", "true", "false")
+$preferred = @("program", "end", "let", "define", "const", "called", "be", "rename", "title", "set", "to", "message", "text", "show", "print", "string", "int", "float", "double", "bool", "var", "command", "arg", "count", "write", "file", "with", "style", "for", "when", "type", "color", "opacity", "visibility", "clip", "children", "font", "size", "px", "background", "foreground", "border", "corner", "radius", "padding", "margin", "hovered", "pressed", "disabled", "focused", "unfocused", "load", "add", "remove", "from", "multiply", "by", "divide", "while", "function", "call", "exit", "blend", "mix", "code", "if", "else", "is", "not", "and", "or", "true", "false")
 $ordered = @()
 foreach ($keyword in $preferred) {
     if ($found.Contains($keyword)) {

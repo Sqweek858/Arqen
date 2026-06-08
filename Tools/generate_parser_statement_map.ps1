@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 Import-Module (Join-Path $PSScriptRoot "CommandAutomationCommon.psm1") -Force
 
 $root = Get-ArqenRepoRoot
@@ -14,7 +14,7 @@ $statementRows = @(
     @{ Rule = "define_statement"; Command = "define"; Keywords = "define,called,be"; TestFolder = "canonical_define" },
     @{ Rule = "command_args_statement"; Command = "command_args"; Keywords = "define,called,be,command,arg,count"; TestFolder = "command_args" },
     @{ Rule = "rename_statement"; Command = "rename"; Keywords = "rename,to"; TestFolder = "rename" },
-    @{ Rule = "title_statement"; Command = "title"; Keywords = "title" },
+    @{ Rule = "title_statement"; Command = "title"; Keywords = "title"; TestFolder = "title" },
     @{ Rule = "set_title_statement"; Command = "set_title_to"; Keywords = "set,title,to" },
     @{ Rule = "set_value_statement"; Command = "set_value"; Keywords = "set,to"; TestFolder = "set_value" },
     @{ Rule = "message_text_statement"; Command = "message_text"; Keywords = "message,text" },
@@ -23,6 +23,7 @@ $statementRows = @(
     @{ Rule = "show_value_statement"; Command = "show_value"; Keywords = "show"; TestFolder = "canonical_show" },
     @{ Rule = "print_statement"; Command = "print"; Keywords = "print" },
     @{ Rule = "file_io_statement"; Command = "file_io"; Keywords = "write,file,with,add,to,file,load,file,to"; TestFolder = "file_io" },
+    @{ Rule = "style_statement"; Command = "style"; Keywords = "with,style,for,when,end,style"; TestFolder = "style" },
     @{ Rule = "math_update_statement"; Command = "math_update"; Keywords = "add,remove,multiply,divide"; TestFolder = "math_update" },
     @{ Rule = "while_statement"; Command = "while_compile_time"; Keywords = "while"; TestFolder = "while_compile_time" },
     @{ Rule = "function_statement"; Command = "function"; Keywords = "define,function,call"; TestFolder = "function" },

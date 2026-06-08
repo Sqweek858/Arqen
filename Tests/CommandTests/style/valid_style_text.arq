@@ -1,0 +1,14 @@
+program "StyleText"
+
+set title to string "M19B Style"
+
+with style for "Title"
+    font: "Arial"
+    size: 32 px
+    color: white
+end style
+
+show string "style text"
+blend mix to code 0
+
+end program "StyleText"

@@ -103,13 +103,6 @@ foreach ($row in $rows) {
         continue
     }
 
-    # Grammar aliases / special block control can map to existing specs.
-    if ($commandId -eq "blend_mix_to_code") {
-        # This is a final command path. Keep as warning-level until a dedicated spec is added.
-        $missingSpecs += $commandId
-        continue
-    }
-
     $specPath = Join-Path $RepoRoot "Specs/Commands/$commandId.command.txt"
     $testPath = Join-Path $RepoRoot "Tests/CommandTests/$commandId"
 
@@ -175,6 +168,8 @@ $coreStarts = @(
     "run",
     "when",
     "close",
+    "with",
+    "style",
     "blend"
 )
 

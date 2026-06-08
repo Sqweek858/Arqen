@@ -21,6 +21,10 @@ static partial class Program
 
         readonly List<RuntimeAction> _runtimeActions = new();
 
+        readonly List<StyleProperty> _styles = new();
+
+        readonly HashSet<string> _styleBlocks = new(StringComparer.Ordinal);
+
         readonly HashSet<string> _runtimeSymbols = new(StringComparer.Ordinal);
 
         readonly Dictionary<string, List<Token>> _functions = new(StringComparer.Ordinal);
@@ -69,6 +73,7 @@ static partial class Program
                 new StatementRule(() => IsKeyword("define") && PeekKeyword("window"), ParseWindowStatement),
                 new StatementRule(() => IsKeyword("set") && (PeekKeyword("title") || PeekKeyword("resolution") || PeekKeyword("resizable")) && PeekKeyword("of", 2), ParseWindowStatement),
                 new StatementRule(() => (IsKeyword("show") || IsKeyword("run") || IsKeyword("close")) && PeekKeyword("window"), ParseWindowStatement),
+                new StatementRule(() => IsKeyword("with") && PeekKeyword("style") && PeekKeyword("for", 2), ParseStyleStatement),
                 new StatementRule(() => IsKeyword("let"), ParseLegacyLetStatement),
                 new StatementRule(() => IsKeyword("define"), ParseCanonicalDefineStatement),
                 new StatementRule(() => IsKeyword("rename"), ParseRenameStatement),
@@ -137,7 +142,7 @@ static partial class Program
             SkipNewlines();
             Expect("EOF", "end of file");
 
-            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow, _runtimeActions);
+            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow, _runtimeActions, _styles);
         }
 
         record CommandExpr(string Value, string Repr, string Command);

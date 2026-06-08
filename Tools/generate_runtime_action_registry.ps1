@@ -18,10 +18,15 @@ function Emit-Check {
     )
 
     if ($Ok) {
-        Write-Host "PASS|$Name|$Message"
+        $line = "PASS|$Name|$Message"
     } else {
-        Write-Host "FAIL|$Name|$Message"
+        $line = "FAIL|$Name|$Message"
         $script:failed = $true
+    }
+
+    Write-Host $line
+    if ($null -ne $script:runtimeRegistryLines) {
+        $script:runtimeRegistryLines.Add($line) | Out-Null
     }
 }
 
@@ -118,6 +123,7 @@ New-Item -ItemType Directory -Path $generatedDir -Force | Out-Null
 
 $registryPath = Join-Path $generatedDir "runtime_action_registry.txt"
 $lines = New-Object System.Collections.Generic.List[string]
+$script:runtimeRegistryLines = $lines
 
 $lines.Add("RUNTIME_ACTION_REGISTRY|generated") | Out-Null
 Write-Host "RUNTIME_ACTION_REGISTRY|generated"
@@ -140,12 +146,6 @@ foreach ($name in ($actions.Keys | Sort-Object)) {
     Write-Host $line
 }
 
-[System.IO.File]::WriteAllText(
-    $registryPath,
-    (($lines.ToArray() -join [Environment]::NewLine) + [Environment]::NewLine),
-    [System.Text.UTF8Encoding]::new($false)
-)
-
 $required = @(
     "show_message",
     "print_stdout",
@@ -157,6 +157,10 @@ $required = @(
     "command_arg_count",
     "command_arg_index",
     "window_create",
+    "window_set_title",
+    "window_set_resolution",
+    "window_set_resizable",
+    "window_show",
     "window_run",
     "window_close",
     "event_window_closed",
@@ -185,7 +189,15 @@ foreach ($name in $actions.Keys) {
 Emit-Check "runtime_actions_have_capabilities" (($missingCapability.Count -eq 0) -and ($unsupportedCapability.Count -eq 0)) ("missing=$($missingCapability.Count) unsupported=$($unsupportedCapability.Count)")
 Emit-Check "runtime_action_count_min" ($actions.Count -ge 15) "count=$($actions.Count)"
 
-Write-Host "SUMMARY|actions=$($actions.Count)|missingCapabilities=$($missingCapability.Count)|unsupportedCapabilities=$($unsupportedCapability.Count)"
+$summaryLine = "SUMMARY|actions=$($actions.Count)|missingCapabilities=$($missingCapability.Count)|unsupportedCapabilities=$($unsupportedCapability.Count)"
+$lines.Add($summaryLine) | Out-Null
+Write-Host $summaryLine
+
+[System.IO.File]::WriteAllText(
+    $registryPath,
+    (($lines.ToArray() -join [Environment]::NewLine) + [Environment]::NewLine),
+    [System.Text.UTF8Encoding]::new($false)
+)
 
 if ($failed) {
     exit 1

@@ -1,0 +1,5 @@
+valid_literal.arq|0|MESSAGE|Title literal works
+valid_with_show_message.arq|0|MESSAGE|Title with show message works
+invalid_title_missing_string.arq|1|ERROR|P001|parse
+invalid_title_numeric.arq|1|ERROR|P001|parse
+invalid_title_extra_tokens.arq|1|ERROR|P001|parse

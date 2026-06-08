@@ -1,0 +1,10 @@
+program "BadStyleMissingTarget"
+
+with style for
+    color: black
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleMissingTarget"

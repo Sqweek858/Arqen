@@ -1,0 +1,10 @@
+program "BadStyleSizeUnit"
+
+with style for "Title"
+    size: 32 em
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleSizeUnit"

@@ -1,0 +1,10 @@
+program "BadStyleClipBool"
+
+with style for "Panel"
+    clip children: maybe
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleClipBool"

@@ -1,0 +1,10 @@
+program "BadStyleOpacityNegative"
+
+with style for "Panel"
+    opacity: -0.1
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleOpacityNegative"

@@ -1,0 +1,10 @@
+program "BadStyleColorRange"
+
+with style for "Panel"
+    color: [1.2, 0, 0, 1]
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleColorRange"

@@ -58,6 +58,10 @@ static partial class Program
                     if (!fields.ContainsKey("name") || !fields.ContainsKey("type") || !fields.ContainsKey("value"))
                         throw new CompileError("BACKEND", "B001", 0, 0, "Malformed SYMBOL in IR.");
                     break;
+                case "STYLE":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("state") || !fields.ContainsKey("property") || !fields.ContainsKey("kind") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed STYLE metadata in IR.");
+                    break;
                 case "CONST":
                     if (!fields.TryGetValue("id", out var id) || string.IsNullOrWhiteSpace(id) ||
                         !fields.TryGetValue("type", out var type) || string.IsNullOrWhiteSpace(type) ||

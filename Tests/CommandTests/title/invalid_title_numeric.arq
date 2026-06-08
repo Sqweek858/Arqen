@@ -1,0 +1,7 @@
+program "BadTitleNumeric"
+
+title 123
+message text "nope"
+exit 0
+
+end program "BadTitleNumeric"

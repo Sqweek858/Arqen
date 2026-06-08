@@ -6,6 +6,6 @@ AST_NODE|Title
 SEMANTIC|title must be text and fit output buffer
 IR|show_message.title
 BACKEND|WindowsX64PE.show_message
-VALID_TEST|Tests\CommandTests\program\valid_basic.arq
-INVALID_TEST|none
+VALID_TEST|Tests\CommandTests\title\valid_literal.arq;Tests\CommandTests\title\valid_with_show_message.arq
+INVALID_TEST|Tests\CommandTests\title\invalid_title_missing_string.arq;Tests\CommandTests\title\invalid_title_numeric.arq;Tests\CommandTests\title\invalid_title_extra_tokens.arq
 STATUS|stable

@@ -86,7 +86,7 @@ static partial class Program
                 var word = sb.ToString();
                 if (word is "true" or "false")
                     tokens.Add(new Token("BOOL", word, startLine, startCol));
-                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "quat" or "rect" or "circle" or "segment" or "line" or "ray" or "sphere" or "aabb" or "plane" or "complex" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close")
+                else if (word is "program" or "let" or "be" or "title" or "message" or "text" or "show" or "set" or "to" or "exit" or "blend" or "mix" or "code" or "end" or "if" or "else" or "is" or "not" or "define" or "string" or "int" or "bool" or "var" or "called" or "rename" or "print" or "const" or "float" or "double" or "vec2" or "vec3" or "vec4" or "mat4" or "transform" or "quat" or "rect" or "circle" or "segment" or "line" or "ray" or "sphere" or "aabb" or "plane" or "complex" or "color" or "angle" or "deg" or "rad" or "while" or "from" or "add" or "remove" or "multiply" or "by" or "divide" or "function" or "call" or "and" or "or" or "write" or "file" or "with" or "load" or "command" or "arg" or "count" or "window" or "resolution" or "resizable" or "run" or "of" or "when" or "closed" or "key" or "pressed" or "close" or "style" or "for" or "type" or "opacity" or "visibility" or "clip" or "children" or "font" or "size" or "px" or "hovered" or "disabled" or "focused" or "unfocused" or "background" or "foreground" or "border" or "corner" or "radius" or "padding" or "margin")
                     tokens.Add(new Token("KEYWORD", word, startLine, startCol));
                 else
                     tokens.Add(new Token("IDENT", word, startLine, startCol));
@@ -167,6 +167,14 @@ static partial class Program
             if (ch == '^')
             {
                 tokens.Add(new Token("CARET", "^", line, col));
+                i++;
+                col++;
+                continue;
+            }
+
+            if (ch == ':')
+            {
+                tokens.Add(new Token("COLON", ":", line, col));
                 i++;
                 col++;
                 continue;

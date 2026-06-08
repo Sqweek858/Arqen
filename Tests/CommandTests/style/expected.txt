@@ -1,0 +1,19 @@
+valid_style_panel_basic.arq|0|MESSAGE|style panel basic
+valid_style_text.arq|0|MESSAGE|style text
+valid_style_states.arq|0|MESSAGE|style states
+valid_style_color_vec4.arq|0|MESSAGE|style color vec4
+valid_style_multiple_targets.arq|0|MESSAGE|style multiple targets
+invalid_style_missing_target.arq|1|ERROR|P001|parse
+invalid_style_missing_end.arq|1|ERROR|P202|parse
+invalid_style_unknown_property.arq|1|ERROR|S203|semantic
+invalid_style_unknown_state.arq|1|ERROR|S201|semantic
+invalid_style_bad_opacity_negative.arq|1|ERROR|S209|semantic
+invalid_style_bad_opacity_above_one.arq|1|ERROR|S209|semantic
+invalid_style_bad_color_count.arq|1|ERROR|S212|semantic
+invalid_style_bad_color_component_range.arq|1|ERROR|S212|semantic
+invalid_style_bad_visibility.arq|1|ERROR|S207|semantic
+invalid_style_bad_clip_bool.arq|1|ERROR|S208|semantic
+invalid_style_bad_size_unit.arq|1|ERROR|P204|parse
+invalid_style_duplicate_block.arq|1|ERROR|S202|semantic
+invalid_style_duplicate_property.arq|1|ERROR|S204|semantic
+invalid_style_empty_block.arq|1|ERROR|S205|semantic

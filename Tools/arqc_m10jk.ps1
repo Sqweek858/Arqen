@@ -320,7 +320,7 @@ function Add-SourceDiagnostics {
         return
     }
 
-    $knownStarts = @("program", "end", "let", "define", "rename", "title", "message", "show", "print", "set", "write", "load", "add", "remove", "multiply", "divide", "while", "call", "exit", "blend", "if", "else")
+    $knownStarts = @("program", "end", "let", "define", "rename", "title", "message", "show", "print", "set", "write", "load", "add", "remove", "multiply", "divide", "while", "call", "exit", "blend", "if", "else", "run", "when", "close", "with", "style", "type", "color", "background", "foreground", "border", "corner", "padding", "margin", "opacity", "visibility", "clip", "font", "size")
     $lines = Get-Content $inputPath
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $lineNo = $i + 1

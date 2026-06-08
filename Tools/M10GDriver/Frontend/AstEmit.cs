@@ -9,6 +9,8 @@ static partial class Program
             yield return $"LET|{Esc(v.Name)}|{Esc(v.Type)}|{Esc(v.Value)}";
         foreach (var line in ast.Flow)
             yield return line;
+        foreach (var line in AstStyleLines(ast))
+            yield return line;
         foreach (var line in AstTitleLines(ast))
             yield return line;
         foreach (var line in AstMessageLines(ast))
@@ -18,6 +20,13 @@ static partial class Program
         foreach (var line in AstFinalLines(ast))
             yield return line;
         yield return "SEMANTIC|OK";
+    }
+
+
+    static IEnumerable<string> AstStyleLines(AstModel ast)
+    {
+        foreach (var style in ast.Styles)
+            yield return $"STYLE|target={Esc(style.Target)}|state={Esc(style.State)}|property={Esc(style.Property)}|kind={Esc(style.ValueKind)}|value={Esc(style.Value)}|unit={Esc(style.Unit)}|source={Esc(style.Source)}";
     }
 
     static IEnumerable<string> AstTitleLines(AstModel ast)

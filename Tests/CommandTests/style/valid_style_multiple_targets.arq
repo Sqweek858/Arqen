@@ -1,0 +1,19 @@
+program "StyleMultipleTargets"
+
+set title to string "M19B Style"
+
+with style for "Panel"
+    type: rectangle
+    padding: 8 px
+end style
+
+with style for "Title"
+    font: "Consolas"
+    size: 24 px
+    color: white
+end style
+
+show string "style multiple targets"
+blend mix to code 0
+
+end program "StyleMultipleTargets"

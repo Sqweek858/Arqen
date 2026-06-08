@@ -1,0 +1,11 @@
+COMMAND_ID|style
+CANONICAL|with style for "Name" ... end style
+CATEGORY|ui
+TOKENS|KEYWORD(with) KEYWORD(style) KEYWORD(for) STRING [KEYWORD(when) KEYWORD(hovered)] NEWLINE property COLON value NEWLINE KEYWORD(end) KEYWORD(style)
+AST_NODE|StyleProperty
+SEMANTIC|validates style target, state, property names, property value kinds, px dimensions, color values, opacity ranges, duplicate blocks, duplicate properties, and non-empty blocks
+IR|STYLE metadata lines
+BACKEND|metadata only; ignored by WindowsX64PE until UI/DX12 consumes style
+VALID_TEST|Tests\CommandTests\style\valid_style_panel_basic.arq;Tests\CommandTests\style\valid_style_text.arq;Tests\CommandTests\style\valid_style_states.arq;Tests\CommandTests\style\valid_style_color_vec4.arq;Tests\CommandTests\style\valid_style_multiple_targets.arq
+INVALID_TEST|Tests\CommandTests\style\invalid_style_missing_target.arq;Tests\CommandTests\style\invalid_style_missing_end.arq;Tests\CommandTests\style\invalid_style_unknown_property.arq;Tests\CommandTests\style\invalid_style_unknown_state.arq;Tests\CommandTests\style\invalid_style_bad_opacity_negative.arq;Tests\CommandTests\style\invalid_style_bad_opacity_above_one.arq;Tests\CommandTests\style\invalid_style_bad_color_count.arq;Tests\CommandTests\style\invalid_style_bad_color_component_range.arq;Tests\CommandTests\style\invalid_style_bad_visibility.arq;Tests\CommandTests\style\invalid_style_bad_clip_bool.arq;Tests\CommandTests\style\invalid_style_bad_size_unit.arq;Tests\CommandTests\style\invalid_style_duplicate_block.arq;Tests\CommandTests\style\invalid_style_duplicate_property.arq;Tests\CommandTests\style\invalid_style_empty_block.arq
+STATUS|m19b

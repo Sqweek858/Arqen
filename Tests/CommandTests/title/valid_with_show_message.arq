@@ -1,0 +1,7 @@
+program "TitleShowMessage"
+
+title "Arqen Title Show"
+show message "Title with show message works"
+blend mix to code 0
+
+end program "TitleShowMessage"

@@ -1,0 +1,11 @@
+program "BadStyleDuplicateProperty"
+
+with style for "Panel"
+    color: black
+    color: white
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleDuplicateProperty"

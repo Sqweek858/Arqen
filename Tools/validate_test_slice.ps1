@@ -23,7 +23,11 @@ Emit-Check "test_slice_flow_group" ($text -match '"flow"' -and $text -match 'if_
 Emit-Check "test_slice_m18h_group" ($text -match '"m18h"' -and $text -match 'test_slice_self') "M18H group present"
 Emit-Check "test_slice_m18i_group" ($text -match '"m18i"' -and $text -match 'strict_ir') "M18I group present"
 Emit-Check "test_slice_m18j_group" ($text -match '"m18j"' -and $text -match 'keyword_registry') "M18J group present"
+Emit-Check "test_slice_m19a_group" ($text -match '"m19a"' -and $text -match 'm19a_runtime_loop') "M19A group present"
+Emit-Check "test_slice_m19b_group" ($text -match '"m19b"' -and $text -match 'm19b_style' -and $text -match '"style"') "M19B group present"
 Emit-Check "test_slice_strict_ir_tool" ($text -match 'validate_strict_ir\.ps1') "strict IR tool alias present"
+Emit-Check "test_slice_m19a_runtime_loop_tool" ($text -match 'validate_m19a_runtime_loop_contract\.ps1') "M19A runtime loop tool alias present"
+Emit-Check "test_slice_m19b_style_tool" ($text -match 'validate_m19b_style_contract\.ps1') "M19B style contract tool alias present"
 Emit-Check "test_slice_keyword_tools" ($text -match 'validate_keyword_registry\.ps1' -and $text -match 'validate_parser_statement_map\.ps1') "keyword/parser registry tools present"
 
 if ($failed) { exit 1 }

@@ -1,0 +1,10 @@
+program "BadStyleColorCount"
+
+with style for "Panel"
+    color: [1, 1, 1]
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleColorCount"

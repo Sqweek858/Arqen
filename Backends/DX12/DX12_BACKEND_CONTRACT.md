@@ -46,3 +46,12 @@ They must remain `unsupported` until the backend can validate and execute them.
 ## No fake support rule
 
 Do not mark `dx12`, `shader`, `render_pass`, or `frame_update` as `supported` only because a parser accepts the words. Support means the backend and runtime can execute the action safely and produce diagnostics on failure.
+
+## M19D skeleton entry criteria
+
+The first DX12 skeleton patch is allowed to do only a real clear-color window path after M19A runtime loop rules are in place. It must prove:
+
+- the backend receives a real window handle or documented handoff
+- device/swapchain/command queue creation has diagnostics
+- clear color is executed by a command list, not a fake message-box path
+- `dx12`, `render_pass`, `shader`, and `frame_update` remain unsupported until each action family has IR, runtime, backend, and tests

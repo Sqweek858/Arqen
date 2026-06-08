@@ -1,0 +1,10 @@
+program "BadStyleUnknownState"
+
+with style for "Panel" when glowing
+    color: white
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleUnknownState"

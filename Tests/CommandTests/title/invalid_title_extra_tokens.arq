@@ -1,0 +1,7 @@
+program "BadTitleExtra"
+
+title "Arqen" "extra"
+message text "nope"
+exit 0
+
+end program "BadTitleExtra"

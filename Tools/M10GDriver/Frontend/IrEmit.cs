@@ -8,6 +8,8 @@ static partial class Program
         yield return "ARQIR|version=0";
         yield return $"TARGET|kind=program|name={Esc(ast.Program)}";
         yield return $"META|source={Esc(sourcePath.Replace('\\', '/'))}";
+        foreach (var style in ast.Styles)
+            yield return StyleIrLine(style);
         if (ast.RuntimeActions.Count > 0)
         {
             foreach (var v in ast.Vars)
@@ -31,6 +33,9 @@ static partial class Program
         yield return "ENTRY|actions=act_0,act_1";
         yield return "END";
     }
+
+    static string StyleIrLine(StyleProperty style)
+        => $"STYLE|target={Esc(style.Target)}|state={Esc(style.State)}|property={Esc(style.Property)}|kind={Esc(style.ValueKind)}|value={Esc(style.Value)}|unit={Esc(style.Unit)}";
 
     static string IrConstLine(string id, string type, string value) => $"CONST|id={id}|type={type}|value={Esc(value)}";
     static string IrSymbolLine(string name, string type, string value) => $"SYMBOL|name={Esc(name)}|type={Esc(type)}|value={Esc(value)}";

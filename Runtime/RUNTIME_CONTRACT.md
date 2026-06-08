@@ -48,3 +48,36 @@ swapchain resize
 ## Event rule
 
 Current event blocks are intentionally limited. DX12 work should first introduce a runtime event model before adding rendering commands inside event blocks.
+
+## M19A runtime loop boundary
+
+M19A may introduce a runtime loop contract, but it must not pretend that frame rendering exists before the backend can actually execute it. The loop boundary is:
+
+```text
+compile source
+validate emitted ARQIR actions against backend capabilities
+initialize runtime resources
+create/configure/show windows
+enter the real message pump when run window is reached
+dispatch supported runtime events
+exit through an explicit exit action or window-close action
+```
+
+### No hidden frame simulation rule
+
+`frame_update`, `delta time`, `elapsed time`, and `frame count` are runtime-provided values only after a real frame pump exists. They must not be faked with compile-time loops, scalar math, or silent backend defaults.
+
+### Event execution rule
+
+Current event blocks stay intentionally narrow until the runtime loop owns event dispatch. Adding design/UI/DX12 commands inside event blocks requires a visible ARQIR action, a capability entry, and a backend/runtime implementation.
+
+### Window handoff rule
+
+DX12 work must reuse or explicitly hand off the window handle created by the window runtime. Creating a second hidden window to fake render support is not allowed.
+
+
+## M19B style/design boundary
+
+`with style for` blocks are frontend/IR metadata. They define visual intent for UI objects, including default and state-specific style values, but they are not runtime actions yet.
+
+M19B must not add frame timing, hit testing, text rendering, or DX12 drawing. Later UI/runtime milestones may consume `STYLE` metadata after UI object and renderer contracts exist.

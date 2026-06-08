@@ -1,0 +1,10 @@
+program "BadStyleUnknownProperty"
+
+with style for "Panel"
+    potato glow: 10 px
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleUnknownProperty"

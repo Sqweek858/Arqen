@@ -310,3 +310,50 @@ Limitations:
 - no int math
 - no bool logic
 - no runtime expression evaluation
+
+## style
+
+Canonical syntax:
+
+```text
+with style for "Panel"
+    type: rectangle
+    color: black
+    opacity: 0.8
+    visibility: visible
+    clip children: false
+end style
+```
+
+State-specific style blocks:
+
+```text
+with style for "PlayButton" when hovered
+    background color: light blue
+end style
+```
+
+Supported M19B properties:
+
+```text
+type
+color
+background color
+foreground color
+border color
+border size
+corner radius
+padding
+margin
+opacity
+visibility
+clip children
+font
+size
+```
+
+Style blocks emit `STYLE|...` metadata in AST/IR. They are not executable runtime/render actions yet; later UI/DX12 milestones consume the metadata after UI object and renderer contracts exist.
+
+Tests:
+
+- `Tests\CommandTests\style`
