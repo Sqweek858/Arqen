@@ -1,0 +1,26 @@
+program "StyleExtendedPanel"
+
+set title to string "M19B Style Extended"
+
+with style for "Panel"
+    type: rounded rectangle
+    display: block
+    background color: dark gray
+    foreground color: white
+    accent color: teal
+    outline color: [0.2, 0.8, 0.6, 1]
+    outline size: 1 px
+    shadow color: black
+    shadow opacity: 0.35
+    shadow blur: 18 px
+    shadow spread: 2 px
+    shadow offset x: 0 px
+    shadow offset y: 6 px
+    z index: 10
+    blend mode: alpha
+end style
+
+show string "style extended panel"
+blend mix to code 0
+
+end program "StyleExtendedPanel"

@@ -1,0 +1,10 @@
+program "InvalidUiBindingDuplicate"
+set title to string "M19 UI Final"
+define int called "score" be 1
+define int called "score2" be 2
+define text called "ScoreText"
+link "ScoreText" content to "score"
+link "ScoreText" content to "score2"
+show string "bad"
+blend mix to code 0
+end program "InvalidUiBindingDuplicate"

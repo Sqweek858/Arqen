@@ -1,0 +1,10 @@
+program "BadStyleZIndexFraction"
+
+with style for "Panel"
+    z index: 1.5
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleZIndexFraction"

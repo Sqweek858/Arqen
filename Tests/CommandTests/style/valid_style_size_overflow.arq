@@ -1,0 +1,19 @@
+program "StyleSizeOverflow"
+
+set title to string "M19B Style Size"
+
+with style for "Panel"
+    min width: 200 px
+    min height: 80 px
+    preferred width: 420 px
+    preferred height: 160 px
+    max width: 640 px
+    max height: 320 px
+    aspect ratio: 1.6
+    overflow: hidden
+end style
+
+show string "style size overflow"
+blend mix to code 0
+
+end program "StyleSizeOverflow"

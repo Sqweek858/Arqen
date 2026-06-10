@@ -1,0 +1,8 @@
+program "ValidUiDockToWindow"
+
+define window called "Window"
+define shape called "Toolbar"
+dock "Toolbar" to top of "Window"
+
+blend mix to code 0
+end program "ValidUiDockToWindow"

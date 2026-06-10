@@ -1,0 +1,19 @@
+COMMAND_ID|ui_final
+CANONICAL|when clicked "PlayButton" ... end when; link "Text" content to "score"; set enabled of "Button" to false; define texture called "ButtonTexture" from file "ui/button.png"
+CATEGORY|ui
+TOKENS|when UI_EVENT STRING NEWLINE UI_EVENT_BODY end when NEWLINE
+TOKENS|link STRING UI_BIND_PROPERTY to STRING NEWLINE
+TOKENS|set UI_STATE_PROPERTY of STRING to UI_STATE_VALUE NEWLINE
+TOKENS|define UI_RESOURCE_TYPE called STRING from file STRING NEWLINE
+TOKENS|set UI_RESOURCE_PROPERTY of STRING to STRING NEWLINE
+AST_NODE|UiEvent;UiBinding;UiState;UiResource;UiResourceUse
+SEMANTIC|validates UI event targets and compatibility, duplicate UI events, non-empty UI event blocks, binding target/source/type compatibility, duplicate bindings, UI state values, resource definitions/extensions, resource target compatibility, and duplicate resource assignments
+IR|UI_EVENT;UI_BIND;UI_STATE;UI_RESOURCE;UI_RESOURCE_USE metadata lines
+BACKEND|metadata only; ignored by WindowsX64PE until UI runtime/render backends consume UI final metadata
+SUPPORTED_EVENTS|clicked;hovered;pressed;released;focused;unfocused;changed;value changed;text changed;dragged;dropped;loaded;resized
+SUPPORTED_BINDING_PROPERTIES|content;width;height;visibility;visible;enabled;checked;selected;value;color;background color;foreground color;border color;opacity
+SUPPORTED_STATE_PROPERTIES|enabled;visible;selected;focused;hovered;pressed;loading;visibility;state
+SUPPORTED_RESOURCES|texture;font;sound
+VALID_TEST|Tests\CommandTests\ui_final\valid_ui_events_basic.arq;Tests\CommandTests\ui_final\valid_ui_events_value_text.arq;Tests\CommandTests\ui_final\valid_ui_binding_basic.arq;Tests\CommandTests\ui_final\valid_ui_state_contract.arq;Tests\CommandTests\ui_final\valid_ui_resources_basic.arq;Tests\CommandTests\ui_final\valid_ui_final_combo.arq
+INVALID_TEST|Tests\CommandTests\ui_final\invalid_ui_event_unknown_target.arq;Tests\CommandTests\ui_final\invalid_ui_event_bad_event.arq;Tests\CommandTests\ui_final\invalid_ui_event_empty.arq;Tests\CommandTests\ui_final\invalid_ui_event_duplicate.arq;Tests\CommandTests\ui_final\invalid_ui_event_nested.arq;Tests\CommandTests\ui_final\invalid_ui_event_incompatible.arq;Tests\CommandTests\ui_final\invalid_ui_binding_unknown_target.arq;Tests\CommandTests\ui_final\invalid_ui_binding_unknown_source.arq;Tests\CommandTests\ui_final\invalid_ui_binding_type_mismatch.arq;Tests\CommandTests\ui_final\invalid_ui_binding_duplicate.arq;Tests\CommandTests\ui_final\invalid_ui_state_bad_bool.arq;Tests\CommandTests\ui_final\invalid_ui_state_bad_value.arq;Tests\CommandTests\ui_final\invalid_ui_state_duplicate.arq;Tests\CommandTests\ui_final\invalid_ui_resource_duplicate.arq;Tests\CommandTests\ui_final\invalid_ui_resource_bad_extension.arq;Tests\CommandTests\ui_final\invalid_ui_resource_unknown.arq;Tests\CommandTests\ui_final\invalid_ui_resource_wrong_type.arq;Tests\CommandTests\ui_final\invalid_ui_resource_bad_target.arq;Tests\CommandTests\ui_final\invalid_ui_resource_duplicate_use.arq
+STATUS|m19efgh_ui_final_foundation

@@ -313,7 +313,7 @@ Limitations:
 
 ## style
 
-Canonical syntax:
+Canonical direct syntax:
 
 ```text
 with style for "Panel"
@@ -333,15 +333,32 @@ with style for "PlayButton" when hovered
 end style
 ```
 
+Reusable style presets:
+
+```text
+define style called "PrimaryButton"
+    background color: blue
+    foreground color: white
+    corner radius: 8 px
+end style
+
+use style "PrimaryButton" for "PlayButton"
+use style "PrimaryButton" for "PlayButton" when selected
+```
+
 Supported M19B properties:
 
 ```text
 type
+display
 color
 background color
 foreground color
+accent color
 border color
 border size
+outline color
+outline size
 corner radius
 padding
 margin
@@ -350,10 +367,138 @@ visibility
 clip children
 font
 size
+font weight
+font style
+text align
+vertical align
+line height
+letter spacing
+wrap
+shadow color
+shadow opacity
+shadow blur
+shadow spread
+shadow offset x
+shadow offset y
+cursor
+transition duration
+transition easing
+blend mode
+z index
+min width
+min height
+max width
+max height
+preferred width
+preferred height
+aspect ratio
+overflow
+pointer events
+interactable
+scale
+scale x
+scale y
+rotation
+translate x
+translate y
+pivot
+transition property
+transition delay
+animation duration
+animation easing
 ```
 
-Style blocks emit `STYLE|...` metadata in AST/IR. They are not executable runtime/render actions yet; later UI/DX12 milestones consume the metadata after UI object and renderer contracts exist.
+Supported M19B state suffixes are `hovered`, `pressed`, `disabled`, `focused`, `unfocused`, `active`, `selected`, `checked`, `loading`, `visited`, `dragged`, `dropped`, `error`, `warning`, and `success`.
+
+Style blocks emit `STYLE|...`, `STYLE_PRESET|...`, and `STYLE_APPLY|...` metadata in AST/IR. They are not executable runtime/render actions yet; later UI/DX12 milestones consume the metadata after UI object and renderer contracts exist.
 
 Tests:
 
 - `Tests\CommandTests\style`
+
+## ui_objects
+
+Canonical syntax:
+
+```text
+define shape called "Panel"
+define text called "Title"
+define button called "PlayButton"
+define slider called "VolumeSlider"
+define input field called "NameInput"
+define checkbox called "FullscreenCheck"
+define dropdown called "QualityDropdown"
+
+set content of "Title" to string "Hello world"
+set range of "VolumeSlider" to 0, 100
+set value of "VolumeSlider" to 50
+set placeholder of "NameInput" to string "Enter name"
+set checked of "FullscreenCheck" to false
+add string "High" to "QualityDropdown"
+```
+
+Parser rule:
+
+```text
+UiObject := define UiObjectType called Name
+UiSet := set UiProperty of Name to UiValue
+UiDropdownOption := add string StringLiteral to Name
+```
+
+AST/IR metadata:
+
+```text
+UI_OBJECT|type=button|name=PlayButton
+UI_SET|target=PlayButton|property=content|kind=text|value=Play
+```
+
+Semantic:
+
+- rejects duplicate UI object names and collisions with existing symbols/windows
+- validates target existence for UI setters
+- validates property support per UI object type
+- validates slider range/value as numeric
+- validates checkbox checked state as boolean
+- validates duplicate property assignment and duplicate dropdown options
+
+Backend:
+
+- metadata only in M19C
+- accepted by strict IR parser
+- ignored by WindowsX64PE executable generation until UI/DX12 consumes it
+
+Tests:
+
+- `Tests\CommandTests\ui_objects`
+
+
+## ui_layout
+
+Canonical forms:
+
+```arq
+parent "Title" to "Panel"
+
+with layout for "Panel"
+    x: 100 px
+    y: 50 px
+    width: 300 px
+    height: 80 px
+end layout
+
+dock "Toolbar" to top of "Window"
+```
+
+AST/IR metadata:
+
+```text
+UI_PARENT|child=Title|parent=Panel
+UI_DOCK|target=Toolbar|side=top|parent=Window
+UI_LAYOUT|target=Panel|property=width|kind=dimension|value=300|unit=px
+```
+
+Backend: metadata only in M19D; strict IR accepts it but WindowsX64PE ignores it until UI layout/render milestones consume it.
+
+Tests: `Tests\CommandTests\ui_layout`.
+
+- `ui_final` - M19E/F/G/H UI final foundation: UI event metadata, binding/link metadata, state metadata, and UI resource metadata.

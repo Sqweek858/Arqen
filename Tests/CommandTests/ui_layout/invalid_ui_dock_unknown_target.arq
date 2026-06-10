@@ -1,0 +1,7 @@
+program "InvalidUiDockUnknownTarget"
+
+define window called "Window"
+dock "Missing" to top of "Window"
+
+blend mix to code 0
+end program "InvalidUiDockUnknownTarget"

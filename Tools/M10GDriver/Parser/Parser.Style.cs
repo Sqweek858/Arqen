@@ -16,16 +16,30 @@ static partial class Program
             "disabled",
             "focused",
             "unfocused",
+            "active",
+            "selected",
+            "checked",
+            "loading",
+            "visited",
+            "dragged",
+            "dropped",
+            "error",
+            "warning",
+            "success",
         };
 
         static readonly HashSet<string> StyleProperties = new(StringComparer.Ordinal)
         {
             "type",
+            "display",
             "color",
             "background color",
             "foreground color",
+            "accent color",
             "border color",
             "border size",
+            "outline color",
+            "outline size",
             "corner radius",
             "padding",
             "margin",
@@ -34,6 +48,45 @@ static partial class Program
             "clip children",
             "font",
             "size",
+            "font weight",
+            "font style",
+            "text align",
+            "vertical align",
+            "line height",
+            "letter spacing",
+            "wrap",
+            "shadow color",
+            "shadow opacity",
+            "shadow blur",
+            "shadow spread",
+            "shadow offset x",
+            "shadow offset y",
+            "cursor",
+            "transition duration",
+            "transition easing",
+            "blend mode",
+            "z index",
+            "min width",
+            "min height",
+            "max width",
+            "max height",
+            "preferred width",
+            "preferred height",
+            "aspect ratio",
+            "overflow",
+            "pointer events",
+            "interactable",
+            "scale",
+            "scale x",
+            "scale y",
+            "rotation",
+            "translate x",
+            "translate y",
+            "pivot",
+            "transition property",
+            "transition delay",
+            "animation duration",
+            "animation easing",
         };
 
         static readonly HashSet<string> StyleTypeValues = new(StringComparer.Ordinal)
@@ -48,6 +101,11 @@ static partial class Program
             "checkbox",
             "dropdown",
             "image",
+            "circle",
+            "ellipse",
+            "icon",
+            "progress bar",
+            "scrollbar",
         };
 
         static readonly HashSet<string> StyleColorNames = new(StringComparer.Ordinal)
@@ -58,9 +116,209 @@ static partial class Program
             "green",
             "blue",
             "transparent",
+            "gray",
+            "grey",
+            "dark gray",
+            "dark grey",
+            "light gray",
+            "light grey",
+            "yellow",
+            "orange",
+            "purple",
+            "pink",
+            "cyan",
+            "magenta",
+            "lime",
+            "teal",
+            "navy",
+            "brown",
+            "silver",
+            "gold",
+            "violet",
+            "indigo",
+            "crimson",
+            "emerald",
+            "amber",
+            "slate",
             "light blue",
             "dark blue",
         };
+
+        static readonly HashSet<string> StyleDisplayValues = new(StringComparer.Ordinal)
+        {
+            "block",
+            "inline",
+            "flex",
+            "grid",
+            "none",
+        };
+
+        static readonly HashSet<string> StyleFontWeightWords = new(StringComparer.Ordinal)
+        {
+            "thin",
+            "light",
+            "normal",
+            "medium",
+            "semibold",
+            "bold",
+            "black",
+        };
+
+        static readonly HashSet<string> StyleFontStyleValues = new(StringComparer.Ordinal)
+        {
+            "normal",
+            "italic",
+            "oblique",
+        };
+
+        static readonly HashSet<string> StyleTextAlignValues = new(StringComparer.Ordinal)
+        {
+            "left",
+            "center",
+            "right",
+            "justify",
+        };
+
+        static readonly HashSet<string> StyleVerticalAlignValues = new(StringComparer.Ordinal)
+        {
+            "top",
+            "middle",
+            "bottom",
+            "baseline",
+        };
+
+        static readonly HashSet<string> StyleCursorValues = new(StringComparer.Ordinal)
+        {
+            "default",
+            "pointer",
+            "text",
+            "move",
+            "resize",
+            "none",
+        };
+
+        static readonly HashSet<string> StyleTransitionEasingValues = new(StringComparer.Ordinal)
+        {
+            "linear",
+            "smooth",
+            "ease in",
+            "ease out",
+            "ease in out",
+            "bounce",
+        };
+
+        static readonly HashSet<string> StyleBlendModeValues = new(StringComparer.Ordinal)
+        {
+            "normal",
+            "alpha",
+            "additive",
+            "multiply",
+            "screen",
+            "overlay",
+            "subtract",
+        };
+
+        static readonly HashSet<string> StyleOverflowValues = new(StringComparer.Ordinal)
+        {
+            "visible",
+            "hidden",
+            "scroll",
+            "auto",
+        };
+
+        static readonly HashSet<string> StylePivotValues = new(StringComparer.Ordinal)
+        {
+            "center",
+            "top",
+            "bottom",
+            "left",
+            "right",
+            "top left",
+            "top right",
+            "bottom left",
+            "bottom right",
+        };
+
+        static readonly HashSet<string> StyleTransitionPropertyValues = new(StringComparer.Ordinal)
+        {
+            "all",
+            "color",
+            "background color",
+            "foreground color",
+            "opacity",
+            "transform",
+            "border",
+            "outline",
+            "shadow",
+            "scale",
+            "position",
+        };
+
+        void ParseStylePresetStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "style preset blocks inside compile-time if are not supported in M19B++.");
+
+            ExpectKeyword("define");
+            ExpectKeyword("style");
+            ExpectKeyword("called");
+            var nameTok = Expect("STRING", "style preset name");
+            if (string.IsNullOrWhiteSpace(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S213", nameTok.Line, nameTok.Column, "Style preset name cannot be empty.");
+            if (_stylePresetNames.Contains(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S213", nameTok.Line, nameTok.Column, $"Duplicate style preset '{nameTok.Value}'.");
+            _stylePresetNames.Add(nameTok.Value);
+            ExpectLine();
+
+            var seenProperties = new HashSet<string>(StringComparer.Ordinal);
+            var count = ParseStylePropertyBlock(
+                owner: nameTok.Value,
+                state: "preset",
+                endKeyword: "style",
+                seenProperties: seenProperties,
+                onProperty: parsed =>
+                {
+                    if (apply)
+                        _stylePresets.Add(new StylePresetProperty(nameTok.Value, parsed.Property, parsed.Value.Kind, parsed.Value.Value, parsed.Value.Unit, parsed.Value.Source));
+                });
+
+            if (count == 0)
+                throw new CompileError("SEMANTIC", "S215", nameTok.Line, nameTok.Column, $"Style preset '{nameTok.Value}' cannot be empty.");
+        }
+
+        void ParseUseStyleStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "style application inside compile-time if is not supported in M19B++.");
+
+            ExpectKeyword("use");
+            ExpectKeyword("style");
+            var styleTok = Expect("STRING", "style preset name");
+            ExpectKeyword("for");
+            var targetTok = Expect("STRING", "style target name");
+            var state = "default";
+
+            if (IsKeyword("when"))
+            {
+                ExpectKeyword("when");
+                var stateTok = ExpectStyleWord("style application state");
+                state = stateTok.Value;
+                if (!StyleStates.Contains(state))
+                    throw new CompileError("SEMANTIC", "S201", stateTok.Line, stateTok.Column, $"Unsupported style state '{state}'.");
+            }
+
+            ExpectLine();
+
+            if (!_stylePresetNames.Contains(styleTok.Value))
+                throw new CompileError("SEMANTIC", "S214", styleTok.Line, styleTok.Column, $"Unknown style preset '{styleTok.Value}'.");
+
+            var applyKey = styleTok.Value + "|" + targetTok.Value + "|" + state;
+            if (!_styleApplications.Add(applyKey))
+                throw new CompileError("SEMANTIC", "S216", styleTok.Line, styleTok.Column, $"Duplicate style application '{styleTok.Value}' for '{targetTok.Value}' state '{state}'.");
+
+            if (apply)
+                _styleApplies.Add(new StyleApplication(styleTok.Value, targetTok.Value, state));
+        }
 
         void ParseStyleStatement(bool apply, bool inIf)
         {
@@ -90,9 +348,28 @@ static partial class Program
             _styleBlocks.Add(blockKey);
 
             var seenProperties = new HashSet<string>(StringComparer.Ordinal);
+            var count = ParseStylePropertyBlock(
+                owner: targetTok.Value,
+                state: state,
+                endKeyword: "style",
+                seenProperties: seenProperties,
+                onProperty: parsed =>
+                {
+                    if (apply)
+                        _styles.Add(new StyleProperty(targetTok.Value, state, parsed.Property, parsed.Value.Kind, parsed.Value.Value, parsed.Value.Unit, parsed.Value.Source));
+                });
+
+            if (count == 0)
+                throw new CompileError("SEMANTIC", "S205", targetTok.Line, targetTok.Column, $"Style block for '{targetTok.Value}' cannot be empty.");
+        }
+
+        record ParsedStyleProperty(string Property, ParsedStyleValue Value);
+
+        int ParseStylePropertyBlock(string owner, string state, string endKeyword, HashSet<string> seenProperties, Action<ParsedStyleProperty> onProperty)
+        {
             var count = 0;
             SkipNewlines();
-            while (!CurrentIs("EOF") && !(IsKeyword("end") && PeekKeyword("style")))
+            while (!CurrentIs("EOF") && !(IsKeyword("end") && PeekKeyword(endKeyword)))
             {
                 var propertyTok = Current;
                 var property = ParseStylePropertyName();
@@ -101,21 +378,18 @@ static partial class Program
                 if (!seenProperties.Add(property))
                     throw new CompileError("SEMANTIC", "S204", propertyTok.Line, propertyTok.Column, $"Duplicate style property '{property}'.");
 
-                var parsed = ParseStylePropertyValue(property, propertyTok);
-                if (apply)
-                    _styles.Add(new StyleProperty(targetTok.Value, state, property, parsed.Kind, parsed.Value, parsed.Unit, parsed.Source));
+                var parsedValue = ParseStylePropertyValue(property, propertyTok);
+                onProperty(new ParsedStyleProperty(property, parsedValue));
                 count++;
                 SkipNewlines();
             }
 
-            if (!IsKeyword("end") || !PeekKeyword("style"))
-                throw new CompileError("PARSE", "P200", Current.Line, Current.Column, "Expected end style.");
+            if (!IsKeyword("end") || !PeekKeyword(endKeyword))
+                throw new CompileError("PARSE", "P200", Current.Line, Current.Column, $"Expected end {endKeyword}.");
             ExpectKeyword("end");
-            ExpectKeyword("style");
+            ExpectKeyword(endKeyword);
             ExpectLine();
-
-            if (count == 0)
-                throw new CompileError("SEMANTIC", "S205", targetTok.Line, targetTok.Column, $"Style block for '{targetTok.Value}' cannot be empty.");
+            return count;
         }
 
         Token ExpectStyleWord(string what)
@@ -153,16 +427,56 @@ static partial class Program
             return property switch
             {
                 "type" => ParseStyleEnumValue(property, StyleTypeValues, "S206"),
+                "display" => ParseStyleEnumValue(property, StyleDisplayValues, "S206"),
                 "visibility" => ParseStyleEnumValue(property, new HashSet<string>(StringComparer.Ordinal) { "visible", "hidden", "collapsed" }, "S207"),
                 "clip children" => ParseStyleBoolValue(property),
+                "wrap" => ParseStyleBoolValue(property),
+                "pointer events" => ParseStyleBoolValue(property),
+                "interactable" => ParseStyleBoolValue(property),
                 "opacity" => ParseStyleOpacityValue(property),
+                "shadow opacity" => ParseStyleOpacityValue(property),
                 "font" => ParseStyleFontValue(property),
+                "font weight" => ParseStyleFontWeightValue(property),
+                "font style" => ParseStyleEnumValue(property, StyleFontStyleValues, "S206"),
+                "text align" => ParseStyleEnumValue(property, StyleTextAlignValues, "S206"),
+                "vertical align" => ParseStyleEnumValue(property, StyleVerticalAlignValues, "S206"),
+                "cursor" => ParseStyleEnumValue(property, StyleCursorValues, "S206"),
+                "transition easing" => ParseStyleEnumValue(property, StyleTransitionEasingValues, "S206"),
+                "animation easing" => ParseStyleEnumValue(property, StyleTransitionEasingValues, "S206"),
+                "blend mode" => ParseStyleEnumValue(property, StyleBlendModeValues, "S206"),
+                "overflow" => ParseStyleEnumValue(property, StyleOverflowValues, "S206"),
+                "pivot" => ParseStyleEnumValue(property, StylePivotValues, "S206"),
+                "transition property" => ParseStyleEnumValue(property, StyleTransitionPropertyValues, "S206"),
                 "size" => ParseStyleDimensionValue(property),
                 "border size" => ParseStyleDimensionValue(property),
+                "outline size" => ParseStyleDimensionValue(property),
                 "corner radius" => ParseStyleDimensionValue(property),
                 "padding" => ParseStyleDimensionValue(property),
                 "margin" => ParseStyleDimensionValue(property),
-                "color" or "background color" or "foreground color" or "border color" => ParseStyleColorValue(property),
+                "line height" => ParseStyleDimensionValue(property),
+                "letter spacing" => ParseStyleDimensionValue(property),
+                "shadow blur" => ParseStyleDimensionValue(property),
+                "shadow spread" => ParseStyleDimensionValue(property),
+                "shadow offset x" => ParseStyleDimensionValue(property),
+                "shadow offset y" => ParseStyleDimensionValue(property),
+                "min width" => ParseStyleDimensionValue(property),
+                "min height" => ParseStyleDimensionValue(property),
+                "max width" => ParseStyleDimensionValue(property),
+                "max height" => ParseStyleDimensionValue(property),
+                "preferred width" => ParseStyleDimensionValue(property),
+                "preferred height" => ParseStyleDimensionValue(property),
+                "translate x" => ParseStyleSignedDimensionValue(property),
+                "translate y" => ParseStyleSignedDimensionValue(property),
+                "transition duration" => ParseStyleDurationValue(property),
+                "transition delay" => ParseStyleDurationValue(property),
+                "animation duration" => ParseStyleDurationValue(property),
+                "z index" => ParseStyleIntegerValue(property),
+                "scale" => ParseStyleNonNegativeNumberValue(property),
+                "scale x" => ParseStyleNonNegativeNumberValue(property),
+                "scale y" => ParseStyleNonNegativeNumberValue(property),
+                "aspect ratio" => ParseStylePositiveNumberValue(property),
+                "rotation" => ParseStyleAngleValue(property),
+                "color" or "background color" or "foreground color" or "accent color" or "border color" or "outline color" or "shadow color" => ParseStyleColorValue(property),
                 _ => throw new CompileError("SEMANTIC", "S203", propertyTok.Line, propertyTok.Column, $"Unknown style property '{property}'."),
             };
         }
@@ -217,6 +531,91 @@ static partial class Program
             return new ParsedStyleValue("dimension", formatted, "px", formatted + " px");
         }
 
+        ParsedStyleValue ParseStyleSignedDimensionValue(string property)
+        {
+            var start = Current;
+            var sign = 1.0;
+            var signText = "";
+
+            if (CurrentIs("MINUS") || CurrentIs("PLUS"))
+            {
+                signText = Current.Value;
+                sign = CurrentIs("MINUS") ? -1.0 : 1.0;
+                Advance();
+            }
+
+            if (!CurrentIs("INT") && !CurrentIs("DECIMAL"))
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' requires a signed numeric px value.");
+
+            var numberTok = Advance();
+            if (!double.TryParse(numberTok.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var rawValue))
+                throw new CompileError("SEMANTIC", "S210", numberTok.Line, numberTok.Column, $"Style property '{property}' requires a signed numeric px value.");
+
+            var value = sign * rawValue;
+
+            if (!CurrentWordIs("px"))
+                throw new CompileError("PARSE", "P204", Current.Line, Current.Column, $"Expected px unit for style property '{property}'.");
+            Advance();
+            ExpectLine();
+
+            var formatted = FormatNumber(value, "double");
+            var source = signText + numberTok.Value + " px";
+            return new ParsedStyleValue("dimension", formatted, "px", source);
+        }
+
+        ParsedStyleValue ParseStyleNonNegativeNumberValue(string property)
+        {
+            var start = Current;
+            var expr = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(expr.Type))
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' requires a numeric value.");
+            var value = ToNumber(expr);
+            if (value < 0)
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' cannot be negative.");
+            ExpectLine();
+            var formatted = FormatNumber(value, "double");
+            return new ParsedStyleValue("number", formatted, "", expr.Value);
+        }
+
+        ParsedStyleValue ParseStylePositiveNumberValue(string property)
+        {
+            var start = Current;
+            var expr = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(expr.Type))
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' requires a numeric value.");
+            var value = ToNumber(expr);
+            if (value <= 0)
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' must be positive.");
+            ExpectLine();
+            var formatted = FormatNumber(value, "double");
+            return new ParsedStyleValue("number", formatted, "", expr.Value);
+        }
+
+        ParsedStyleValue ParseStyleAngleValue(string property)
+        {
+            var start = Current;
+            var expr = ParseAddExpression(legacyQuotedStrings: false);
+
+            if (IsAngle(expr.Type))
+            {
+                ExpectLine();
+                var angleValue = ToNumber(expr);
+                var formattedAngle = FormatNumber(angleValue, "double");
+                return new ParsedStyleValue("angle", formattedAngle, "rad", expr.Repr);
+            }
+
+            if (!IsNumeric(expr.Type))
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' requires a numeric angle value.");
+
+            var value = ToNumber(expr);
+            if (!CurrentWordIs("deg") && !CurrentWordIs("rad"))
+                throw new CompileError("PARSE", "P204", Current.Line, Current.Column, $"Expected deg or rad unit for style property '{property}'.");
+            var unit = Advance().Value;
+            ExpectLine();
+            var formatted = FormatNumber(value, "double");
+            return new ParsedStyleValue("angle", formatted, unit, formatted + " " + unit);
+        }
+
         ParsedStyleValue ParseStyleFontValue(string property)
         {
             var token = Expect("STRING", "font name string");
@@ -224,6 +623,58 @@ static partial class Program
                 throw new CompileError("SEMANTIC", "S211", token.Line, token.Column, "Font name cannot be empty.");
             ExpectLine();
             return new ParsedStyleValue("string", token.Value, "", token.Value);
+        }
+
+        ParsedStyleValue ParseStyleFontWeightValue(string property)
+        {
+            var start = Current;
+            if (CurrentIs("INT"))
+            {
+                var raw = Advance().Value;
+                if (!int.TryParse(raw, NumberStyles.None, CultureInfo.InvariantCulture, out var weight) ||
+                    weight < 100 || weight > 900 || weight % 100 != 0)
+                    throw new CompileError("SEMANTIC", "S206", start.Line, start.Column, "Font weight must be a word or a numeric weight between 100 and 900 in steps of 100.");
+                ExpectLine();
+                return new ParsedStyleValue("font_weight", weight.ToString(CultureInfo.InvariantCulture), "", raw);
+            }
+
+            var value = ReadStyleWordsUntilLine(property);
+            var normalized = value.ToLowerInvariant();
+            if (!StyleFontWeightWords.Contains(normalized))
+                throw new CompileError("SEMANTIC", "S206", start.Line, start.Column, $"Unsupported font weight '{value}'.");
+            ExpectLine();
+            return new ParsedStyleValue("font_weight", normalized, "", value);
+        }
+
+        ParsedStyleValue ParseStyleDurationValue(string property)
+        {
+            var start = Current;
+            var expr = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(expr.Type))
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' requires a numeric duration value.");
+            var value = ToNumber(expr);
+            if (value < 0)
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' cannot be negative.");
+            if (!CurrentWordIs("ms") && !CurrentWordIs("sec"))
+                throw new CompileError("PARSE", "P204", Current.Line, Current.Column, $"Expected ms or sec unit for style property '{property}'.");
+            var unit = Advance().Value;
+            ExpectLine();
+            var formatted = FormatNumber(value, "double");
+            return new ParsedStyleValue("duration", formatted, unit, formatted + " " + unit);
+        }
+
+        ParsedStyleValue ParseStyleIntegerValue(string property)
+        {
+            var start = Current;
+            var expr = ParseAddExpression(legacyQuotedStrings: false);
+            if (!IsNumeric(expr.Type))
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' requires an integer value.");
+            var value = ToNumber(expr);
+            if (value < 0 || Math.Abs(value - Math.Round(value)) > NumericEpsilon)
+                throw new CompileError("SEMANTIC", "S210", start.Line, start.Column, $"Style property '{property}' requires a non-negative integer value.");
+            ExpectLine();
+            var integer = ((long)Math.Round(value)).ToString(CultureInfo.InvariantCulture);
+            return new ParsedStyleValue("integer", integer, "", expr.Value);
         }
 
         ParsedStyleValue ParseStyleColorValue(string property)

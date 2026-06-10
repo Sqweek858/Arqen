@@ -1,0 +1,21 @@
+program "ValidUiEventsValueText"
+set title to string "M19 UI Final"
+
+define slider called "VolumeSlider"
+set range of "VolumeSlider" to 0, 100
+set value of "VolumeSlider" to 50
+
+define input field called "NameInput"
+set placeholder of "NameInput" to string "Name"
+
+when value changed "VolumeSlider"
+    print string "Volume changed"
+end when
+
+when text changed "NameInput"
+    print string "Text changed"
+end when
+
+show string "ui events value text"
+blend mix to code 0
+end program "ValidUiEventsValueText"

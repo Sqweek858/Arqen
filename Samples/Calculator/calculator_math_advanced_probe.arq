@@ -1,0 +1,278 @@
+﻿program "CalculatorMathAdvancedProbe"
+
+set title to string "Arqen Advanced Math Probe"
+
+print string "=============================="
+print string "ARQEN ADVANCED MATH PROBE V2"
+print string "=============================="
+
+define int called "passCount" be 0
+define int called "failCount" be 0
+
+define float called "sqrtValue" be sqrt 144
+
+if "sqrtValue" is 12
+    add 1 to "passCount"
+    print string "PASS sqrt 144"
+else
+    add 1 to "failCount"
+    print string "FAIL sqrt 144"
+end if
+
+define float called "absValue" be abs -42
+
+if "absValue" is 42
+    add 1 to "passCount"
+    print string "PASS abs -42"
+else
+    add 1 to "failCount"
+    print string "FAIL abs -42"
+end if
+
+define float called "floorValue" be floor 9.8
+
+if "floorValue" is 9
+    add 1 to "passCount"
+    print string "PASS floor 9.8"
+else
+    add 1 to "failCount"
+    print string "FAIL floor 9.8"
+end if
+
+define float called "ceilValue" be ceil 9.1
+
+if "ceilValue" is 10
+    add 1 to "passCount"
+    print string "PASS ceil 9.1"
+else
+    add 1 to "failCount"
+    print string "FAIL ceil 9.1"
+end if
+
+define float called "roundValue" be round 9.5
+
+if "roundValue" is 10
+    add 1 to "passCount"
+    print string "PASS round 9.5"
+else
+    add 1 to "failCount"
+    print string "FAIL round 9.5"
+end if
+
+define float called "minValue" be min 12, 4
+
+if "minValue" is 4
+    add 1 to "passCount"
+    print string "PASS min 12, 4"
+else
+    add 1 to "failCount"
+    print string "FAIL min 12, 4"
+end if
+
+define float called "maxValue" be max 12, 4
+
+if "maxValue" is 12
+    add 1 to "passCount"
+    print string "PASS max 12, 4"
+else
+    add 1 to "failCount"
+    print string "FAIL max 12, 4"
+end if
+
+define float called "clampLow" be clamp -5 between 0 and 100
+
+if "clampLow" is 0
+    add 1 to "passCount"
+    print string "PASS clamp low"
+else
+    add 1 to "failCount"
+    print string "FAIL clamp low"
+end if
+
+define float called "clampHigh" be clamp 250 between 0 and 100
+
+if "clampHigh" is 100
+    add 1 to "passCount"
+    print string "PASS clamp high"
+else
+    add 1 to "failCount"
+    print string "FAIL clamp high"
+end if
+
+define float called "clampMiddle" be clamp 55 between 0 and 100
+
+if "clampMiddle" is 55
+    add 1 to "passCount"
+    print string "PASS clamp middle"
+else
+    add 1 to "failCount"
+    print string "FAIL clamp middle"
+end if
+
+define float called "lerpValue" be lerp 10, 20, 0.5
+
+if "lerpValue" is 15
+    add 1 to "passCount"
+    print string "PASS lerp 10, 20, 0.5"
+else
+    add 1 to "failCount"
+    print string "FAIL lerp 10, 20, 0.5"
+end if
+
+define float called "remapValue" be remap 50 from 0, 100 to 0, 1
+
+if "remapValue" is 0.5
+    add 1 to "passCount"
+    print string "PASS remap 50"
+else
+    add 1 to "failCount"
+    print string "FAIL remap 50"
+end if
+
+define float called "smoothValue" be smoothstep 0, 1, 0.5
+
+print string "PROBE smoothstep 0, 1, 0.5"
+print "smoothValue"
+
+define float called "sinValue" be sin 0
+
+if "sinValue" is 0
+    add 1 to "passCount"
+    print string "PASS sin 0"
+else
+    add 1 to "failCount"
+    print string "FAIL sin 0"
+end if
+
+define float called "cosValue" be cos 0
+
+if "cosValue" is 1
+    add 1 to "passCount"
+    print string "PASS cos 0"
+else
+    add 1 to "failCount"
+    print string "FAIL cos 0"
+end if
+
+define float called "powValue" be pow 2, 8
+
+if "powValue" is 256
+    add 1 to "passCount"
+    print string "PASS pow 2, 8"
+else
+    add 1 to "failCount"
+    print string "FAIL pow 2, 8"
+end if
+
+define float called "length2Value" be length [3, 4]
+
+if "length2Value" is 5
+    add 1 to "passCount"
+    print string "PASS vec2 length [3, 4]"
+else
+    add 1 to "failCount"
+    print string "FAIL vec2 length [3, 4]"
+end if
+
+define float called "dot2Value" be dot [1, 2], [3, 4]
+
+if "dot2Value" is 11
+    add 1 to "passCount"
+    print string "PASS vec2 dot"
+else
+    add 1 to "failCount"
+    print string "FAIL vec2 dot"
+end if
+
+define float called "length3Value" be length [2, 3, 6]
+
+if "length3Value" is 7
+    add 1 to "passCount"
+    print string "PASS vec3 length [2, 3, 6]"
+else
+    add 1 to "failCount"
+    print string "FAIL vec3 length [2, 3, 6]"
+end if
+
+define float called "dot3Value" be dot [1, 2, 3], [4, 5, 6]
+
+if "dot3Value" is 32
+    add 1 to "passCount"
+    print string "PASS vec3 dot"
+else
+    add 1 to "failCount"
+    print string "FAIL vec3 dot"
+end if
+
+define vec3 called "crossValue" be cross [1, 0, 0], [0, 1, 0]
+
+print string "PROBE vec3 cross [1,0,0] x [0,1,0]"
+print "crossValue"
+
+define vec3 called "normalizedValue" be normalize [0, 3, 4]
+
+print string "PROBE normalize [0,3,4]"
+print "normalizedValue"
+
+define vec3 called "vectorLerpValue" be lerp [0, 0, 0], [10, 20, 30], 0.5
+
+print string "PROBE vec3 lerp"
+print "vectorLerpValue"
+
+define float called "distanceValue" be distance [0, 0], [3, 4]
+
+if "distanceValue" is 5
+    add 1 to "passCount"
+    print string "PASS distance vec2"
+else
+    add 1 to "failCount"
+    print string "FAIL distance vec2"
+end if
+
+define float called "angleValue" be radians 180 deg
+
+print string "PROBE radians 180 deg"
+print "angleValue"
+
+define float called "degValue" be degrees 3.1415926535 rad
+
+print string "PROBE degrees pi rad"
+print "degValue"
+
+define float called "aggregateScore" be 0
+
+add "sqrtValue" to "aggregateScore"
+add "absValue" to "aggregateScore"
+add "floorValue" to "aggregateScore"
+add "ceilValue" to "aggregateScore"
+add "roundValue" to "aggregateScore"
+add "minValue" to "aggregateScore"
+add "maxValue" to "aggregateScore"
+add "clampLow" to "aggregateScore"
+add "clampHigh" to "aggregateScore"
+add "clampMiddle" to "aggregateScore"
+add "lerpValue" to "aggregateScore"
+add "powValue" to "aggregateScore"
+add "dot2Value" to "aggregateScore"
+add "dot3Value" to "aggregateScore"
+add "distanceValue" to "aggregateScore"
+
+print string "------------------------------"
+print string "PASS COUNT"
+print "passCount"
+print string "FAIL COUNT"
+print "failCount"
+print string "AGGREGATE SCORE"
+print "aggregateScore"
+print string "------------------------------"
+
+if "failCount" is 0
+    print string "FINAL RESULT: PASS"
+else
+    print string "FINAL RESULT: FAIL"
+end if
+
+blend mix to code 0
+
+end program "CalculatorMathAdvancedProbe"
+

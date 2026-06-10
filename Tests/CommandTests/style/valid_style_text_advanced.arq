@@ -1,0 +1,21 @@
+program "StyleTextAdvanced"
+
+set title to string "M19B Style Extended"
+
+with style for "Title"
+    font: "Arial"
+    size: 32 px
+    font weight: bold
+    font style: italic
+    text align: center
+    vertical align: middle
+    line height: 40 px
+    letter spacing: 1 px
+    wrap: false
+    cursor: text
+end style
+
+show string "style text advanced"
+blend mix to code 0
+
+end program "StyleTextAdvanced"

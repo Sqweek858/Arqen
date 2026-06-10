@@ -1,0 +1,24 @@
+valid_ui_parent_basic.arq|0|MESSAGE|ui parent basic
+valid_ui_layout_absolute.arq|0|MESSAGE|ui layout absolute
+valid_ui_layout_anchor_offsets.arq|0|MESSAGE|ui layout anchor offsets
+valid_ui_layout_flex.arq|0|MESSAGE|ui layout flex
+valid_ui_layout_grid.arq|0|MESSAGE|ui layout grid
+valid_ui_dock_to_window.arq|0|MESSAGE|
+valid_ui_dock_to_panel.arq|0|MESSAGE|ui dock to panel
+invalid_ui_parent_unknown_child.arq|1|ERROR|S240|semantic
+invalid_ui_parent_unknown_parent.arq|1|ERROR|S245|semantic
+invalid_ui_parent_self.arq|1|ERROR|S246|semantic
+invalid_ui_parent_duplicate.arq|1|ERROR|S248|semantic
+invalid_ui_parent_cycle.arq|1|ERROR|S246|semantic
+invalid_ui_layout_unknown_target.arq|1|ERROR|S240|semantic
+invalid_ui_layout_unknown_property.arq|1|ERROR|S241|semantic
+invalid_ui_layout_missing_end.arq|1|ERROR|P240|parse
+invalid_ui_layout_duplicate_property.arq|1|ERROR|S242|semantic
+invalid_ui_layout_negative_width.arq|1|ERROR|S243|semantic
+invalid_ui_layout_missing_px.arq|1|ERROR|P240|parse
+invalid_ui_layout_bad_anchor.arq|1|ERROR|S243|semantic
+invalid_ui_layout_bad_columns.arq|1|ERROR|S243|semantic
+invalid_ui_layout_empty_block.arq|1|ERROR|S243|semantic
+invalid_ui_dock_unknown_target.arq|1|ERROR|S240|semantic
+invalid_ui_dock_bad_side.arq|1|ERROR|S247|semantic
+invalid_ui_dock_duplicate_relationship.arq|1|ERROR|S248|semantic

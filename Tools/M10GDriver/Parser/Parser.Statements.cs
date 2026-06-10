@@ -734,7 +734,7 @@ static partial class Program
             }
             else
             {
-                throw new CompileError("PARSE", "P110", Current.Line, Current.Column, "Expected 'closed' or 'key pressed' after 'when'.");
+                ParseUiEventStatementAfterWhen(apply, inIf);
             }
         }
 

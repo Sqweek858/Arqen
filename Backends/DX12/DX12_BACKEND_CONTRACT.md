@@ -47,7 +47,7 @@ They must remain `unsupported` until the backend can validate and execute them.
 
 Do not mark `dx12`, `shader`, `render_pass`, or `frame_update` as `supported` only because a parser accepts the words. Support means the backend and runtime can execute the action safely and produce diagnostics on failure.
 
-## M19D skeleton entry criteria
+## M20A skeleton entry criteria
 
 The first DX12 skeleton patch is allowed to do only a real clear-color window path after M19A runtime loop rules are in place. It must prove:
 

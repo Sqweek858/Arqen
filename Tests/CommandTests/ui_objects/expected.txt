@@ -1,0 +1,19 @@
+valid_ui_objects_basic.arq|0|MESSAGE|ui objects basic
+valid_ui_controls_basic.arq|0|MESSAGE|ui controls basic
+valid_ui_style_integration.arq|0|MESSAGE|ui style integration
+valid_ui_symbol_content.arq|0|MESSAGE|ui symbol content
+valid_ui_dropdown_single.arq|0|MESSAGE|ui dropdown single
+invalid_ui_missing_called.arq|1|ERROR|P001|parse
+invalid_ui_input_missing_field.arq|1|ERROR|P230|parse
+invalid_ui_duplicate_object.arq|1|ERROR|S230|semantic
+invalid_ui_conflicts_variable.arq|1|ERROR|S230|semantic
+invalid_ui_unknown_target.arq|1|ERROR|S231|semantic
+invalid_ui_content_on_slider.arq|1|ERROR|S233|semantic
+invalid_ui_range_on_button.arq|1|ERROR|S233|semantic
+invalid_ui_range_text.arq|1|ERROR|S234|semantic
+invalid_ui_range_reversed.arq|1|ERROR|S235|semantic
+invalid_ui_checked_text.arq|1|ERROR|S237|semantic
+invalid_ui_option_to_button.arq|1|ERROR|S233|semantic
+invalid_ui_duplicate_option.arq|1|ERROR|S238|semantic
+invalid_ui_duplicate_property.arq|1|ERROR|S236|semantic
+invalid_ui_value_on_checkbox.arq|1|ERROR|S233|semantic

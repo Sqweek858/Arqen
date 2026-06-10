@@ -1,0 +1,9 @@
+program "InvalidUiEventIncompatible"
+set title to string "M19 UI Final"
+define slider called "VolumeSlider"
+when clicked "VolumeSlider"
+    print string "Clicked"
+end when
+show string "bad"
+blend mix to code 0
+end program "InvalidUiEventIncompatible"

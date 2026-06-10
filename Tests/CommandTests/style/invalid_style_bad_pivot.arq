@@ -1,0 +1,12 @@
+program "InvalidStyleBadPivot"
+
+set title to string "Invalid"
+
+with style for "Panel"
+    pivot: somewhere outside
+end style
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleBadPivot"

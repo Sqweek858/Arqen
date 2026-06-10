@@ -1,0 +1,11 @@
+program "InvalidUiLayoutNegativeWidth"
+set title to string "M19D UI Layout"
+
+define shape called "Panel"
+with layout for "Panel"
+    width: -1 px
+end layout
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiLayoutNegativeWidth"

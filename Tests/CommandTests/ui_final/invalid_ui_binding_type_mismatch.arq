@@ -1,0 +1,8 @@
+program "InvalidUiBindingTypeMismatch"
+set title to string "M19 UI Final"
+define string called "name" be string "Sqweek"
+define shape called "Panel"
+link "Panel" width to "name"
+show string "bad"
+blend mix to code 0
+end program "InvalidUiBindingTypeMismatch"

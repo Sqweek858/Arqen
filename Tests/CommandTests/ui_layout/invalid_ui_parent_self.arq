@@ -1,0 +1,9 @@
+program "InvalidUiParentSelf"
+set title to string "M19D UI Layout"
+
+define shape called "Panel"
+parent "Panel" to "Panel"
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiParentSelf"

@@ -23,7 +23,57 @@ static partial class Program
 
         readonly List<StyleProperty> _styles = new();
 
+        readonly List<StylePresetProperty> _stylePresets = new();
+
+        readonly List<StyleApplication> _styleApplies = new();
+
+        readonly List<UiObject> _uiObjects = new();
+
+        readonly List<UiProperty> _uiProperties = new();
+
+        readonly List<UiLayoutProperty> _uiLayoutProperties = new();
+
+        readonly List<UiParent> _uiParents = new();
+
+        readonly List<UiDock> _uiDocks = new();
+
+        readonly List<UiEvent> _uiEvents = new();
+
+        readonly List<UiBinding> _uiBindings = new();
+
+        readonly List<UiState> _uiStates = new();
+
+        readonly List<UiResource> _uiResources = new();
+
+        readonly List<UiResourceUse> _uiResourceUses = new();
+
+        readonly Dictionary<string, string> _uiObjectTypes = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _uiPropertyKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _uiOptionKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _uiLayoutPropertyKeys = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _uiParentByChild = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _uiDockTargets = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _uiEventKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _uiBindingKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _uiStateKeys = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _uiResourceTypes = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _uiResourceUseKeys = new(StringComparer.Ordinal);
+
         readonly HashSet<string> _styleBlocks = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _stylePresetNames = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _styleApplications = new(StringComparer.Ordinal);
 
         readonly HashSet<string> _runtimeSymbols = new(StringComparer.Ordinal);
 
@@ -73,7 +123,19 @@ static partial class Program
                 new StatementRule(() => IsKeyword("define") && PeekKeyword("window"), ParseWindowStatement),
                 new StatementRule(() => IsKeyword("set") && (PeekKeyword("title") || PeekKeyword("resolution") || PeekKeyword("resizable")) && PeekKeyword("of", 2), ParseWindowStatement),
                 new StatementRule(() => (IsKeyword("show") || IsKeyword("run") || IsKeyword("close")) && PeekKeyword("window"), ParseWindowStatement),
+                new StatementRule(() => IsKeyword("define") && PeekKeyword("style"), ParseStylePresetStatement),
+                new StatementRule(() => IsKeyword("use") && PeekKeyword("style"), ParseUseStyleStatement),
                 new StatementRule(() => IsKeyword("with") && PeekKeyword("style") && PeekKeyword("for", 2), ParseStyleStatement),
+                new StatementRule(() => IsKeyword("define") && LooksLikeUiObjectDefinition(), ParseUiObjectDefinitionStatement),
+                new StatementRule(() => IsKeyword("set") && LooksLikeUiPropertySet(), ParseUiPropertySetStatement),
+                new StatementRule(() => IsKeyword("add") && LooksLikeUiDropdownOption(), ParseUiDropdownOptionStatement),
+                new StatementRule(() => CurrentWordIs("parent"), ParseUiParentStatement),
+                new StatementRule(() => CurrentWordIs("dock"), ParseUiDockStatement),
+                new StatementRule(() => CurrentWordIs("link"), ParseUiBindingStatement),
+                new StatementRule(() => IsKeyword("define") && LooksLikeUiResourceDefinition(), ParseUiResourceDefinitionStatement),
+                new StatementRule(() => IsKeyword("set") && LooksLikeUiResourceUse(), ParseUiResourceUseStatement),
+                new StatementRule(() => IsKeyword("set") && LooksLikeUiStateSet(), ParseUiStateStatement),
+                new StatementRule(() => IsKeyword("with") && PeekWord("layout") && PeekKeyword("for", 2), ParseUiLayoutStatement),
                 new StatementRule(() => IsKeyword("let"), ParseLegacyLetStatement),
                 new StatementRule(() => IsKeyword("define"), ParseCanonicalDefineStatement),
                 new StatementRule(() => IsKeyword("rename"), ParseRenameStatement),
@@ -142,7 +204,7 @@ static partial class Program
             SkipNewlines();
             Expect("EOF", "end of file");
 
-            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow, _runtimeActions, _styles);
+            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow, _runtimeActions, _styles, _stylePresets, _styleApplies, _uiObjects, _uiProperties, _uiLayoutProperties, _uiParents, _uiDocks, _uiEvents, _uiBindings, _uiStates, _uiResources, _uiResourceUses);
         }
 
         record CommandExpr(string Value, string Repr, string Command);

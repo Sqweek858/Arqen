@@ -1,0 +1,12 @@
+program "InvalidStyleBadRotationUnit"
+
+set title to string "Invalid"
+
+with style for "Panel"
+    rotation: 45 px
+end style
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleBadRotationUnit"

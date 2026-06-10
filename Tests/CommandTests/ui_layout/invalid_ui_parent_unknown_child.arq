@@ -1,0 +1,9 @@
+program "InvalidUiParentUnknownChild"
+set title to string "M19D UI Layout"
+
+define shape called "Panel"
+parent "Missing" to "Panel"
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiParentUnknownChild"

@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 Import-Module (Join-Path $PSScriptRoot "CommandAutomationCommon.psm1") -Force
 
 $root = Get-ArqenRepoRoot
@@ -23,7 +23,10 @@ $statementRows = @(
     @{ Rule = "show_value_statement"; Command = "show_value"; Keywords = "show"; TestFolder = "canonical_show" },
     @{ Rule = "print_statement"; Command = "print"; Keywords = "print" },
     @{ Rule = "file_io_statement"; Command = "file_io"; Keywords = "write,file,with,add,to,file,load,file,to"; TestFolder = "file_io" },
-    @{ Rule = "style_statement"; Command = "style"; Keywords = "with,style,for,when,end,style"; TestFolder = "style" },
+    @{ Rule = "style_statement"; Command = "style"; Keywords = "with,style,for,when,define,called,use,end,style"; TestFolder = "style" },
+    @{ Rule = "ui_object_statement"; Command = "ui_objects"; Keywords = "define,shape,text,button,slider,input,field,checkbox,dropdown,called,set,content,range,value,placeholder,checked,of,to,add,string"; TestFolder = "ui_objects" },
+    @{ Rule = "ui_layout_statement"; Command = "ui_layout"; Keywords = "parent,to,with,layout,for,end,dock,of,x,y,width,height,anchor,offset,margin,padding,mode,direction,gap,columns,rows"; TestFolder = "ui_layout" },
+    @{ Rule = "ui_final_statement"; Command = "ui_final"; Keywords = "when,clicked,hovered,pressed,released,focused,unfocused,changed,value,text,dragged,dropped,loaded,resized,link,set,enabled,visible,selected,visibility,state,define,texture,font,sound,called,from,file"; TestFolder = "ui_final" },
     @{ Rule = "math_update_statement"; Command = "math_update"; Keywords = "add,remove,multiply,divide"; TestFolder = "math_update" },
     @{ Rule = "while_statement"; Command = "while_compile_time"; Keywords = "while"; TestFolder = "while_compile_time" },
     @{ Rule = "function_statement"; Command = "function"; Keywords = "define,function,call"; TestFolder = "function" },

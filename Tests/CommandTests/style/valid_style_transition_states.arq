@@ -1,0 +1,32 @@
+program "StyleTransitionStates"
+
+set title to string "M19B Style Extended"
+
+with style for "PlayButton"
+    type: button
+    transition duration: 150 ms
+    transition easing: ease out
+    cursor: pointer
+end style
+
+with style for "PlayButton" when active
+    background color: cyan
+end style
+
+with style for "PlayButton" when selected
+    outline color: yellow
+    outline size: 2 px
+end style
+
+with style for "PlayButton" when checked
+    accent color: lime
+end style
+
+with style for "PlayButton" when loading
+    opacity: 0.6
+end style
+
+show string "style transition states"
+blend mix to code 0
+
+end program "StyleTransitionStates"

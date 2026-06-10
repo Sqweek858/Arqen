@@ -1,0 +1,12 @@
+program "M19CUIDropdownSingle"
+
+set title to string "M19C UI Dropdown Single"
+
+define dropdown called "QualityDropdown"
+set content of "QualityDropdown" to string "Quality"
+add string "Epic" to "QualityDropdown"
+
+show string "ui dropdown single"
+blend mix to code 0
+
+end program "M19CUIDropdownSingle"

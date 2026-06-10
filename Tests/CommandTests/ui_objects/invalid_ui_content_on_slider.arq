@@ -1,0 +1,11 @@
+program "M19CInvalidContentOnSlider"
+
+set title to string "M19C invalid"
+
+define slider called "VolumeSlider"
+set content of "VolumeSlider" to string "Volume"
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidContentOnSlider"

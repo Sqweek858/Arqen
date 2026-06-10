@@ -1,0 +1,17 @@
+program "ValidUiEventsBasic"
+set title to string "M19 UI Final"
+
+define button called "PlayButton"
+set content of "PlayButton" to string "Play"
+
+when clicked "PlayButton"
+    print string "Clicked"
+end when
+
+when hovered "PlayButton"
+    print string "Hovered"
+end when
+
+show string "ui events basic"
+blend mix to code 0
+end program "ValidUiEventsBasic"

@@ -1,0 +1,238 @@
+﻿program "CalculatorLogicStress"
+
+set title to string "Arqen Calculator Logic Stress"
+
+print string "=============================="
+print string "ARQEN CALCULATOR LOGIC STRESS V1"
+print string "=============================="
+
+define int called "passCount" be 0
+define int called "failCount" be 0
+
+define int called "basic" be 10
+add 5 to "basic"
+multiply "basic" by 3
+remove 9 from "basic"
+divide "basic" by 6
+
+if "basic" is 6
+    add 1 to "passCount"
+    print string "PASS basic arithmetic chain"
+else
+    add 1 to "failCount"
+    print string "FAIL basic arithmetic chain"
+end if
+
+define int called "sum" be 12
+add 4 to "sum"
+
+if "sum" is 16
+    add 1 to "passCount"
+    print string "PASS addition chain"
+else
+    add 1 to "failCount"
+    print string "FAIL addition chain"
+end if
+
+define int called "difference" be 50
+remove 18 from "difference"
+
+if "difference" is 32
+    add 1 to "passCount"
+    print string "PASS subtraction chain"
+else
+    add 1 to "failCount"
+    print string "FAIL subtraction chain"
+end if
+
+define int called "product" be 7
+multiply "product" by 8
+
+if "product" is 56
+    add 1 to "passCount"
+    print string "PASS multiplication chain"
+else
+    add 1 to "failCount"
+    print string "FAIL multiplication chain"
+end if
+
+define int called "quotient" be 144
+divide "quotient" by 12
+
+if "quotient" is 12
+    add 1 to "passCount"
+    print string "PASS division chain"
+else
+    add 1 to "failCount"
+    print string "FAIL division chain"
+end if
+
+define int called "branchScore" be 0
+
+if "sum" > 10
+    add 10 to "branchScore"
+else
+    add 100 to "branchScore"
+end if
+
+if "difference" < 40
+    add 20 to "branchScore"
+else
+    add 200 to "branchScore"
+end if
+
+if "product" >= 56
+    add 30 to "branchScore"
+else
+    add 300 to "branchScore"
+end if
+
+if "quotient" <= 12
+    add 40 to "branchScore"
+else
+    add 400 to "branchScore"
+end if
+
+if "branchScore" is 100
+    add 1 to "passCount"
+    print string "PASS comparison branch chain"
+else
+    add 1 to "failCount"
+    print string "FAIL comparison branch chain"
+end if
+
+define bool called "logicA" be true
+define bool called "logicB" be false
+
+if "logicA" is true
+    add 1 to "passCount"
+    print string "PASS bool true comparison"
+else
+    add 1 to "failCount"
+    print string "FAIL bool true comparison"
+end if
+
+if "logicB" is false
+    add 1 to "passCount"
+    print string "PASS bool false comparison"
+else
+    add 1 to "failCount"
+    print string "FAIL bool false comparison"
+end if
+
+define int called "nestedScore" be 0
+
+if "sum" is 16
+    add 30 to "nestedScore"
+else
+    add 1 to "nestedScore"
+end if
+
+if "product" is 56
+    add 30 to "nestedScore"
+else
+    add 2 to "nestedScore"
+end if
+
+if "quotient" is 12
+    add 39 to "nestedScore"
+else
+    add 3 to "nestedScore"
+end if
+
+if "nestedScore" is 99
+    add 1 to "passCount"
+    print string "PASS flat multi-condition chain"
+else
+    add 1 to "failCount"
+    print string "FAIL flat multi-condition chain"
+end if
+
+define int called "stressTotal" be 0
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+add 3 to "stressTotal"
+multiply "stressTotal" by 2
+divide "stressTotal" by 2
+
+if "stressTotal" is 30
+    add 1 to "passCount"
+    print string "PASS long arithmetic stress chain"
+else
+    add 1 to "failCount"
+    print string "FAIL long arithmetic stress chain"
+end if
+
+define int called "finalScore" be 0
+
+add "basic" to "finalScore"
+add "sum" to "finalScore"
+add "difference" to "finalScore"
+add "product" to "finalScore"
+add "quotient" to "finalScore"
+add "branchScore" to "finalScore"
+add "nestedScore" to "finalScore"
+add "stressTotal" to "finalScore"
+
+if "finalScore" is 351
+    add 1 to "passCount"
+    print string "PASS final aggregate score"
+else
+    add 1 to "failCount"
+    print string "FAIL final aggregate score"
+end if
+
+print string "------------------------------"
+print string "PASS COUNT"
+print "passCount"
+print string "FAIL COUNT"
+print "failCount"
+print string "FINAL SCORE"
+print "finalScore"
+print string "------------------------------"
+
+if "failCount" is 0
+    print string "FINAL RESULT: PASS"
+else
+    print string "FINAL RESULT: FAIL"
+end if
+
+blend mix to code 0
+
+end program "CalculatorLogicStress"
+

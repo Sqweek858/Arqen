@@ -1,0 +1,8 @@
+program "InvalidUiResourceWrongType"
+set title to string "M19 UI Final"
+define font called "MainFont" from file "fonts/inter.ttf"
+define button called "PlayButton"
+set texture of "PlayButton" to "MainFont"
+show string "bad"
+blend mix to code 0
+end program "InvalidUiResourceWrongType"

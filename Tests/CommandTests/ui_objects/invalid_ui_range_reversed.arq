@@ -1,0 +1,11 @@
+program "M19CInvalidRangeReversed"
+
+set title to string "M19C invalid"
+
+define slider called "VolumeSlider"
+set range of "VolumeSlider" to 100, 0
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidRangeReversed"

@@ -1,0 +1,7 @@
+program "InvalidUiResourceDuplicate"
+set title to string "M19 UI Final"
+define texture called "ButtonTexture" from file "ui/button.png"
+define texture called "ButtonTexture" from file "ui/other.png"
+show string "bad"
+blend mix to code 0
+end program "InvalidUiResourceDuplicate"

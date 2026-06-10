@@ -1,0 +1,13 @@
+﻿program "MathFunctionSetProbe"
+
+set title to string "Math Function Set Probe"
+
+define float called "sqrtValue" be 0
+set "sqrtValue" to sqrt 144
+
+print string "SQRT VALUE"
+print "sqrtValue"
+
+blend mix to code 0
+
+end program "MathFunctionSetProbe"

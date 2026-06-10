@@ -1,0 +1,19 @@
+program "StylePresetApply"
+
+set title to string "M19B Style Preset"
+
+define style called "PrimaryButton"
+    background color: blue
+    foreground color: white
+    corner radius: 8 px
+    padding: 12 px
+    transition property: all
+    transition duration: 150 ms
+end style
+
+use style "PrimaryButton" for "PlayButton"
+
+show string "style preset apply"
+blend mix to code 0
+
+end program "StylePresetApply"

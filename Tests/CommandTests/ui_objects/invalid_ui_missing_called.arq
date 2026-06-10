@@ -1,0 +1,10 @@
+program "M19CInvalidMissingCalled"
+
+set title to string "M19C invalid"
+
+define button "PlayButton"
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidMissingCalled"

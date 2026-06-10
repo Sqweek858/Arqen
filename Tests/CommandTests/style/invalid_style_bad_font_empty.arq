@@ -1,0 +1,10 @@
+program "BadStyleFontEmpty"
+
+with style for "Title"
+    font: ""
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleFontEmpty"

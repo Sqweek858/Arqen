@@ -1,0 +1,15 @@
+COMMAND_ID|ui_objects
+CANONICAL|define button called "Name"; set content of "Name" to string "Text"
+CATEGORY|ui
+TOKENS|KEYWORD(define) UI_OBJECT_TYPE KEYWORD(called) STRING NEWLINE
+TOKENS|KEYWORD(set) UI_PROPERTY KEYWORD(of) STRING KEYWORD(to) UI_VALUE NEWLINE
+TOKENS|KEYWORD(add) KEYWORD(string) STRING KEYWORD(to) STRING NEWLINE
+AST_NODE|UiObject;UiProperty
+SEMANTIC|validates UI object definitions, duplicate object names, collisions with existing symbols/windows, target existence, property support per object type, slider numeric ranges, checkbox booleans, dropdown options, duplicate options, and duplicate property assignment
+IR|UI_OBJECT;UI_SET metadata lines
+BACKEND|metadata only; ignored by WindowsX64PE until UI/DX12 consumes UI objects
+SUPPORTED_OBJECTS|shape;text;button;slider;input field;checkbox;dropdown
+SUPPORTED_PROPERTIES|content;range;value;placeholder;checked;option
+VALID_TEST|Tests\CommandTests\ui_objects\valid_ui_objects_basic.arq;Tests\CommandTests\ui_objects\valid_ui_controls_basic.arq;Tests\CommandTests\ui_objects\valid_ui_style_integration.arq;Tests\CommandTests\ui_objects\valid_ui_symbol_content.arq;Tests\CommandTests\ui_objects\valid_ui_dropdown_single.arq
+INVALID_TEST|Tests\CommandTests\ui_objects\invalid_ui_missing_called.arq;Tests\CommandTests\ui_objects\invalid_ui_input_missing_field.arq;Tests\CommandTests\ui_objects\invalid_ui_duplicate_object.arq;Tests\CommandTests\ui_objects\invalid_ui_conflicts_variable.arq;Tests\CommandTests\ui_objects\invalid_ui_unknown_target.arq;Tests\CommandTests\ui_objects\invalid_ui_content_on_slider.arq;Tests\CommandTests\ui_objects\invalid_ui_range_on_button.arq;Tests\CommandTests\ui_objects\invalid_ui_range_text.arq;Tests\CommandTests\ui_objects\invalid_ui_range_reversed.arq;Tests\CommandTests\ui_objects\invalid_ui_checked_text.arq;Tests\CommandTests\ui_objects\invalid_ui_option_to_button.arq;Tests\CommandTests\ui_objects\invalid_ui_duplicate_option.arq;Tests\CommandTests\ui_objects\invalid_ui_duplicate_property.arq;Tests\CommandTests\ui_objects\invalid_ui_value_on_checkbox.arq
+STATUS|m19c_ui_objects_basic

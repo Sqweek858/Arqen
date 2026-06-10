@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 Import-Module (Join-Path $PSScriptRoot "CommandAutomationCommon.psm1") -Force
 
 $root = Get-ArqenRepoRoot
@@ -49,8 +49,8 @@ Add-Result "m19a_no_hidden_frame_simulation" ($runtimeText.Contains('No hidden f
 Add-Result "m19a_event_execution_rule" ($runtimeText.Contains('Event execution rule') -and $runtimeText.Contains('visible ARQIR action')) "events stay capability-visible"
 Add-Result "m19a_window_handoff_rule" ($runtimeText.Contains('Window handoff rule') -and $runtimeText.Contains('window handle')) "window handoff documented"
 Add-Result "m19a_handoff_doc_exists" (Test-Path $handoffDoc) "M19 handoff checklist present"
-Add-Result "m19a_handoff_has_design_and_dx12" ($handoffText.Contains('M19B Style / Design Foundation') -and $handoffText.Contains('M19D DX12 Skeleton')) "next slices are named"
-Add-Result "m19a_dx12_skeleton_entry_criteria" ($dx12Text.Contains('M19D skeleton entry criteria') -and $dx12Text.Contains('clear-color')) "first DX12 skeleton is bounded"
+Add-Result "m19a_handoff_has_design_and_dx12" ($handoffText.Contains('M19B Style / Design Foundation') -and $handoffText.Contains('M19D UI Hierarchy / Layout Foundation') -and $handoffText.Contains('M20A DX12 Skeleton')) "next slices are named"
+Add-Result "m19a_dx12_skeleton_entry_criteria" (($dx12Text.Contains('M20A skeleton entry criteria') -or $dx12Text.Contains('DX12 skeleton entry criteria')) -and $dx12Text.Contains('clear-color')) "first DX12 skeleton is bounded"
 
 foreach ($op in @('dx12', 'shader', 'render_pass', 'frame_update')) {
     Add-Result "m19a_reserved_still_unsupported_$op" ($cap.ContainsKey($op) -and $cap[$op] -eq 'unsupported') "reserved action remains unsupported"

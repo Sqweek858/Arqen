@@ -1,0 +1,15 @@
+program "ValidUiLayoutAnchorOffsets"
+set title to string "M19D UI Layout"
+
+define shape called "Panel"
+with layout for "Panel"
+    anchor: center
+    offset x: 0 px
+    offset y: -12 px
+    margin: 10 px
+    padding: 8 px
+end layout
+
+show message "ui layout anchor offsets"
+blend mix to code 0
+end program "ValidUiLayoutAnchorOffsets"

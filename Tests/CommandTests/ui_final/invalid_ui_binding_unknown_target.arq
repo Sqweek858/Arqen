@@ -1,0 +1,7 @@
+program "InvalidUiBindingUnknownTarget"
+set title to string "M19 UI Final"
+define int called "score" be 1
+link "MissingText" content to "score"
+show string "bad"
+blend mix to code 0
+end program "InvalidUiBindingUnknownTarget"

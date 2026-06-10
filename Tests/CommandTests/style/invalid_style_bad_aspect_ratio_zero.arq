@@ -1,0 +1,12 @@
+program "InvalidStyleBadAspectRatioZero"
+
+set title to string "Invalid"
+
+with style for "Panel"
+    aspect ratio: 0
+end style
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleBadAspectRatioZero"

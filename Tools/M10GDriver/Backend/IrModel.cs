@@ -62,6 +62,54 @@ static partial class Program
                     if (!fields.ContainsKey("target") || !fields.ContainsKey("state") || !fields.ContainsKey("property") || !fields.ContainsKey("kind") || !fields.ContainsKey("value"))
                         throw new CompileError("BACKEND", "B001", 0, 0, "Malformed STYLE metadata in IR.");
                     break;
+                case "STYLE_PRESET":
+                    if (!fields.ContainsKey("name") || !fields.ContainsKey("property") || !fields.ContainsKey("kind") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed STYLE_PRESET metadata in IR.");
+                    break;
+                case "STYLE_APPLY":
+                    if (!fields.ContainsKey("style") || !fields.ContainsKey("target") || !fields.ContainsKey("state"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed STYLE_APPLY metadata in IR.");
+                    break;
+                case "UI_OBJECT":
+                    if (!fields.ContainsKey("type") || !fields.ContainsKey("name"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_OBJECT metadata in IR.");
+                    break;
+                case "UI_SET":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("property") || !fields.ContainsKey("kind") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_SET metadata in IR.");
+                    break;
+                case "UI_LAYOUT":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("property") || !fields.ContainsKey("kind") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_LAYOUT metadata in IR.");
+                    break;
+                case "UI_PARENT":
+                    if (!fields.ContainsKey("child") || !fields.ContainsKey("parent"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_PARENT metadata in IR.");
+                    break;
+                case "UI_DOCK":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("side") || !fields.ContainsKey("parent"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_DOCK metadata in IR.");
+                    break;
+                case "UI_EVENT":
+                    if (!fields.ContainsKey("event") || !fields.ContainsKey("target") || !fields.ContainsKey("target_kind") || !fields.ContainsKey("body_lines"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_EVENT metadata in IR.");
+                    break;
+                case "UI_BIND":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("property") || !fields.ContainsKey("source") || !fields.ContainsKey("source_type"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_BIND metadata in IR.");
+                    break;
+                case "UI_STATE":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("property") || !fields.ContainsKey("kind") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_STATE metadata in IR.");
+                    break;
+                case "UI_RESOURCE":
+                    if (!fields.ContainsKey("type") || !fields.ContainsKey("name") || !fields.ContainsKey("path"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_RESOURCE metadata in IR.");
+                    break;
+                case "UI_RESOURCE_USE":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("property") || !fields.ContainsKey("resource") || !fields.ContainsKey("resource_type"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_RESOURCE_USE metadata in IR.");
+                    break;
                 case "CONST":
                     if (!fields.TryGetValue("id", out var id) || string.IsNullOrWhiteSpace(id) ||
                         !fields.TryGetValue("type", out var type) || string.IsNullOrWhiteSpace(type) ||

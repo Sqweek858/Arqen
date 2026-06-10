@@ -1,0 +1,7 @@
+program "InvalidUiResourceUnknown"
+set title to string "M19 UI Final"
+define button called "PlayButton"
+set texture of "PlayButton" to "MissingTexture"
+show string "bad"
+blend mix to code 0
+end program "InvalidUiResourceUnknown"

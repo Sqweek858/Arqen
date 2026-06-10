@@ -1,0 +1,12 @@
+program "InvalidStyleBadOverflow"
+
+set title to string "Invalid"
+
+with style for "Panel"
+    overflow: sideways
+end style
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleBadOverflow"

@@ -1,0 +1,14 @@
+program "ValidUiStateContract"
+set title to string "M19 UI Final"
+
+define button called "PlayButton"
+define shape called "Panel"
+
+set enabled of "PlayButton" to false
+set selected of "PlayButton" to true
+set visibility of "Panel" to hidden
+set state of "PlayButton" to disabled
+
+show string "ui state contract"
+blend mix to code 0
+end program "ValidUiStateContract"

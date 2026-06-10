@@ -1,0 +1,14 @@
+program "ValidUiLayoutGrid"
+set title to string "M19D UI Layout"
+
+define shape called "Inventory"
+with layout for "Inventory"
+    mode: grid
+    columns: 5
+    rows: auto
+    gap: 10 px
+end layout
+
+show message "ui layout grid"
+blend mix to code 0
+end program "ValidUiLayoutGrid"

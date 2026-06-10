@@ -17,9 +17,53 @@ M19B can emit style metadata lines before constants/actions:
 
 ```text
 STYLE|target=<ui-object>|state=<default-or-state>|property=<style-property>|kind=<value-kind>|value=<escaped-value>|unit=<optional-unit>
+STYLE_PRESET|name=<style-preset>|property=<style-property>|kind=<value-kind>|value=<escaped-value>|unit=<optional-unit>
+STYLE_APPLY|style=<style-preset>|target=<ui-object>|state=<default-or-state>
 ```
 
-`STYLE` lines are metadata, not executable backend actions. The WindowsX64PE backend must parse and preserve the strict IR boundary by accepting well-formed style metadata while ignoring it for current executable generation. Rendering these styles belongs to later UI/DX12 milestones.
+`STYLE`, `STYLE_PRESET`, and `STYLE_APPLY` lines are metadata, not executable backend actions. The WindowsX64PE backend must parse and preserve the strict IR boundary by accepting well-formed style metadata while ignoring it for current executable generation. Rendering these styles belongs to later UI/DX12 milestones.
+
+M19B value kinds include `enum`, `bool`, `number`, `dimension`, `duration`, `angle`, `integer`, `string`, `font_weight`, `named_color`, `color`, and `vec4`. Units are intentionally explicit (`px`, `ms`, `sec`, `deg`, `rad`) so later UI/DX12 work does not inherit implicit layout guesses.
+
+
+## UI object metadata
+
+M19C can emit UI object metadata lines before constants/actions:
+
+```text
+UI_OBJECT|type=<shape/text/button/slider/input field/checkbox/dropdown>|name=<ui-object>
+UI_SET|target=<ui-object>|property=<content/range/value/placeholder/checked/option>|kind=<value-kind>|value=<escaped-value>
+```
+
+`UI_OBJECT` and `UI_SET` lines are metadata, not executable backend actions. They define the UI object graph inputs that later layout, events, and renderer milestones may consume. The WindowsX64PE backend accepts well-formed UI metadata while ignoring it for current executable generation.
+
+M19C value kinds include `text`, `number`, `range`, and `bool`. Dropdown entries are represented as `UI_SET` with `property=option`.
+
+## UI hierarchy/layout metadata
+
+M19D can emit UI hierarchy and layout metadata lines before constants/actions:
+
+```text
+UI_PARENT|child=<ui-object>|parent=<ui-object-or-window>
+UI_DOCK|target=<ui-object>|side=<top/right/bottom/left/fill/center>|parent=<ui-object-or-window>
+UI_LAYOUT|target=<ui-object>|property=<layout-property>|kind=<value-kind>|value=<escaped-value>|unit=<optional-unit>
+```
+
+`UI_PARENT`, `UI_DOCK`, and `UI_LAYOUT` lines are metadata, not executable backend actions. They describe UI graph relationships and layout intent for later layout/hit-test/render milestones. The WindowsX64PE backend accepts well-formed metadata while ignoring it for current executable generation.
+
+### UI final metadata (M19E/F/G/H)
+
+```text
+UI_EVENT|event=<clicked/hovered/pressed/released/focused/unfocused/changed/value changed/text changed/dragged/dropped/loaded/resized>|target=<ui-object-or-window>|target_kind=<ui/window>|body_lines=<count>
+UI_BIND|target=<ui-object>|property=<content/width/height/visibility/visible/enabled/checked/selected/value/color/background color/foreground color/border color/opacity>|source=<symbol>|source_type=<symbol-type>
+UI_STATE|target=<ui-object>|property=<enabled/visible/selected/focused/hovered/pressed/loading/visibility/state>|kind=<bool/state>|value=<value>
+UI_RESOURCE|type=<texture/font/sound>|name=<resource>|path=<file-path>
+UI_RESOURCE_USE|target=<ui-object>|property=<texture/font/sound>|resource=<resource>|resource_type=<texture/font/sound>
+```
+
+`UI_EVENT`, `UI_BIND`, `UI_STATE`, `UI_RESOURCE`, and `UI_RESOURCE_USE` are metadata-only lines. They complete the UI language-side contract for events, data binding, state, and resource references. They do not perform input dispatch, file loading, font loading, audio playback, hit testing, layout solving, or rendering.
+
+M19D layout value kinds include `dimension`, `enum`, and `track`. Dimension units are currently explicit `px`; grid tracks may use positive integers or `auto`.
 
 ## Constants
 
@@ -65,7 +109,7 @@ M18I makes ARQIR v0 strict enough for pre-DX12 work:
 
 - `ARQIR`, `TARGET`, `ENTRY`, and `END` are required.
 - `ARQIR`, `TARGET`, and `ENTRY` may appear only once.
-- Unknown top-level line kinds are invalid; currently recognized top-level metadata includes `META`, `SYMBOL`, and `STYLE`.
+- Unknown top-level line kinds are invalid; currently recognized top-level metadata includes `META`, `SYMBOL`, `STYLE`, `STYLE_PRESET`, `STYLE_APPLY`, `UI_OBJECT`, `UI_SET`, `UI_PARENT`, `UI_DOCK`, `UI_LAYOUT`, `UI_EVENT`, `UI_BIND`, `UI_STATE`, `UI_RESOURCE`, and `UI_RESOURCE_USE`.
 - Duplicate `CONST` ids are invalid.
 - Duplicate `ACTION` ids are invalid.
 - Every `ACTION` must include both `id` and `op`.

@@ -110,7 +110,10 @@ $requiredTools = @(
     "Tools/validate_parser_statement_map.ps1",
     "Tools/validate_test_slice.ps1",
     "Tools/validate_m19a_runtime_loop_contract.ps1",
-    "Tools/validate_m19b_style_contract.ps1"
+    "Tools/validate_m19b_style_contract.ps1",
+    "Tools/validate_m19c_ui_contract.ps1",
+    "Tools/validate_m19d_ui_layout_contract.ps1",
+    "Tools/validate_m19efgh_ui_final_contract.ps1"
 )
 
 foreach ($tool in $requiredTools) {

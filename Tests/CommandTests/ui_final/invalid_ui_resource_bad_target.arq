@@ -1,0 +1,8 @@
+program "InvalidUiResourceBadTarget"
+set title to string "M19 UI Final"
+define sound called "ClickSound" from file "audio/click.wav"
+define text called "Title"
+set sound of "Title" to "ClickSound"
+show string "bad"
+blend mix to code 0
+end program "InvalidUiResourceBadTarget"

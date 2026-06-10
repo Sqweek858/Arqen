@@ -1,0 +1,10 @@
+program "BadStyleFontWeight"
+
+with style for "Title"
+    font weight: gigantic
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleFontWeight"

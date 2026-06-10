@@ -320,7 +320,7 @@ function Add-SourceDiagnostics {
         return
     }
 
-    $knownStarts = @("program", "end", "let", "define", "rename", "title", "message", "show", "print", "set", "write", "load", "add", "remove", "multiply", "divide", "while", "call", "exit", "blend", "if", "else", "run", "when", "close", "with", "style", "type", "color", "background", "foreground", "border", "corner", "padding", "margin", "opacity", "visibility", "clip", "font", "size")
+    $knownStarts = @("program", "end", "let", "define", "rename", "title", "message", "show", "print", "set", "write", "load", "add", "remove", "multiply", "divide", "while", "call", "exit", "blend", "if", "else", "run", "when", "close", "with", "style", "shape", "button", "slider", "input", "field", "checkbox", "dropdown", "content", "range", "value", "placeholder", "type", "display", "color", "background", "foreground", "accent", "border", "outline", "corner", "padding", "margin", "opacity", "visibility", "clip", "font", "size", "text", "vertical", "line", "letter", "wrap", "shadow", "cursor", "transition", "animation", "blend", "z", "min", "max", "preferred", "width", "height", "aspect", "overflow", "pointer", "interactable", "scale", "rotation", "translate", "pivot", "use", "parent", "dock", "layout", "x", "y", "anchor", "offset", "mode", "direction", "gap", "columns", "rows", "top", "right", "bottom", "left", "center", "fill", "link", "enabled", "visible", "selected", "texture", "font", "sound")
     $lines = Get-Content $inputPath
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $lineNo = $i + 1

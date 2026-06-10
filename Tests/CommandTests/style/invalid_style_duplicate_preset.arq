@@ -1,0 +1,16 @@
+program "InvalidStyleDuplicatePreset"
+
+set title to string "Invalid"
+
+define style called "Primary"
+    color: white
+end style
+
+define style called "Primary"
+    color: black
+end style
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleDuplicatePreset"

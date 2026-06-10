@@ -169,6 +169,7 @@ $coreStarts = @(
     "when",
     "close",
     "with",
+    "use",
     "style",
     "blend"
 )

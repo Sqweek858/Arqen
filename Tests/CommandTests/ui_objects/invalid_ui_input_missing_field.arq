@@ -1,0 +1,10 @@
+program "M19CInvalidInputMissingField"
+
+set title to string "M19C invalid"
+
+define input called "NameInput"
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidInputMissingField"

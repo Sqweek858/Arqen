@@ -1,0 +1,11 @@
+program "InvalidUiEventNested"
+set title to string "M19 UI Final"
+define button called "PlayButton"
+when clicked "PlayButton"
+    when hovered "PlayButton"
+        print string "Nested"
+    end when
+end when
+show string "bad"
+blend mix to code 0
+end program "InvalidUiEventNested"
