@@ -1,0 +1,10 @@
+program "InvalidDx12WindowStyleUnknownTarget"
+set title to string "dx12 window style unknown target"
+
+with style for "MissingWindow"
+    title bar color: color "#000000"
+end style
+
+show message "dx12 window style unknown target"
+blend mix to code 0
+end program "InvalidDx12WindowStyleUnknownTarget"

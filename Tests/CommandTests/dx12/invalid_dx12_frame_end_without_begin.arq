@@ -1,0 +1,16 @@
+program "InvalidDx12FrameEndWithoutBegin"
+set title to string "M20G DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+end frame of "MainRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12FrameEndWithoutBegin"

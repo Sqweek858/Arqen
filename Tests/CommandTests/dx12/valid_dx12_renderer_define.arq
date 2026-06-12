@@ -1,0 +1,8 @@
+program "ValidDx12RendererDefine"
+set title to string "M20B DX12"
+
+define dx12 renderer called "MainRenderer"
+
+show message "dx12 renderer define"
+blend mix to code 0
+end program "ValidDx12RendererDefine"

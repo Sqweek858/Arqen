@@ -1,0 +1,9 @@
+program "InvalidDx12BoxDuplicateObject"
+set title to string "dx12 box duplicate object"
+
+define object called "CubeA"
+define box called "CubeA"
+
+show message "dx12 box duplicate object"
+blend mix to code 0
+end program "InvalidDx12BoxDuplicateObject"

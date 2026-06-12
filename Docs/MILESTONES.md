@@ -1032,3 +1032,66 @@ Known limitations:
 - ARQIR v0 supports only `show_message` and `exit`
 - backend supports only exit code `0`
 - no if/else, blend mix implementation, functions, loops, UI/window/style, or new operators were added
+
+## M22 - DX12 Mini Scene
+
+M22A-M22I turns the M21 animated triangle into a generated crystal mini scene: bible/docs, deterministic crystal sample generator, larger vertex-buffer samples, M22I wrapper, keep-open runtime mode, Escape/Q close handling, manifest/config markers, validation, and the official `dx12_crystal_scene_m22i.arq` demo.
+
+## M23 - DX12 Real Scene Objects and Multi-Draw
+
+- M23A: documents the public object syntax: `define object called "CrystalA"`.
+- M23B: emits real object metadata: `DX12_OBJECT`, `DX12_OBJECT_BIND`, `DX12_DRAW_OBJECT`.
+- M23C: lowers multiple object draw calls into native draw-call tables and runtime `DrawInstanced` loops.
+
+## M24/M25/M26 - DX12 Runtime Scene Controls
+
+- M24 adds per-object transform metadata and runtime vertex-buffer transform application.
+- M25 adds orthographic camera metadata and runtime camera application.
+- M26 adds keyboard input runtime bindings for camera movement/reset and animation toggle.
+- Official sample: `Samples\DX12\dx12_interactive_camera_scene_m26c.arq`.
+
+## M27 - DX12 Perspective Camera + Depth Buffer
+
+M27A defines the real 3D/depth/perspective camera contract and documents the public syntax. M27B adds native DX12 depth buffer support through a DSV heap, D32_FLOAT depth resource, depth-stencil state, and per-frame depth clear. M27C lowers perspective camera metadata into generated config/manifest markers and provides the official perspective/depth runtime sample.
+
+Public syntax added:
+
+```arq
+set camera "MainCamera" projection to perspective
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+```
+
+Validation:
+
+```powershell
+.\Tools\run_test_slice.ps1 -BuildDriver -Folder dx12 -StopOnFail
+.\Tools\validate_m27_dx12_perspective_depth.ps1
+.\Tools\build_m27c_dx12_perspective_depth_scene.ps1 -BuildNative -RunNative -KeepOpen
+```
+
+Boundary: no scene graph, no UI DX12, no mouse input, no materials/textures, no lighting, no mesh import, and no M27D/E in this milestone.
+
+
+## M27D/M28A - Native Window Style + Box Primitive
+
+- M27D adds a tiny native window style bridge through existing Arqen style blocks: `title bar color` and `title text color` for defined windows.
+- M28A adds `define box called "CubeA"` as the first generated 3D primitive/object contract.
+- Box primitives lower to generated 36-vertex position/color geometry and reuse the existing renderer/pipeline/object/draw/depth/perspective path.
+- Official sample: `Samples\DX12\dx12_window_style_box_scene_m28a.arq`.
+
+Validation:
+
+```powershell
+.\Tools\run_test_slice.ps1 -BuildDriver -Folder dx12 -StopOnFail
+.\Tools\validate_m27d_m28a_dx12_window_style_box.ps1
+.\Tools\build_m28a_dx12_window_style_box_scene.ps1 -BuildNative -RunNative -KeepOpen
+```
+
+Boundary: no custom title bar, no DX12 UI, no scene graph, no lighting, no materials/textures, no mesh import, and no M28B/C in this milestone.
+
+## M28B - DX12 full peripheral input
+
+M28B adds mouse capture, mouse look, mouse buttons, mouse wheel, and Q/E vertical camera movement for the DX12 perspective scene path. It keeps the scope deliberately small: no key remapping, controller input, collision, physics, UI widgets, mouse picking, lighting, scene graph, or mesh import.

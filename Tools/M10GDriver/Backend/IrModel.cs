@@ -110,6 +110,130 @@ static partial class Program
                     if (!fields.ContainsKey("target") || !fields.ContainsKey("property") || !fields.ContainsKey("resource") || !fields.ContainsKey("resource_type"))
                         throw new CompileError("BACKEND", "B001", 0, 0, "Malformed UI_RESOURCE_USE metadata in IR.");
                     break;
+                case "DX12_RENDERER":
+                    if (!fields.ContainsKey("name"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_RENDERER metadata in IR.");
+                    break;
+                case "DX12_PARENT":
+                    if (!fields.ContainsKey("renderer") || !fields.ContainsKey("window"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_PARENT metadata in IR.");
+                    break;
+                case "DX12_CLEAR_STYLE":
+                    if (!fields.ContainsKey("renderer") || !fields.ContainsKey("state") || !fields.ContainsKey("kind") || !fields.ContainsKey("value") || !fields.ContainsKey("source"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CLEAR_STYLE metadata in IR.");
+                    break;
+                case "DX12_CLEAR_READY":
+                    if (!fields.ContainsKey("renderer") || !fields.ContainsKey("window") || !fields.ContainsKey("kind") || !fields.ContainsKey("value") || !fields.ContainsKey("source"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CLEAR_READY metadata in IR.");
+                    break;
+                case "DX12_FRAME":
+                    if (!fields.ContainsKey("command") || !fields.ContainsKey("renderer"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_FRAME metadata in IR.");
+                    break;
+                case "DX12_SHADER":
+                    if (!fields.ContainsKey("name") || !fields.ContainsKey("vertex") || !fields.ContainsKey("pixel"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_SHADER metadata in IR.");
+                    break;
+                case "DX12_PIPELINE":
+                    if (!fields.ContainsKey("name") || !fields.ContainsKey("renderer") || !fields.ContainsKey("shader") || !fields.ContainsKey("topology"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_PIPELINE metadata in IR.");
+                    break;
+                case "DX12_PIPELINE_BIND":
+                    if (!fields.ContainsKey("pipeline") || !fields.ContainsKey("renderer"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_PIPELINE_BIND metadata in IR.");
+                    break;
+                case "DX12_VERTEX_BUFFER":
+                    if (!fields.ContainsKey("name"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_VERTEX_BUFFER metadata in IR.");
+                    break;
+                case "DX12_VERTEX":
+                    if (!fields.ContainsKey("buffer") || !fields.ContainsKey("index") || !fields.ContainsKey("position") || !fields.ContainsKey("color"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_VERTEX metadata in IR.");
+                    break;
+                case "DX12_VERTEX_BUFFER_BIND":
+                    if (!fields.ContainsKey("buffer") || !fields.ContainsKey("renderer"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_VERTEX_BUFFER_BIND metadata in IR.");
+                    break;
+                case "DX12_DRAW":
+                    if (!fields.ContainsKey("renderer") || !fields.ContainsKey("vertices") || !fields.ContainsKey("buffer") || !fields.ContainsKey("pipeline"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_DRAW metadata in IR.");
+                    break;
+                case "DX12_OBJECT":
+                    if (!fields.ContainsKey("name"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_OBJECT metadata in IR.");
+                    break;
+                case "DX12_OBJECT_BIND":
+                    if (!fields.ContainsKey("object") || !fields.ContainsKey("renderer") || !fields.ContainsKey("pipeline") || !fields.ContainsKey("buffer") || !fields.ContainsKey("vertices"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_OBJECT_BIND metadata in IR.");
+                    break;
+                case "DX12_DRAW_OBJECT":
+                    if (!fields.ContainsKey("object") || !fields.ContainsKey("renderer") || !fields.ContainsKey("vertices") || !fields.ContainsKey("buffer") || !fields.ContainsKey("pipeline"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_DRAW_OBJECT metadata in IR.");
+                    break;
+                case "DX12_OBJECT_TRANSFORM":
+                    if (!fields.ContainsKey("object") || !fields.ContainsKey("property") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_OBJECT_TRANSFORM metadata in IR.");
+                    break;
+                case "DX12_OBJECT_PRIMITIVE":
+                    if (!fields.ContainsKey("object") || !fields.ContainsKey("kind"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_OBJECT_PRIMITIVE metadata in IR.");
+                    break;
+                case "DX12_CAMERA":
+                    if (!fields.ContainsKey("name"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CAMERA metadata in IR.");
+                    break;
+                case "DX12_CAMERA_USE":
+                    if (!fields.ContainsKey("camera") || !fields.ContainsKey("renderer"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CAMERA_USE metadata in IR.");
+                    break;
+                case "DX12_CAMERA_PROJECTION":
+                    if (!fields.ContainsKey("camera") || !fields.ContainsKey("projection"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CAMERA_PROJECTION metadata in IR.");
+                    break;
+                case "DX12_CAMERA_TRANSFORM":
+                    if (!fields.ContainsKey("camera") || !fields.ContainsKey("property") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CAMERA_TRANSFORM metadata in IR.");
+                    break;
+                case "DX12_KEY_BINDING":
+                    if (!fields.ContainsKey("key") || !fields.ContainsKey("action") || !fields.ContainsKey("target") || !fields.ContainsKey("delta"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_KEY_BINDING metadata in IR.");
+                    break;
+                case "DX12_MOUSE_CAPTURE":
+                    if (!fields.ContainsKey("window"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_MOUSE_CAPTURE metadata in IR.");
+                    break;
+                case "DX12_MOUSE_MOVE":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("sensitivity"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_MOUSE_MOVE metadata in IR.");
+                    break;
+                case "DX12_MOUSE_BUTTON":
+                    if (!fields.ContainsKey("button") || !fields.ContainsKey("action") || !fields.ContainsKey("target") || !fields.ContainsKey("delta"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_MOUSE_BUTTON metadata in IR.");
+                    break;
+                case "DX12_MOUSE_WHEEL":
+                    if (!fields.ContainsKey("action") || !fields.ContainsKey("target") || !fields.ContainsKey("delta"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_MOUSE_WHEEL metadata in IR.");
+                    break;
+                case "DX12_CONSTANT_BUFFER":
+                    if (!fields.ContainsKey("name") || !fields.ContainsKey("field") || !fields.ContainsKey("type") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CONSTANT_BUFFER metadata in IR.");
+                    break;
+                case "DX12_CONSTANT_BUFFER_BIND":
+                    if (!fields.ContainsKey("buffer") || !fields.ContainsKey("pipeline"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CONSTANT_BUFFER_BIND metadata in IR.");
+                    break;
+                case "DX12_COLOR_SEQUENCE":
+                    if (!fields.ContainsKey("name"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_COLOR_SEQUENCE metadata in IR.");
+                    break;
+                case "DX12_COLOR_KEY":
+                    if (!fields.ContainsKey("sequence") || !fields.ContainsKey("index") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_COLOR_KEY metadata in IR.");
+                    break;
+                case "DX12_ANIMATE_COLOR":
+                    if (!fields.ContainsKey("target") || !fields.ContainsKey("buffer") || !fields.ContainsKey("field") || !fields.ContainsKey("sequence") || !fields.ContainsKey("every_frames"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_ANIMATE_COLOR metadata in IR.");
+                    break;
                 case "CONST":
                     if (!fields.TryGetValue("id", out var id) || string.IsNullOrWhiteSpace(id) ||
                         !fields.TryGetValue("type", out var type) || string.IsNullOrWhiteSpace(type) ||

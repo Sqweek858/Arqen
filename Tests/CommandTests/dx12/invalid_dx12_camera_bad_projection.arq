@@ -1,0 +1,13 @@
+program "InvalidDx12CameraBadProjection"
+set title to string "dx12 bad camera projection"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+define camera called "MainCamera"
+set camera "MainCamera" projection to fisheye
+
+show message "should not compile"
+blend mix to code 0
+end program "InvalidDx12CameraBadProjection"

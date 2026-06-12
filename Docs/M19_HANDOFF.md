@@ -38,9 +38,11 @@ This checklist keeps the next stage split into safe slices instead of turning DX
 ## M20A DX12 Skeleton / Clear Color Window
 
 - First real rendering goal: one existing window cleared to a color.
+- M20A starts with native DX12 bridge source and explicit HWND handoff, not public Arqen grammar.
 - No shader language surface until device/swapchain/command list diagnostics are stable.
 - No delta time until the runtime loop can provide measured frame values.
 - Capability table stays the gate. No fake supported flags.
+- Current M20 planning lives in `Docs/M20_HANDOFF.md`.
 
 ## M19E/F/G/H UI Final Foundation
 

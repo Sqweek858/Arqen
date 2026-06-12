@@ -1,0 +1,130 @@
+COMMAND_ID|dx12
+CANONICAL|define dx12 renderer called "Name"; parent renderer "Renderer" to window "Window"
+CATEGORY|dx12
+TOKENS|define dx12 renderer called STRING NEWLINE
+TOKENS|parent renderer STRING to window STRING NEWLINE
+STYLE_RULE|renderer clear/background color comes from existing with style / style preset metadata, especially background color; no separate set clear color command is public in M20B
+AST_NODE|Dx12Renderer;Dx12RendererParent
+SEMANTIC|validates non-empty unique renderer names, conflicts with existing windows/UI objects, known renderer before parent, known window before parent, duplicate parent relationship, and metadata-only boundary
+IR|DX12_RENDERER;DX12_PARENT metadata lines
+BACKEND|metadata only in M20B; ignored by WindowsX64PE until a later DX12 backend slice consumes renderer metadata and style-derived clear color
+CAPABILITY|dx12/shader/render_pass/frame_update remain unsupported in M20B
+VALID_TEST|Tests\CommandTests\dx12\valid_dx12_renderer_define.arq;Tests\CommandTests\dx12\valid_dx12_renderer_parent_window.arq;Tests\CommandTests\dx12\valid_dx12_renderer_with_style_background.arq
+INVALID_TEST|Tests\CommandTests\dx12\invalid_dx12_renderer_empty_name.arq;Tests\CommandTests\dx12\invalid_dx12_renderer_duplicate.arq;Tests\CommandTests\dx12\invalid_dx12_parent_unknown_renderer.arq;Tests\CommandTests\dx12\invalid_dx12_parent_unknown_window.arq;Tests\CommandTests\dx12\invalid_dx12_parent_duplicate.arq;Tests\CommandTests\dx12\invalid_dx12_parent_missing_renderer_word.arq
+STATUS|m20b_dx12_renderer_metadata_syntax
+M20C_STYLE_BRIDGE|with style for "Renderer" background color emits DX12_CLEAR_STYLE metadata when the target is a DX12 renderer
+M20C_STYLE_BRIDGE|use style "Preset" for "Renderer" emits DX12_CLEAR_STYLE metadata when the preset contains background color and the target is a DX12 renderer
+M20C_STYLE_RULE|DX12 renderer styles support default-state background color only; unsupported renderer style properties fail semantic validation
+AST_NODE|Dx12RendererClearStyle
+IR|DX12_CLEAR_STYLE metadata line
+VALID_TEST|Tests\CommandTests\dx12\valid_dx12_renderer_style_preset_background.arq;Tests\CommandTests\dx12\valid_dx12_renderer_named_background.arq;Tests\CommandTests\dx12\valid_dx12_renderer_multiple_clear_styles.arq
+INVALID_TEST|Tests\CommandTests\dx12\invalid_dx12_renderer_style_state.arq;Tests\CommandTests\dx12\invalid_dx12_renderer_style_unsupported_property.arq;Tests\CommandTests\dx12\invalid_dx12_renderer_style_preset_unsupported_property.arq;Tests\CommandTests\dx12\invalid_dx12_renderer_style_duplicate_clear_sources.arq;Tests\CommandTests\dx12\invalid_dx12_renderer_style_preset_state.arq
+STATUS|m20c_dx12_style_bridge_metadata
+M20D_SEMANTIC_RULE|DX12 renderer names conflict with variables, windows, and UI objects; variables/windows may not reuse renderer names after definition
+M20D_SEMANTIC_RULE|parent renderer requires a known renderer and known window; a UI object name in the window slot is not a window
+M20D_TEST_RULE|semantic hardening adds conflict and parenting negative cases beyond parser syntax cases
+M20E0_READY_GATE|DX12_CLEAR_READY is derived when DX12_RENDERER, DX12_PARENT, and DX12_CLEAR_STYLE exist for the same renderer
+M20E0_READY_GATE|DX12_CLEAR_READY is metadata-only and not a runtime ACTION
+AST_NODE|Dx12RendererClearReady
+IR|DX12_CLEAR_READY metadata line
+VALID_TEST|Tests\CommandTests\dx12\valid_dx12_clear_ready_direct_style.arq;Tests\CommandTests\dx12\valid_dx12_clear_ready_preset_style.arq;Tests\CommandTests\dx12\valid_dx12_style_without_parent_metadata_only.arq;Tests\CommandTests\dx12\valid_dx12_mixed_ready_and_metadata_renderers.arq
+INVALID_TEST|Tests\CommandTests\dx12\invalid_dx12_renderer_conflicts_variable_before.arq;Tests\CommandTests\dx12\invalid_dx12_variable_conflicts_renderer_after.arq;Tests\CommandTests\dx12\invalid_dx12_renderer_conflicts_ui_object_before.arq;Tests\CommandTests\dx12\invalid_dx12_renderer_conflicts_window_before.arq;Tests\CommandTests\dx12\invalid_dx12_window_conflicts_renderer_after.arq;Tests\CommandTests\dx12\invalid_dx12_parent_to_button_instead_of_window.arq;Tests\CommandTests\dx12\invalid_dx12_clear_style_duplicate_direct_blocks.arq;Tests\CommandTests\dx12\invalid_dx12_clear_style_preset_then_direct.arq
+STATUS|m20d_m20e0_dx12_semantic_hardening_and_clear_readiness
+
+
+M20E1_LOWERING|DX12_CLEAR_READY is consumed by Tools\lower_m20e1_dx12_clear_from_ir.ps1 to generate Build\M20E1\dx12_clear_manifest.generated.txt and Build\M20E1\dx12_clear_config.generated.h
+M20E1_LOWERING|lowering requires one selected DX12_CLEAR_READY record, a matching DX12_PARENT record, a matching DX12_RENDERER record, and a window_create ACTION for the target window
+M20E1_LOWERING|window_set_title and window_set_resolution are optional inputs carried into generated config when present
+M20E1_LOWERING|lowering is explicit/offline and does not emit a public ARQIR ACTION or promote dx12 support
+STATUS|m20e1_dx12_experimental_clear_lowering
+M20F_SMOKE|Tools\build_m20f_dx12_clear_smoke.ps1 compiles Samples\DX12\dx12_clear_smoke_m20f.arq, validates DX12_CLEAR_READY, and lowers to Build\M20F manifest/config without requiring native DX12 runtime by default
+M20F_SMOKE|native build/run is optional behind -BuildNative and -Run
+STATUS|m20f_dx12_clear_smoke_path
+M20G_FRAME_SYNTAX|begin frame of "Renderer"; clear renderer "Renderer"; end frame of "Renderer"; present frame of "Renderer"
+M20G_FRAME_RULE|frame commands are metadata-only and require known renderer, parented window, active frame order, and style-derived clear color before clear renderer
+AST_NODE|Dx12FrameCommand
+IR|DX12_FRAME metadata line
+VALID_TEST|Tests\CommandTests\dx12\valid_dx12_frame_clear_sequence.arq;Tests\CommandTests\dx12\valid_dx12_frame_preset_style_sequence.arq;Tests\CommandTests\dx12\valid_dx12_frame_two_renderers_one_presented.arq;Tests\CommandTests\dx12\valid_dx12_frame_metadata_only_no_run.arq
+INVALID_TEST|Tests\CommandTests\dx12\invalid_dx12_frame_begin_unknown_renderer.arq;Tests\CommandTests\dx12\invalid_dx12_frame_begin_unparented_renderer.arq;Tests\CommandTests\dx12\invalid_dx12_frame_begin_twice.arq;Tests\CommandTests\dx12\invalid_dx12_frame_clear_outside_begin.arq;Tests\CommandTests\dx12\invalid_dx12_frame_clear_without_style.arq;Tests\CommandTests\dx12\invalid_dx12_frame_end_without_begin.arq;Tests\CommandTests\dx12\invalid_dx12_frame_end_without_clear.arq;Tests\CommandTests\dx12\invalid_dx12_frame_present_without_end.arq;Tests\CommandTests\dx12\invalid_dx12_frame_present_twice.arq
+STATUS|m20g_dx12_frame_metadata_syntax
+M20H_FRAME_LOWERING|Tools\lower_m20e1_dx12_clear_from_ir.ps1 supports -RequireFrame and validates DX12_FRAME begin,clear,end,present for the selected renderer
+M20H_FRAME_LOWERING|generated manifest records FRAME_MODE and FRAME_SEQUENCE when frame metadata is present or required
+M20H_FRAME_RULE|frame-aware lowering rejects missing begin, missing clear, missing end, missing present, wrong order, unknown frame renderer, duplicate sequence, and selected renderer without frame sequence
+STATUS|m20h_dx12_frame_aware_lowering
+M20I_NATIVE_SMOKE|Tools\build_m20i_dx12_frame_clear_smoke.ps1 compiles Samples\DX12\dx12_frame_clear_smoke_m20h.arq and lowers it with -RequireFrame to Build\M20I
+M20I_NATIVE_SMOKE|native build/run remains optional behind -BuildNative and -Run; regression validates compile/lower only
+STATUS|m20i_dx12_native_smoke_polish
+
+M21A_SHADER_PIPELINE_BIBLE|Docs\M21_SHADER_PIPELINE_MINI_BIBLE.md defines file-based shader, dx12 pipeline, and pipeline bind syntax
+M21B_SHADER_SYNTAX|define shader called "TriangleShader"; vertex source file "Shaders/triangle_vs.hlsl"; pixel source file "Shaders/triangle_ps.hlsl"; end shader
+M21B_PIPELINE_SYNTAX|define dx12 pipeline called "TrianglePipeline"; renderer: "MainRenderer"; shader: "TriangleShader"; topology: triangle list; end pipeline
+M21B_PIPELINE_BIND_SYNTAX|use pipeline "TrianglePipeline" for renderer "MainRenderer"
+AST_NODE|Dx12Shader;Dx12Pipeline;Dx12PipelineBind
+IR|DX12_SHADER;DX12_PIPELINE;DX12_PIPELINE_BIND metadata lines
+SEMANTIC|validates shader uniqueness, source presence, pipeline renderer/shader existence, parented renderer, topology, and one binding per renderer
+CAPABILITY|dx12/shader/render_pass/frame_update remain unsupported in M21B
+STATUS|m21b_dx12_shader_pipeline_metadata
+M21C_VERTEX_BUFFER_SYNTAX|define vertex buffer called "TriangleVertices"; vertex position [-0.5,-0.5,0] color [1,0,0,1]; end vertex buffer
+M21C_VERTEX_BUFFER_BIND_SYNTAX|use vertex buffer "TriangleVertices" for renderer "MainRenderer"
+M21C_DRAW_SYNTAX|draw 3 vertices with renderer "MainRenderer"
+M21C_METADATA|DX12_VERTEX_BUFFER, DX12_VERTEX, DX12_VERTEX_BUFFER_BIND, DX12_DRAW
+M21D_TRIANGLE_LOWERING|-RequireTriangle consumes shader/pipeline/vertex/draw/frame metadata and generates triangle smoke config
+M21D_NATIVE_SMOKE|optional native triangle smoke compiles HLSL, creates PSO, uploads generated vertex data, and calls DrawInstanced
+M21G_CONSTANT_BUFFER_SYNTAX|define constant buffer called "TriangleParams"; color tint: color "#38FFC0"; end constant buffer
+M21G_CONSTANT_BUFFER_BIND_SYNTAX|use constant buffer "TriangleParams" for pipeline "TrianglePipeline"
+M21G_METADATA|DX12_CONSTANT_BUFFER, DX12_CONSTANT_BUFFER_BIND
+M21H_COLOR_SEQUENCE_SYNTAX|define color sequence called "TriangleColors"; color "#FF4040"; end color sequence
+M21H_ANIMATE_COLOR_SYNTAX|animate color "TriangleParams.tint"; using sequence "TriangleColors"; every 12 frames; end animate
+M21H_METADATA|DX12_COLOR_SEQUENCE, DX12_COLOR_KEY, DX12_ANIMATE_COLOR
+M21H_NATIVE_SMOKE|optional native triangle smoke updates tint constant buffer from generated color sequence by frame number
+
+M21I_SMOKE_POLISH|build_m21i_dx12_color_animation_smoke_polish.ps1 wraps the animated triangle sample with explicit Frames/Fps/Hold/OutDir/RunNative knobs and generated runtime markers.
+M21J_HARDENING|animate color requires a known ConstantBuffer.tint target, a known sequence, positive every-frames interval, a single animation per target, and a target bound to exactly one pipeline before animation.
+
+M22_MINI_SCENE|No new public DX12 grammar. M22 reuses renderer/window/style/shader/pipeline/vertex-buffer/draw/constant-buffer/color-animation syntax to build larger crystal-cluster smoke scenes.
+M22_KEEP_OPEN|Experimental lowering/runtime switch. `-KeepOpen` emits frame count zero and native smoke loops until the window closes. Escape and Q are close shortcuts in the generated native window.
+M22_GENERATED_GEOMETRY|Crystal-cluster geometry is generated by tooling into ordinary vertex buffer syntax, not by a new `define crystal` language command.
+
+M23A_OBJECT_SYNTAX|define object called "CrystalA"
+M23B_OBJECT_BINDING_SYNTAX|use renderer "MainRenderer" for object "CrystalA"; use pipeline "CrystalPipeline" for object "CrystalA"; use vertex buffer "CrystalAVertices" for object "CrystalA"; draw 12 vertices for object "CrystalA"
+M23C_OBJECT_DRAW_SYNTAX|draw "CrystalA"
+M23C_EXPLICIT_MULTI_DRAW_SYNTAX|draw 3 vertices from buffer "ShardA" with pipeline "CrystalPipeline" using renderer "MainRenderer"
+M23_METADATA|DX12_OBJECT, DX12_OBJECT_BIND, DX12_DRAW_OBJECT
+M23_LOWERING|Tools\lower_m20e1_dx12_clear_from_ir.ps1 merges object vertex buffers into a native scene vertex buffer and emits ARQEN_M23_DRAW_CALL_DATA
+M23_RUNTIME|native triangle runtime accepts ARQEN_M23_DRAW_CALL_DATA and issues multiple DrawInstanced calls
+STATUS|m23c_dx12_real_scene_objects_multi_draw
+M24_OBJECT_TRANSFORM_SYNTAX|set position of object "CrystalA" to [0.2,0.1,0.0]; set rotation z of object "CrystalA" to 25 deg; set scale of object "CrystalA" to [1.2,1.2,1.0]
+M24_METADATA|DX12_OBJECT_TRANSFORM
+M24_RUNTIME|native DX12 runtime rewrites generated upload-buffer vertices every frame using per-object transform data
+M25_CAMERA_SYNTAX|define camera called "MainCamera"; use camera "MainCamera" for renderer "MainRenderer"; set position of camera "MainCamera" to [0,0,0]; set zoom of camera "MainCamera" to 1.0
+M25_METADATA|DX12_CAMERA, DX12_CAMERA_USE, DX12_CAMERA_TRANSFORM
+M25_RUNTIME|native DX12 runtime applies orthographic camera translation and zoom after object transform
+M26_KEYBOARD_INPUT_SYNTAX|when key "W" is held move camera "MainCamera" by [0,0.75,0]; when key "R" is pressed reset camera "MainCamera"; when key "Space" is pressed toggle animation
+M26_METADATA|DX12_KEY_BINDING
+M26_RUNTIME|native DX12 runtime polls keyboard state with GetAsyncKeyState and updates camera/animation state per frame
+
+M27_PERSPECTIVE_CAMERA_SYNTAX|set camera "MainCamera" projection to perspective
+M27_CAMERA_ROTATION_SYNTAX|set rotation of camera "MainCamera" to [0.0,0.0,0.0]
+M27_CAMERA_FOV_SYNTAX|set field of view of camera "MainCamera" to 70 deg
+M27_CAMERA_NEAR_FAR_SYNTAX|set near plane of camera "MainCamera" to 0.1; set far plane of camera "MainCamera" to 100.0
+M27_METADATA|DX12_CAMERA_PROJECTION plus DX12_CAMERA_TRANSFORM properties rotation,fov_y_degrees,near_plane,far_plane
+M27_LOWERING|Tools\lower_m20e1_dx12_clear_from_ir.ps1 emits ARQEN_M27_DEPTH_BUFFER_ENABLED, ARQEN_M27_CAMERA_PROJECTION, ARQEN_M27_PERSPECTIVE_CAMERA_ENABLED, and ARQEN_M27_PERSPECTIVE_CAMERA_DATA
+M27_RUNTIME|native DX12 runtime creates a D32_FLOAT depth resource/DSV, clears depth, enables z testing, and applies CPU-side perspective projection before upload-buffer draw
+VALID_TEST|Tests\CommandTests\dx12\valid_dx12_perspective_camera_metadata.arq
+INVALID_TEST|Tests\CommandTests\dx12\invalid_dx12_camera_bad_projection.arq;Tests\CommandTests\dx12\invalid_dx12_camera_bad_fov.arq;Tests\CommandTests\dx12\invalid_dx12_camera_bad_near_plane.arq
+STATUS|m27c_dx12_perspective_depth
+
+
+M27D_NATIVE_WINDOW_STYLE_SYNTAX|with style for "MainWindow"; title bar color: color "#000000"; title text color: color "#FFFFFF"; end style
+M27D_NATIVE_WINDOW_STYLE_RULE|title bar/text colors target defined windows only, support default state only, require explicit #RRGGBB color literals, and lower as native window chrome metadata rather than renderer clear color
+M27D_METADATA|runtime ACTION op=window_style_title_bar_color and op=window_style_title_text_color
+M27D_LOWERING|Tools\lower_m20e1_dx12_clear_from_ir.ps1 emits ARQEN_M27D_TITLE_BAR_ENABLED, ARQEN_M27D_TITLE_TEXT_ENABLED, ARQEN_M27D_TITLE_BAR_COLOR, and ARQEN_M27D_TITLE_TEXT_COLOR
+M27D_NATIVE|generated Win32 smoke code applies DWM immersive dark mode, caption color, and text color when title style metadata is present
+M28A_BOX_PRIMITIVE_SYNTAX|define box called "CubeA"; draw "CubeA"
+M28A_BOX_PRIMITIVE_RULE|box is a DX12 object with generated 36-vertex data; it reuses renderer/pipeline/transform/draw syntax and rejects manual vertex-buffer binding
+M28A_METADATA|DX12_OBJECT_PRIMITIVE metadata line with object and kind=box
+M28A_LOWERING|Tools\lower_m20e1_dx12_clear_from_ir.ps1 generates box vertices and emits M28_BOX_PRIMITIVE plus OBJECT_PRIMITIVE manifest markers
+VALID_TEST|Tests\CommandTests\dx12\valid_dx12_window_style_titlebar_metadata.arq;Tests\CommandTests\dx12\valid_dx12_box_primitive_metadata.arq
+INVALID_TEST|Tests\CommandTests\dx12\invalid_dx12_window_style_unknown_target.arq;Tests\CommandTests\dx12\invalid_dx12_window_style_named_color.arq;Tests\CommandTests\dx12\invalid_dx12_box_duplicate_object.arq;Tests\CommandTests\dx12\invalid_dx12_box_unknown_draw.arq;Tests\CommandTests\dx12\invalid_dx12_box_manual_vertex_buffer.arq
+STATUS|m27d_m28a_native_window_style_box_primitive
+M28B_FULL_PERIPHERAL_INPUT_SYNTAX|capture mouse for window "MainWindow"; when mouse moves rotate camera "MainCamera" by [0.12,0.12]; when mouse wheel moves move camera "MainCamera" by [0,0,1]; when mouse button "Left" is held move camera "MainCamera" by [0,0,3]

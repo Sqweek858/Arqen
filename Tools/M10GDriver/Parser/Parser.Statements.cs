@@ -81,6 +81,10 @@ static partial class Program
                     throw new CompileError("SEMANTIC", "S073", nameTok.Line, nameTok.Column, "Only one window is supported in M15F.");
                 if (_definedWindows.Contains(nameTok.Value))
                     throw new CompileError("SEMANTIC", "S071", nameTok.Line, nameTok.Column, $"Window '{nameTok.Value}' is already defined.");
+                if (_dx12RendererNames.Contains(nameTok.Value))
+                    throw new CompileError("SEMANTIC", "S260", nameTok.Line, nameTok.Column, $"Window '{nameTok.Value}' conflicts with an existing DX12 renderer name.");
+                if (_dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value))
+                    throw new CompileError("SEMANTIC", "S280", nameTok.Line, nameTok.Column, $"Window '{nameTok.Value}' conflicts with an existing DX12 shader, pipeline, vertex buffer, or object name.");
                 _definedWindows.Add(nameTok.Value);
                 if (apply)
                     _runtimeActions.Add(new RuntimeAction("window_create", "", "static", "", nameTok.Value));

@@ -1,0 +1,12 @@
+program "Dx12RendererStyleMetadataOnlyM20E0"
+set title to string "Arqen DX12 Metadata Only"
+
+define dx12 renderer called "MainRenderer"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+show message "dx12 renderer style metadata only"
+blend mix to code 0
+end program "Dx12RendererStyleMetadataOnlyM20E0"

@@ -10,6 +10,8 @@ window_create|supported
 window_set_title|supported
 window_set_resolution|supported
 window_set_resizable|supported
+window_style_title_bar_color|supported
+window_style_title_text_color|supported
 window_show|supported
 window_run|supported
 window_close|supported

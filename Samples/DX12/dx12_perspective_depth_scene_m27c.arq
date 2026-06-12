@@ -1,0 +1,123 @@
+program "Dx12PerspectiveDepthSceneM27C"
+set title to string "Arqen M27C perspective depth scene"
+
+// M27C official smoke scene:
+// - perspective camera metadata and lowering
+// - D3D12 depth buffer / DSV / z test runtime path
+// - intentionally overlapping foreground/background objects
+// - no scene graph, lighting, textures, materials, mouse input, or mesh import yet
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shader called "CrystalDepthShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "CrystalDepthPipeline"
+    renderer: "MainRenderer"
+    shader: "CrystalDepthShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "CrystalDepthPipeline" for renderer "MainRenderer"
+
+define vertex buffer called "BackPanelVertices"
+    vertex position [-0.650, -0.420, 0.000] color [0.020, 0.040, 0.170, 1.000]
+    vertex position [0.650, -0.420, 0.000] color [0.030, 0.090, 0.240, 1.000]
+    vertex position [0.650, 0.420, 0.000] color [0.090, 0.160, 0.340, 1.000]
+    vertex position [-0.650, -0.420, 0.000] color [0.020, 0.040, 0.170, 1.000]
+    vertex position [0.650, 0.420, 0.000] color [0.090, 0.160, 0.340, 1.000]
+    vertex position [-0.650, 0.420, 0.000] color [0.030, 0.070, 0.220, 1.000]
+end vertex buffer
+
+define vertex buffer called "CrystalVertices"
+    vertex position [0.000, 0.360, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.155, -0.090, 0.000] color [0.120, 0.760, 1.000, 1.000]
+    vertex position [0.000, -0.280, 0.000] color [0.340, 1.000, 0.820, 1.000]
+    vertex position [0.000, 0.360, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.000, -0.280, 0.000] color [0.340, 1.000, 0.820, 1.000]
+    vertex position [0.185, -0.065, 0.000] color [0.760, 0.320, 1.000, 1.000]
+end vertex buffer
+
+define vertex buffer called "CrossOccluderVertices"
+    vertex position [-0.500, -0.080, 0.000] color [0.950, 0.420, 1.000, 1.000]
+    vertex position [0.500, -0.080, 0.000] color [0.320, 0.940, 1.000, 1.000]
+    vertex position [0.500, 0.080, 0.000] color [0.820, 1.000, 0.420, 1.000]
+    vertex position [-0.500, -0.080, 0.000] color [0.950, 0.420, 1.000, 1.000]
+    vertex position [0.500, 0.080, 0.000] color [0.820, 1.000, 0.420, 1.000]
+    vertex position [-0.500, 0.080, 0.000] color [0.220, 0.760, 1.000, 1.000]
+end vertex buffer
+
+define constant buffer called "SceneParams"
+    color tint: color "#70FFD8"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "CrystalDepthPipeline"
+
+define color sequence called "DepthPulse"
+    color "#70FFD8"
+    color "#8A5CFF"
+    color "#FF58D6"
+    color "#49A7FF"
+end color sequence
+
+animate color "SceneParams.tint"
+    using sequence "DepthPulse"
+    every 12 frames
+end animate
+
+// Draw order deliberately places near geometry first, then a large far panel after it.
+// With depth enabled, the far panel must not overwrite the foreground crystal where they overlap.
+define object called "NearCrystal"
+use renderer "MainRenderer" for object "NearCrystal"
+use pipeline "CrystalDepthPipeline" for object "NearCrystal"
+use vertex buffer "CrystalVertices" for object "NearCrystal"
+draw 6 vertices for object "NearCrystal"
+set position of object "NearCrystal" to [0.000, 0.000, 0.850]
+set rotation z of object "NearCrystal" to 0 deg
+set scale of object "NearCrystal" to [1.500, 1.500, 1.0]
+
+define object called "FarPanel"
+use renderer "MainRenderer" for object "FarPanel"
+use pipeline "CrystalDepthPipeline" for object "FarPanel"
+use vertex buffer "BackPanelVertices" for object "FarPanel"
+draw 6 vertices for object "FarPanel"
+set position of object "FarPanel" to [0.000, 0.000, 2.400]
+set rotation z of object "FarPanel" to 0 deg
+set scale of object "FarPanel" to [4.000, 3.200, 1.0]
+
+define object called "FrontBand"
+use renderer "MainRenderer" for object "FrontBand"
+use pipeline "CrystalDepthPipeline" for object "FrontBand"
+use vertex buffer "CrossOccluderVertices" for object "FrontBand"
+draw 6 vertices for object "FrontBand"
+set position of object "FrontBand" to [0.000, -0.260, 0.550]
+set rotation z of object "FrontBand" to -8 deg
+set scale of object "FrontBand" to [1.350, 1.350, 1.0]
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -3.0]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "NearCrystal"
+draw "FarPanel"
+draw "FrontBand"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "M27C perspective + depth scene: depth buffer keeps near geometry in front"
+blend mix to code 0
+end program "Dx12PerspectiveDepthSceneM27C"

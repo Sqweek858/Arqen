@@ -206,6 +206,45 @@ $ToolMap = [ordered]@{
     "cache" = "Tools\validate_wrapper_cache_contract.ps1"
     "dx12_readiness" = "Tools\validate_dx12_readiness.ps1"
     "dx12" = "Tools\validate_dx12_readiness.ps1"
+    "m20a_dx12" = "Tools\validate_m20a_dx12_contract.ps1"
+    "dx12_bridge" = "Tools\validate_m20a_dx12_contract.ps1"
+    "m20b_dx12" = "Tools\validate_m20b_dx12_syntax_contract.ps1"
+    "dx12_syntax" = "Tools\validate_m20b_dx12_syntax_contract.ps1"
+    "m20c_dx12" = "Tools\validate_m20c_dx12_style_bridge_contract.ps1"
+    "dx12_style_bridge" = "Tools\validate_m20c_dx12_style_bridge_contract.ps1"
+    "m20d_dx12" = "Tools\validate_m20d_dx12_semantic_contract.ps1"
+    "dx12_semantics" = "Tools\validate_m20d_dx12_semantic_contract.ps1"
+    "m20e0_dx12" = "Tools\validate_m20e0_dx12_clear_readiness.ps1"
+    "dx12_clear_readiness" = "Tools\validate_m20e0_dx12_clear_readiness.ps1"
+    "m20e1_dx12" = "Tools\validate_m20e1_dx12_lowering_contract.ps1"
+    "dx12_clear_lowering" = "Tools\validate_m20e1_dx12_lowering_contract.ps1"
+    "m20f_dx12" = "Tools\validate_m20f_dx12_clear_smoke_contract.ps1"
+    "dx12_clear_smoke" = "Tools\validate_m20f_dx12_clear_smoke_contract.ps1"
+    "m20g_dx12" = "Tools\validate_m20g_dx12_frame_syntax_contract.ps1"
+    "dx12_frame_syntax" = "Tools\validate_m20g_dx12_frame_syntax_contract.ps1"
+    "m20h_dx12" = "Tools\validate_m20h_dx12_frame_lowering_contract.ps1"
+    "dx12_frame_lowering" = "Tools\validate_m20h_dx12_frame_lowering_contract.ps1"
+    "m20i_dx12" = "Tools\validate_m20i_dx12_native_smoke_polish_contract.ps1"
+    "dx12_native_smoke" = "Tools\validate_m20i_dx12_native_smoke_polish_contract.ps1"
+    "m21a_dx12" = "Tools\validate_m21a_shader_pipeline_bible.ps1"
+    "dx12_shader_pipeline_bible" = "Tools\validate_m21a_shader_pipeline_bible.ps1"
+    "m21b_dx12" = "Tools\validate_m21b_shader_pipeline_metadata.ps1"
+    "dx12_shader_pipeline" = "Tools\validate_m21b_shader_pipeline_metadata.ps1"
+    "m21c_dx12" = "Tools\validate_m21c_vertex_draw_metadata.ps1"
+    "dx12_vertex_draw" = "Tools\validate_m21c_vertex_draw_metadata.ps1"
+    "m21d_dx12" = "Tools\validate_m21d_dx12_triangle_smoke.ps1"
+    "dx12_triangle_smoke" = "Tools\validate_m21d_dx12_triangle_smoke.ps1"
+    "m21e_dx12" = "Tools\validate_m21e_dx12_standalone_runtime.ps1"
+    "dx12_standalone_runtime" = "Tools\validate_m21e_dx12_standalone_runtime.ps1"
+    "m21f_dx12" = "Tools\validate_m21f_dx12_frame_loop.ps1"
+    "dx12_frame_loop" = "Tools\validate_m21f_dx12_frame_loop.ps1"
+    "m21g_dx12" = "Tools\validate_m21g_constant_buffer_metadata.ps1"
+    "dx12_constant_buffer" = "Tools\validate_m21g_constant_buffer_metadata.ps1"
+    "m21h_dx12" = "Tools\validate_m21h_dx12_color_animation.ps1"
+    "dx12_color_animation" = "Tools\validate_m21h_dx12_color_animation.ps1"
+    "m21i_dx12" = "Tools\validate_m21i_dx12_color_animation_smoke_polish.ps1"
+    "m21j_dx12" = "Tools\validate_m21j_dx12_color_animation_metadata_hardening.ps1"
+    "m22_dx12" = "Tools\validate_m22_dx12_mini_scene_contract.ps1"
     "m19a_runtime_loop" = "Tools\validate_m19a_runtime_loop_contract.ps1"
     "runtime_loop" = "Tools\validate_m19a_runtime_loop_contract.ps1"
     "m19b_style" = "Tools\validate_m19b_style_contract.ps1"
@@ -226,6 +265,8 @@ $ToolMap = [ordered]@{
     "parser_statement_map" = "Tools\validate_parser_statement_map.ps1"
     "statement_map" = "Tools\validate_parser_statement_map.ps1"
     "test_slice_self" = "Tools\validate_test_slice.ps1"
+    "m23_dx12" = "Tools\validate_m23_dx12_scene_objects.ps1"
+    "dx12_scene_objects" = "Tools\validate_m23_dx12_scene_objects.ps1"
 }
 
 function Run-ToolCheck {
@@ -308,6 +349,89 @@ function Expand-Group {
             foreach ($f in @("ui_final","ui_layout","ui_objects","style")) { Add-Unique $folders $f }
             foreach ($t in @("m19efgh_ui","m19d_layout","m19c_ui","m19b_style","keyword_registry","parser_statement_map","command_coverage","ir_contract","backend_docs","test_slice_self")) { Add-Unique $tools $t }
         }
+        "m20a" {
+            foreach ($t in @("m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry")) { Add-Unique $tools $t }
+        }
+        "m20b" {
+            foreach ($f in @("dx12")) { Add-Unique $folders $f }
+            foreach ($t in @("m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m20c" {
+            foreach ($f in @("dx12","style")) { Add-Unique $folders $f }
+            foreach ($t in @("m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m20d" {
+            foreach ($f in @("dx12","style","ui_objects","window","canonical_define")) { Add-Unique $folders $f }
+            foreach ($t in @("m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m20e0" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m20e1" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m20f" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m20g" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m20h" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m20i" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m21a" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m21b" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m21b_dx12","m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m21c" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m21c_dx12","m21b_dx12","m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m21d" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m21d_dx12","m21c_dx12","m21b_dx12","m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m21e" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m21e_dx12","m21d_dx12","m21c_dx12","m21b_dx12","m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m21f" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m21f_dx12","m21e_dx12","m21d_dx12","m21c_dx12","m21b_dx12","m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m21g" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m21g_dx12","m21f_dx12","m21e_dx12","m21d_dx12","m21c_dx12","m21b_dx12","m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m21h" {
+            foreach ($f in @("dx12","style","window")) { Add-Unique $folders $f }
+            foreach ($t in @("m21h_dx12","m21g_dx12","m21f_dx12","m21e_dx12","m21d_dx12","m21c_dx12","m21b_dx12","m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "dx12_m20" {
+            foreach ($f in @("dx12")) { Add-Unique $folders $f }
+            foreach ($t in @("m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "dx12_m21" {
+            foreach ($f in @("dx12")) { Add-Unique $folders $f }
+            foreach ($t in @("m21h_dx12","m21g_dx12","m21f_dx12","m21e_dx12","m21d_dx12","m21c_dx12","m21b_dx12","m21a_dx12","m20i_dx12","m20h_dx12","m20g_dx12","m20f_dx12","m20e1_dx12","m20e0_dx12","m20d_dx12","m20c_dx12","m20b_dx12","m20a_dx12","dx12_readiness","backend_docs","ir_contract","runtime_registry","keyword_registry","parser_statement_map","command_coverage")) { Add-Unique $tools $t }
+        }
+        "m23" {
+            foreach ($f in @("dx12")) { Add-Unique $folders $f }
+            foreach ($t in @("m23_dx12","m21h_dx12","m21i_dx12","m21j_dx12","m22_dx12")) { Add-Unique $tools $t }
+        }
         "m18fg" {
             foreach ($t in @("parser_split","ir_contract","runtime_registry")) { Add-Unique $tools $t }
         }
@@ -315,7 +439,7 @@ function Expand-Group {
             foreach ($t in @("parser_split","ir_contract","runtime_registry","backend_docs")) { Add-Unique $tools $t }
         }
         "tooling" {
-            foreach ($t in @("repo_hygiene","backend_capabilities","command_coverage","error_registry","runtime_registry","ir_contract","wrapper_cache","dx12_readiness","m19a_runtime_loop","m19b_style","m19c_ui","m19d_layout","m19efgh_ui","backend_docs","parser_split","strict_ir","keyword_registry","parser_statement_map","test_slice_self")) { Add-Unique $tools $t }
+            foreach ($t in @("repo_hygiene","backend_capabilities","command_coverage","error_registry","runtime_registry","ir_contract","wrapper_cache","dx12_readiness","m20a_dx12","m20b_dx12","m20c_dx12","m20d_dx12","m20e0_dx12","m20e1_dx12","m20f_dx12","m20g_dx12","m20h_dx12","m20i_dx12","m21a_dx12","m21b_dx12","m21c_dx12","m21d_dx12","m21e_dx12","m21f_dx12","m21g_dx12","m21h_dx12","m19a_runtime_loop","m19b_style","m19c_ui","m19d_layout","m19efgh_ui","backend_docs","parser_split","strict_ir","keyword_registry","parser_statement_map","test_slice_self")) { Add-Unique $tools $t }
         }
         "core" {
             foreach ($f in @("program","let","set_value","message_text","show_message","title","set_title_to","exit","blend_mix_to_code","comments","comparison_is","logical_condition","if_compile_time","while_compile_time","function")) { Add-Unique $folders $f }
@@ -371,6 +495,10 @@ function Add-ChangedTargets {
             Add-Unique $Folders $Matches[1]
             continue
         }
+        if ($file -match '^Tests/DX12Lowering/') {
+            Add-Unique $Tools "m20e1_dx12"
+            continue
+        }
         if ($file -match '^Specs/Commands/([^/]+)\.command\.txt$') {
             $candidate = $Matches[1]
             if ($allFolders -contains $candidate) { Add-Unique $Folders $candidate }
@@ -408,6 +536,30 @@ function Add-ChangedTargets {
             elseif ($file -like "*validate_ir_contract.ps1") { Add-Unique $Tools "ir_contract" }
             elseif ($file -like "*validate_wrapper_cache_contract.ps1") { Add-Unique $Tools "wrapper_cache" }
             elseif ($file -like "*validate_dx12_readiness.ps1") { Add-Unique $Tools "dx12_readiness" }
+            elseif ($file -like "*validate_m20a_dx12_contract.ps1") { Add-Unique $Tools "m20a_dx12" }
+            elseif ($file -like "*validate_m20b_dx12_syntax_contract.ps1") { Add-Unique $Tools "m20b_dx12" }
+            elseif ($file -like "*validate_m20c_dx12_style_bridge_contract.ps1") { Add-Unique $Tools "m20c_dx12" }
+            elseif ($file -like "*validate_m20d_dx12_semantic_contract.ps1") { Add-Unique $Tools "m20d_dx12" }
+            elseif ($file -like "*validate_m20e0_dx12_clear_readiness.ps1") { Add-Unique $Tools "m20e0_dx12" }
+            elseif ($file -like "*validate_m20e1_dx12_lowering_contract.ps1") { Add-Unique $Tools "m20e1_dx12" }
+            elseif ($file -like "*lower_m20e1_dx12_clear_from_ir.ps1") { Add-Unique $Tools "m20e1_dx12"; Add-Unique $Tools "m20h_dx12"; Add-Unique $Tools "m20i_dx12"; Add-Unique $Tools "m21d_dx12"; Add-Unique $Tools "m21e_dx12"; Add-Unique $Tools "m21f_dx12"; Add-Unique $Tools "m21g_dx12"; Add-Unique $Tools "m21h_dx12" }
+            elseif ($file -like "*validate_m20f_dx12_clear_smoke_contract.ps1") { Add-Unique $Tools "m20f_dx12" }
+            elseif ($file -like "*build_m20f_dx12_clear_smoke.ps1") { Add-Unique $Tools "m20f_dx12" }
+            elseif ($file -like "*validate_m20g_dx12_frame_syntax_contract.ps1") { Add-Unique $Tools "m20g_dx12" }
+            elseif ($file -like "*validate_m20h_dx12_frame_lowering_contract.ps1") { Add-Unique $Tools "m20h_dx12" }
+            elseif ($file -like "*validate_m20i_dx12_native_smoke_polish_contract.ps1") { Add-Unique $Tools "m20i_dx12" }
+            elseif ($file -like "*validate_m21a_shader_pipeline_bible.ps1") { Add-Unique $Tools "m21a_dx12" }
+            elseif ($file -like "*validate_m21b_shader_pipeline_metadata.ps1") { Add-Unique $Tools "m21b_dx12" }
+            elseif ($file -like "*validate_m21c_vertex_draw_metadata.ps1") { Add-Unique $Tools "m21c_dx12" }
+            elseif ($file -like "*validate_m21d_dx12_triangle_smoke.ps1") { Add-Unique $Tools "m21d_dx12" }
+            elseif ($file -like "*validate_m21e_dx12_standalone_runtime.ps1") { Add-Unique $Tools "m21e_dx12" }
+            elseif ($file -like "*validate_m21f_dx12_frame_loop.ps1") { Add-Unique $Tools "m21f_dx12" }
+            elseif ($file -like "*validate_m21g_constant_buffer_metadata.ps1") { Add-Unique $Tools "m21g_dx12" }
+            elseif ($file -like "*validate_m21h_dx12_color_animation.ps1") { Add-Unique $Tools "m21h_dx12" }
+            elseif ($file -like "*build_m21d_dx12_triangle_smoke.ps1") { Add-Unique $Tools "m21d_dx12"; Add-Unique $Tools "m21e_dx12"; Add-Unique $Tools "m21f_dx12" }
+            elseif ($file -like "*build_m21f_dx12_triangle_loop_smoke.ps1") { Add-Unique $Tools "m21f_dx12" }
+            elseif ($file -like "*build_m21h_dx12_animated_triangle_smoke.ps1") { Add-Unique $Tools "m21h_dx12" }
+            elseif ($file -like "*build_m20i_dx12_frame_clear_smoke.ps1") { Add-Unique $Tools "m20i_dx12" }
             elseif ($file -like "*validate_m19a_runtime_loop_contract.ps1") { Add-Unique $Tools "m19a_runtime_loop" }
             elseif ($file -like "*validate_m19b_style_contract.ps1") { Add-Unique $Tools "m19b_style" }
             elseif ($file -like "*validate_m19c_ui_contract.ps1") { Add-Unique $Tools "m19c_ui" }
@@ -434,6 +586,22 @@ function Add-ChangedTargets {
         if ($file -match '^(IR|Runtime|Backends/DX12|Docs)/') {
             Add-Unique $Tools "ir_contract"
             Add-Unique $Tools "dx12_readiness"
+            Add-Unique $Tools "m20a_dx12"
+            Add-Unique $Tools "m20b_dx12"
+            Add-Unique $Tools "m20c_dx12"
+            Add-Unique $Tools "m20d_dx12"
+            Add-Unique $Tools "m20e0_dx12"
+            Add-Unique $Tools "m20e1_dx12"
+            Add-Unique $Tools "m20f_dx12"
+            Add-Unique $Tools "m20g_dx12"
+            Add-Unique $Tools "m20h_dx12"
+            Add-Unique $Tools "m20i_dx12"
+            Add-Unique $Tools "m21a_dx12"
+            Add-Unique $Tools "m21b_dx12"
+            Add-Unique $Tools "m21c_dx12"
+            Add-Unique $Tools "m21d_dx12"
+            Add-Unique $Tools "m21e_dx12"
+            Add-Unique $Tools "m21f_dx12"
             Add-Unique $Tools "backend_docs"
             Add-Unique $Tools "m19a_runtime_loop"
             continue
@@ -475,7 +643,7 @@ if ($List) {
         Write-Host " - $key -> $($ToolMap[$key]) [$state]"
     }
     Write-Host ""
-    Write-Host "Groups: math, geometry, backend, m18a, m18b, m18fg, m18h, m18i, m18j, m19a, m19b, m19c, m19d, m19efgh, ui_final, refactor, tooling, core, flow, commands"
+    Write-Host "Groups: math, geometry, backend, m18a, m18b, m18fg, m18h, m18i, m18j, m19a, m19b, m19c, m19d, m19efgh, ui_final, m20a, m20b, m20c, m20d, m20e0, m20e1, m20f, m20g, m20h, m20i, dx12_m20, refactor, tooling, core, flow, commands"
     exit 0
 }
 

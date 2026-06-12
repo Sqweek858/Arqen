@@ -1421,10 +1421,178 @@ function Run-M18B-Tests {
     Add-Check "M18B_backend_contract_docs" ($contractExit -eq 0 -and $contractText.Contains("PASS|backend_contract_window_current") -and $contractText.Contains("PASS|ir_contract_action_capability_rule"))
 }
 
+
+function Run-M20A-Tests {
+    Write-Host ""
+    Write-Host "M20A DX12 native bridge contract tests"
+
+    $m20aExit = Invoke-Stage $RepoRoot ".\Tools\validate_m20a_dx12_contract.ps1"
+    $m20aText = Get-Content (Join-Path $RepoRoot "Build\Generated\m20a_dx12_contract_validation.txt") -Raw
+    Add-Check "M20A_dx12_native_clear_contract" ($m20aExit -eq 0 -and $m20aText.Contains("PASS|m20a_real_dx12_clear") -and $m20aText.Contains("PASS|m20a_capability_still_unsupported_dx12"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20b_dx12_syntax_contract.ps1")) {
+    Write-Host ""
+    Write-Host "M20B DX12 renderer metadata syntax contract tests"
+
+    $m20bExit = Invoke-Stage $RepoRoot ".\Tools\validate_m20b_dx12_syntax_contract.ps1"
+    $m20bText = Get-Content (Join-Path $RepoRoot "Build\Generated\m20b_dx12_syntax_contract_validation.txt") -Raw
+    Add-Check "M20B_dx12_renderer_metadata_contract" ($m20bExit -eq 0 -and $m20bText.Contains("PASS|m20b_dx12_parser_exists") -and $m20bText.Contains("PASS|m20b_dx12_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20c_dx12_style_bridge_contract.ps1")) {
+    Write-Host ""
+    Write-Host "M20C DX12 style-derived clear metadata contract tests"
+
+    $m20cExit = Invoke-Stage $RepoRoot ".\Tools\validate_m20c_dx12_style_bridge_contract.ps1"
+    $m20cText = Get-Content (Join-Path $RepoRoot "Build\Generated\m20c_dx12_style_bridge_contract_validation.txt") -Raw
+    Add-Check "M20C_dx12_style_bridge_contract" ($m20cExit -eq 0 -and $m20cText.Contains("PASS|m20c_dx12_clear_style_model") -and $m20cText.Contains("PASS|m20c_dx12_capability_still_unsupported"))
+}
+
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20d_dx12_semantic_contract.ps1")) {
+    Write-Host ""
+    Write-Host "M20D DX12 renderer semantic hardening contract tests"
+
+    $m20dExit = Invoke-Stage $RepoRoot ".\Tools\validate_m20d_dx12_semantic_contract.ps1"
+    $m20dText = Get-Content (Join-Path $RepoRoot "Build\Generated\m20d_dx12_semantic_contract_validation.txt") -Raw
+    Add-Check "M20D_dx12_semantic_hardening_contract" ($m20dExit -eq 0 -and $m20dText.Contains("PASS|m20d_dx12_symbol_conflict_before_renderer") -and $m20dText.Contains("PASS|m20d_dx12_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20e0_dx12_clear_readiness.ps1")) {
+    Write-Host ""
+    Write-Host "M20E0 DX12 clear readiness metadata contract tests"
+
+    $m20e0Exit = Invoke-Stage $RepoRoot ".\Tools\validate_m20e0_dx12_clear_readiness.ps1"
+    $m20e0Text = Get-Content (Join-Path $RepoRoot "Build\Generated\m20e0_dx12_clear_readiness_validation.txt") -Raw
+    Add-Check "M20E0_dx12_clear_readiness_contract" ($m20e0Exit -eq 0 -and $m20e0Text.Contains("PASS|m20e0_dx12_clear_ready_model") -and $m20e0Text.Contains("PASS|m20e0_dx12_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20e1_dx12_lowering_contract.ps1")) {
+    Write-Host ""
+    Write-Host "M20E1 DX12 experimental clear lowering contract tests"
+
+    $m20e1Exit = Invoke-Stage $RepoRoot ".\Tools\validate_m20e1_dx12_lowering_contract.ps1"
+    $m20e1Text = Get-Content (Join-Path $RepoRoot "Build\Generated\m20e1_dx12_lowering_validation.txt") -Raw
+    Add-Check "M20E1_dx12_experimental_clear_lowering_contract" ($m20e1Exit -eq 0 -and $m20e1Text.Contains("PASS|m20e1_valid_basic_lowers") -and $m20e1Text.Contains("PASS|m20e1_capability_still_unsupported"))
+}
+
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20f_dx12_clear_smoke_contract.ps1")) {
+    Write-Host ""
+    Write-Host "M20F DX12 clear smoke path contract tests"
+
+    $m20fExit = Invoke-Stage $RepoRoot ".\Tools\validate_m20f_dx12_clear_smoke_contract.ps1"
+    $m20fText = Get-Content (Join-Path $RepoRoot "Build\Generated\m20f_dx12_clear_smoke_validation.txt") -Raw
+    Add-Check "M20F_dx12_clear_smoke_contract" ($m20fExit -eq 0 -and $m20fText.Contains("PASS|m20f_wrapper_compiles_and_lowers_sample") -and $m20fText.Contains("PASS|m20f_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20g_dx12_frame_syntax_contract.ps1")) {
+    Write-Host ""
+    Write-Host "M20G DX12 frame metadata syntax contract tests"
+
+    $m20gExit = Invoke-Stage $RepoRoot ".\Tools\validate_m20g_dx12_frame_syntax_contract.ps1"
+    $m20gText = Get-Content (Join-Path $RepoRoot "Build\Generated\m20g_dx12_frame_syntax_validation.txt") -Raw
+    Add-Check "M20G_dx12_frame_metadata_contract" ($m20gExit -eq 0 -and $m20gText.Contains("PASS|m20g_frame_ast_ir") -and $m20gText.Contains("PASS|m20g_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20h_dx12_frame_lowering_contract.ps1")) {
+    Write-Host ""
+    Write-Host "M20H DX12 frame-aware lowering contract tests"
+
+    $m20hExit = Invoke-Stage $RepoRoot ".\Tools\validate_m20h_dx12_frame_lowering_contract.ps1"
+    $m20hText = Get-Content (Join-Path $RepoRoot "Build\Generated\m20h_dx12_frame_lowering_validation.txt") -Raw
+    Add-Check "M20H_dx12_frame_aware_lowering_contract" ($m20hExit -eq 0 -and $m20hText.Contains("PASS|m20h_valid_frame_basic_lowers") -and $m20hText.Contains("PASS|m20h_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m20i_dx12_native_smoke_polish_contract.ps1")) {
+    Write-Host ""
+    Write-Host "M20I DX12 native smoke polish contract tests"
+
+    $m20iExit = Invoke-Stage $RepoRoot ".\Tools\validate_m20i_dx12_native_smoke_polish_contract.ps1"
+    $m20iText = Get-Content (Join-Path $RepoRoot "Build\Generated\m20i_dx12_native_smoke_polish_validation.txt") -Raw
+    Add-Check "M20I_dx12_native_smoke_polish_contract" ($m20iExit -eq 0 -and $m20iText.Contains("PASS|m20i_wrapper_compiles_lowers_frame_sample") -and $m20iText.Contains("PASS|m20i_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m21a_shader_pipeline_bible.ps1")) {
+    Write-Host ""
+    Write-Host "M21A DX12 shader/pipeline bible contract tests"
+
+    $m21aExit = Invoke-Stage $RepoRoot ".\Tools\validate_m21a_shader_pipeline_bible.ps1"
+    $m21aText = Get-Content (Join-Path $RepoRoot "Build\Generated\m21a_shader_pipeline_bible_validation.txt") -Raw
+    Add-Check "M21A_dx12_shader_pipeline_bible_contract" ($m21aExit -eq 0 -and $m21aText.Contains("PASS|m21a_mini_bible_exists") -and $m21aText.Contains("PASS|m21a_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m21b_shader_pipeline_metadata.ps1")) {
+    Write-Host ""
+    Write-Host "M21B DX12 shader/pipeline metadata contract tests"
+
+    $m21bExit = Invoke-Stage $RepoRoot ".\Tools\validate_m21b_shader_pipeline_metadata.ps1"
+    $m21bText = Get-Content (Join-Path $RepoRoot "Build\Generated\m21b_shader_pipeline_metadata_validation.txt") -Raw
+    Add-Check "M21B_dx12_shader_pipeline_metadata_contract" ($m21bExit -eq 0 -and $m21bText.Contains("PASS|m21b_strict_ir_accepts_metadata") -and $m21bText.Contains("PASS|m21b_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m21c_vertex_draw_metadata.ps1")) {
+    Write-Host ""
+    Write-Host "M21C DX12 vertex/draw metadata contract tests"
+
+    $m21cExit = Invoke-Stage $RepoRoot ".\Tools\validate_m21c_vertex_draw_metadata.ps1"
+    $m21cText = Get-Content (Join-Path $RepoRoot "Build\Generated\m21c_vertex_draw_metadata_validation.txt") -Raw
+    Add-Check "M21C_dx12_vertex_draw_metadata_contract" ($m21cExit -eq 0 -and $m21cText.Contains("PASS|m21c_strict_ir_accepts_metadata") -and $m21cText.Contains("PASS|m21c_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m21d_dx12_triangle_smoke.ps1")) {
+    Write-Host ""
+    Write-Host "M21D DX12 triangle smoke contract tests"
+
+    $m21dExit = Invoke-Stage $RepoRoot ".\Tools\validate_m21d_dx12_triangle_smoke.ps1"
+    $m21dText = Get-Content (Join-Path $RepoRoot "Build\Generated\m21d_dx12_triangle_smoke_validation.txt") -Raw
+    Add-Check "M21D_dx12_triangle_smoke_contract" ($m21dExit -eq 0 -and $m21dText.Contains("PASS|m21d_wrapper_compiles_lowers_triangle_sample") -and $m21dText.Contains("PASS|m21d_capability_still_unsupported"))
+}
+
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m21e_dx12_standalone_runtime.ps1")) {
+    Write-Host ""
+    Write-Host "M21E DX12 standalone runtime contract tests"
+
+    $m21eExit = Invoke-Stage $RepoRoot ".\Tools\validate_m21e_dx12_standalone_runtime.ps1"
+    $m21eText = Get-Content (Join-Path $RepoRoot "Build\Generated\m21e_dx12_standalone_runtime_validation.txt") -Raw
+    Add-Check "M21E_dx12_standalone_runtime_contract" ($m21eExit -eq 0 -and $m21eText.Contains("PASS|m21e_generated_config_markers") -and $m21eText.Contains("PASS|m21e_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m21f_dx12_frame_loop.ps1")) {
+    Write-Host ""
+    Write-Host "M21F DX12 frame loop contract tests"
+
+    $m21fExit = Invoke-Stage $RepoRoot ".\Tools\validate_m21f_dx12_frame_loop.ps1"
+    $m21fText = Get-Content (Join-Path $RepoRoot "Build\Generated\m21f_dx12_frame_loop_validation.txt") -Raw
+    Add-Check "M21F_dx12_frame_loop_contract" ($m21fExit -eq 0 -and $m21fText.Contains("PASS|m21f_wrapper_compiles_lowers_loop_sample") -and $m21fText.Contains("PASS|m21f_capability_still_unsupported"))
+}
+
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m21g_constant_buffer_metadata.ps1")) {
+    Write-Host ""
+    Write-Host "M21G DX12 constant buffer metadata contract tests"
+
+    $m21gExit = Invoke-Stage $RepoRoot ".\Tools\validate_m21g_constant_buffer_metadata.ps1"
+    $m21gText = Get-Content (Join-Path $RepoRoot "Build\Generated\m21g_constant_buffer_metadata_validation.txt") -Raw
+    Add-Check "M21G_dx12_constant_buffer_metadata_contract" ($m21gExit -eq 0 -and $m21gText.Contains("PASS|m21g_lowerer_runtime_markers") -and $m21gText.Contains("PASS|m21g_capability_still_unsupported"))
+}
+
+if (Test-Path (Join-Path $RepoRoot "Tools\validate_m21h_dx12_color_animation.ps1")) {
+    Write-Host ""
+    Write-Host "M21H DX12 color animation contract tests"
+
+    $m21hExit = Invoke-Stage $RepoRoot ".\Tools\validate_m21h_dx12_color_animation.ps1"
+    $m21hText = Get-Content (Join-Path $RepoRoot "Build\Generated\m21h_dx12_color_animation_validation.txt") -Raw
+    Add-Check "M21H_dx12_color_animation_contract" ($m21hExit -eq 0 -and $m21hText.Contains("PASS|m21h_wrapper_compiles_lowers_animated_sample") -and $m21hText.Contains("PASS|m21h_capability_still_unsupported"))
+}
+
 Run-M15D-Tests
 Run-M15E-Tests
 Run-M18A-Tests
 Run-M18B-Tests
+Run-M20A-Tests
 
 Write-Host ""
 Write-Host "=== Regression summary ==="

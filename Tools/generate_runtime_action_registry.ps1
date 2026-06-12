@@ -113,8 +113,8 @@ foreach ($m in [regex]::Matches($driverText, 'IrActionLine\s*\([^,]+,\s*"([^"]+)
     Add-Action $m.Groups[1].Value "IrActionLine"
 }
 
-# Some baseline IR actions can be emitted indirectly or are expected by contract.
-foreach ($baseline in @("show_message", "print_stdout", "exit")) {
+# Some baseline/indirect IR actions can be emitted through variables or are expected by contract.
+foreach ($baseline in @("show_message", "print_stdout", "exit", "window_style_title_bar_color", "window_style_title_text_color")) {
     Add-Action $baseline "baseline_ir"
 }
 
@@ -160,6 +160,8 @@ $required = @(
     "window_set_title",
     "window_set_resolution",
     "window_set_resizable",
+    "window_style_title_bar_color",
+    "window_style_title_text_color",
     "window_show",
     "window_run",
     "window_close",

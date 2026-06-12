@@ -147,3 +147,124 @@ These tools are fast static/contract checks. They do not implement DX12; they pr
 | `validate_strict_ir.ps1` | `Tools` | M18I | validator | Exercises backend-only strict IR rejection cases | `Tools\arqc_m10g.exe`, generated IR samples | `Build\Temp\strict_ir` | `.\Tools\validate_strict_ir.ps1` | yes | no | active | Requires built driver exe |
 | `validate_keyword_registry.ps1` | `Tools` | M18J | validator | Compares spec keyword registry against lexer keywords and reserved runtime/DX12 docs | `Specs\Commands`, `Lexer.cs`, docs | `Build\Generated\keyword_registry.txt` | `.\Tools\validate_keyword_registry.ps1` | yes | no | active | Catches forgotten lexer keywords before style/DX12 grammar work |
 | `validate_parser_statement_map.ps1` | `Tools` | M18J | validator | Validates generated parser statement map and core dispatch coverage | parser split, specs, tests | `Build\Generated\parser_statement_map.txt` | `.\Tools\validate_parser_statement_map.ps1` | yes | no | active | Warnings are allowed for older gaps; missing specs fail |
+
+
+## M20A DX12 bridge tools
+
+| File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `validate_m20a_dx12_contract.ps1` | `Tools` | M20A | validator | Checks M20A DX12 bridge docs/source boundaries and verifies reserved capability flags remain unsupported | DX12 docs, runtime source, capability table | `Build\Generated\m20a_dx12_contract_validation.txt` | `.\Tools\validate_m20a_dx12_contract.ps1` | yes | no | active | Static contract guard for the first native DX12 bridge slice |
+| `build_m20a_dx12_clear.ps1` | `Backends\DX12\Runtime` | M20A | native smoke builder | Builds the standalone DX12 clear smoke executable using MSVC and Windows SDK libs | DX12 runtime C++ source | `Build\EXE\m20a_dx12_clear_smoke.exe` | `.\Backends\DX12\Runtime\build_m20a_dx12_clear.ps1` | yes, from VS Developer shell | no | partial | Optional Windows-only runtime validation; not compiler feature support |
+
+## M20B DX12 syntax tools
+
+| File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `validate_m20b_dx12_syntax_contract.ps1` | `Tools` | M20B | validator | Checks DX12 metadata syntax docs, parser/AST/IR wiring, tests, and unsupported capability boundary | compiler source, specs, tests, docs, capability table | `Build\Generated\m20b_dx12_syntax_contract_validation.txt` | `.\Tools\validate_m20b_dx12_syntax_contract.ps1` | yes | no | active | Static contract guard for M20B renderer metadata syntax |
+## M20C DX12 style bridge tools
+
+| File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `validate_m20c_dx12_style_bridge_contract.ps1` | `Tools` | M20C | validator | Checks DX12 style-derived clear metadata docs, parser/AST/IR wiring, tests, and unsupported capability boundary | compiler source, specs, tests, docs, capability table | `Build\Generated\m20c_dx12_style_bridge_contract_validation.txt` | `.\Tools\validate_m20c_dx12_style_bridge_contract.ps1` | yes | no | active | Static contract guard for style-derived renderer clear metadata |
+
+## M20D/M20E0 DX12 validation tools
+
+- `Tools/validate_m20d_dx12_semantic_contract.ps1` checks renderer symbol conflict and parenting semantic hardening.
+- `Tools/validate_m20e0_dx12_clear_readiness.ps1` checks derived `DX12_CLEAR_READY` metadata wiring and capability boundaries.
+- `Tools/run_test_slice.ps1 -Group m20d` runs the DX12 command folder plus the M20A/M20B/M20C/M20D/M20E0 validators.
+
+
+## M20E1 DX12 lowering tools
+
+| File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `lower_m20e1_dx12_clear_from_ir.ps1` | `Tools` | M20E1 | lowerer | Consumes `DX12_CLEAR_READY` metadata and window actions from ARQIR to generate native DX12 clear bridge config | `.arqir` file | `Build\M20E1\dx12_clear_manifest.generated.txt`, `Build\M20E1\dx12_clear_config.generated.h` | `.\Tools\lower_m20e1_dx12_clear_from_ir.ps1 -IrPath .\Build\IR\dx12_clear_m20e1.arqir` | yes | no | experimental | Explicit lowering only, does not promote DX12 capability |
+| `build_m20e1_dx12_clear_from_ir.ps1` | `Backends\DX12\Runtime` | M20E1 | native smoke builder | Runs the M20E1 lowerer, generates a C++ smoke source, and builds it with MSVC/DX12 libs | `.arqir` file, DX12 bridge source | `Build\EXE\m20e1_dx12_clear_from_ir.exe` | `.\Backends\DX12\Runtime\build_m20e1_dx12_clear_from_ir.ps1 -IrPath .\Build\IR\dx12_clear_m20e1.arqir` | yes, from VS Developer shell | no | optional | Manual Windows-only runtime validation; not part of standard regression |
+| `validate_m20e1_dx12_lowering_contract.ps1` | `Tools` | M20E1 | validator | Checks M20E1 lowerer, fixtures, docs, generated manifest/header behavior, and unsupported capability boundary | lowering fixtures, docs, tools, capability table | `Build\Generated\m20e1_dx12_lowering_validation.txt` | `.\Tools\validate_m20e1_dx12_lowering_contract.ps1` | yes | no | active | Static/offline guard for experimental clear lowering |
+## M20F/M20G DX12 tools
+
+| File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `build_m20f_dx12_clear_smoke.ps1` | `Tools` | M20F | smoke wrapper | Compiles the official M20F DX12 sample and lowers clear-ready metadata into generated native bridge config | `Samples\DX12\dx12_clear_smoke_m20f.arq` | `Build\M20F\dx12_clear_manifest.generated.txt`, `Build\M20F\dx12_clear_config.generated.h` | `.\Tools\build_m20f_dx12_clear_smoke.ps1` | yes | no | active | Native build/run optional behind switches |
+| `validate_m20f_dx12_clear_smoke_contract.ps1` | `Tools` | M20F | validator | Checks the M20F smoke wrapper, sample, docs, generated manifest/config markers, and unsupported capability boundary | docs, tools, sample, compiler output | `Build\Generated\m20f_dx12_clear_smoke_validation.txt` | `.\Tools\validate_m20f_dx12_clear_smoke_contract.ps1` | yes | no | active | Does not require native DX12 runtime |
+| `validate_m20g_dx12_frame_syntax_contract.ps1` | `Tools` | M20G | validator | Checks frame metadata parser/AST/IR wiring, tests, docs, and unsupported capability boundary | compiler source, tests, docs, capability table | `Build\Generated\m20g_dx12_frame_syntax_validation.txt` | `.\Tools\validate_m20g_dx12_frame_syntax_contract.ps1` | yes | no | active | Frame syntax remains metadata-only |
+
+## M20H/M20I DX12 tools
+
+```text
+Tools\validate_m20h_dx12_frame_lowering_contract.ps1
+Tools\validate_m20i_dx12_native_smoke_polish_contract.ps1
+Tools\build_m20i_dx12_frame_clear_smoke.ps1
+```
+
+M20H validates frame-aware lowering from `DX12_FRAME` metadata. M20I validates the frame-clear smoke wrapper and optional native build/run boundary.
+
+## M21 shader/pipeline tools
+
+```text
+Tools/validate_m21a_shader_pipeline_bible.ps1 - validates M21 shader/pipeline docs/spec boundary.
+Tools/validate_m21b_shader_pipeline_metadata.ps1 - validates M21B parser/AST/IR/strict-IR metadata surface.
+```
+
+## M21C/M21D DX12 tools
+
+- `Tools/validate_m21c_vertex_draw_metadata.ps1` validates vertex buffer/draw metadata implementation and tests.
+- `Tools/validate_m21d_dx12_triangle_smoke.ps1` validates the first-triangle lowering/smoke path without requiring native DX12 execution.
+- `Tools/build_m21d_dx12_triangle_smoke.ps1` compiles the M21D Arqen sample and lowers it to generated native smoke config; `-BuildNative -Run` are optional/manual.
+
+## M21E/M21F DX12 tools
+
+- `Tools/validate_m21e_dx12_standalone_runtime.ps1` validates generated native executable diagnostics/fallback hooks without requiring native DX12 execution.
+- `Tools/validate_m21f_dx12_frame_loop.ps1` validates fixed-frame triangle loop lowering/wrapper behavior without requiring native DX12 execution.
+- `Tools/build_m21f_dx12_triangle_loop_smoke.ps1` compiles the M21D triangle sample and lowers it into `Build\M21F` with frame-loop config markers; `-BuildNative -Run` are optional/manual.
+
+## M21G/M21H DX12 animation tooling
+
+- `Tools\validate_m21g_constant_buffer_metadata.ps1` validates constant buffer syntax/metadata/native tint bridge markers.
+- `Tools\validate_m21h_dx12_color_animation.ps1` validates color sequence animation metadata and animated triangle lowering.
+- `Tools\build_m21h_dx12_animated_triangle_smoke.ps1` compiles/lowers the animated triangle sample and can optionally build/run native DX12.
+
+## M21I/M21J DX12 color animation polish and hardening
+
+- `Tools\build_m21i_dx12_color_animation_smoke_polish.ps1` wraps the M21H animated triangle path with explicit frame/fps/hold/out-dir/runtime knobs and generated M21I manifest/config markers.
+- `Tools\validate_m21i_dx12_color_animation_smoke_polish.ps1` validates the M21I wrapper, runtime knob markers, docs, and unsupported capability boundary.
+- `Tools\validate_m21j_dx12_color_animation_metadata_hardening.ps1` validates the M21J parser/lowerer hardening contract, invalid unbound animation test, docs/spec, and unsupported capability boundary.
+
+## M22 DX12 mini scene tools
+
+- `Tools\new_m22b_dx12_crystal_cluster_sample.ps1` generates deterministic crystal-cluster `.arq` samples using the existing DX12 vertex-buffer/draw syntax.
+- `Tools\build_m22i_dx12_crystal_scene.ps1` compiles, lowers, and optionally builds/runs the official M22 crystal mini scene. It supports `-KeepOpen` for an indefinite native window.
+- `Tools\validate_m22_dx12_mini_scene_contract.ps1` validates the M22 A-I docs, samples, generator, wrapper, keep-open lowerer/runtime markers, and unsupported DX12 capability boundary.
+- `Backends\DX12\Runtime\build_m20e1_dx12_clear_from_ir.ps1` accepts `-KeepOpen` and emits generated native code with Escape/Q close handling.
+
+## M23 DX12 real scene object tools
+
+- `Tools\build_m23c_dx12_multi_object_scene.ps1` compiles, lowers, and optionally builds/runs the official M23C multi-object DX12 scene using `define object called "CrystalA"` and `draw "CrystalA"`.
+- `Tools\validate_m23_dx12_scene_objects.ps1` validates M23A/M23B/M23C docs, parser/AST/IR markers, command tests, lowering markers, runtime draw-call support, and unsupported DX12 capability boundary.
+- `Samples\DX12\dx12_multi_object_scene_m23c.arq` is the official object/multi-draw scene sample.
+- `Samples\DX12\dx12_explicit_multi_draw_m23c.arq` covers the explicit low-level multi-draw syntax.
+
+## M24/M25/M26 DX12 runtime scene tools
+
+- `Tools\build_m26c_dx12_interactive_camera_scene.ps1` compiles, lowers, builds, and optionally runs the official M26 interactive scene using object transforms, an orthographic camera, and keyboard input.
+- `Tools\validate_m24_m25_m26_dx12_runtime_scene.ps1` validates M24 transform metadata/runtime markers, M25 camera metadata/runtime markers, M26 keyboard metadata/runtime markers, generated config output, docs, samples, and runtime source integration.
+
+## M27 DX12 perspective/depth tools
+
+- `Tools\build_m27c_dx12_perspective_depth_scene.ps1` compiles, lowers, builds, and optionally runs the official M27C perspective/depth scene using `set camera "MainCamera" projection to perspective` plus FOV/near/far metadata.
+- `Tools\validate_m27_dx12_perspective_depth.ps1` validates M27 parser/AST/IR/strict-IR contracts, lowerer markers, runtime depth-buffer/perspective hooks, native builder wiring, command tests, docs, and official sample.
+- `Samples\DX12\dx12_perspective_depth_scene_m27c.arq` is the official perspective/depth smoke scene.
+- `Backends\DX12\Runtime\build_m20e1_dx12_clear_from_ir.ps1` now passes generated M27 perspective camera and depth-enable config into `ArqenDx12TriangleWindowDesc` when native build is requested.
+
+
+## M27D/M28A Native window style + box primitive tools
+
+| File | Path | Milestone | Category | Does | Inputs | Outputs | Command | Standalone | Node required | Status | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `validate_m27d_m28a_dx12_window_style_box.ps1` | `Tools` | M27D/M28A | validator | Checks native window style parser/lowering/DWM bridge plus box primitive parser/AST/IR/lowerer/docs/tests/sample | compiler source, lowerer, native builder, tests, docs, sample | `Build\Generated\m27d_m28a_dx12_window_style_box_validation.txt` | `.\Tools\validate_m27d_m28a_dx12_window_style_box.ps1` | yes | no | active | Runs wrapper compile/lower only; native DX12 run remains local/optional |
+| `build_m28a_dx12_window_style_box_scene.ps1` | `Tools` | M27D/M28A | smoke wrapper | Compiles and lowers the official native-window-style + generated-box scene, optionally builds/runs native DX12 | `Samples\DX12\dx12_window_style_box_scene_m28a.arq` | `Build\M28A\dx12_clear_manifest.generated.txt`, `Build\M28A\dx12_clear_config.generated.h`, optional exe | `.\Tools\build_m28a_dx12_window_style_box_scene.ps1 -BuildNative -RunNative -KeepOpen` | yes | no | active | Requires rebuilt driver after parser changes |
+
+## M28B DX12 full peripheral input
+
+- `Tools/build_m28b_dx12_full_peripheral_input_scene.ps1` builds/lowers the official M28B sample and can optionally build/run native DX12.
+- `Tools/validate_m28b_dx12_full_peripheral_input.ps1` validates parser, AST/IR, lowerer, runtime, wrapper, docs, sample, and command tests for M28B.

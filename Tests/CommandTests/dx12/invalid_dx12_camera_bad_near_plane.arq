@@ -1,0 +1,9 @@
+program "InvalidDx12CameraBadNearPlane"
+set title to string "dx12 bad near plane"
+
+define camera called "MainCamera"
+set near plane of camera "MainCamera" to 0.0
+
+show message "should not compile"
+blend mix to code 0
+end program "InvalidDx12CameraBadNearPlane"

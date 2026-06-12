@@ -49,3 +49,4 @@
 *.pdb
 Tools/publish/
 Tools/M10GDriver/publish/
+.vs

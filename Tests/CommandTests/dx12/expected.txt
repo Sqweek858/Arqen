@@ -1,0 +1,134 @@
+valid_dx12_renderer_define.arq|0|MESSAGE|dx12 renderer define
+valid_dx12_renderer_parent_window.arq|0|MESSAGE|dx12 renderer parent
+valid_dx12_renderer_with_style_background.arq|0|MESSAGE|dx12 renderer style background
+invalid_dx12_renderer_empty_name.arq|1|ERROR|S260|semantic
+invalid_dx12_renderer_duplicate.arq|1|ERROR|S260|semantic
+invalid_dx12_parent_unknown_renderer.arq|1|ERROR|S261|semantic
+invalid_dx12_parent_unknown_window.arq|1|ERROR|S262|semantic
+invalid_dx12_parent_duplicate.arq|1|ERROR|S263|semantic
+invalid_dx12_parent_missing_renderer_word.arq|1|ERROR|P001|parse
+
+valid_dx12_renderer_style_preset_background.arq|0|MESSAGE|dx12 renderer preset clear style
+valid_dx12_renderer_named_background.arq|0|MESSAGE|dx12 renderer named clear style
+valid_dx12_renderer_multiple_clear_styles.arq|0|MESSAGE|dx12 multiple renderer clear styles
+invalid_dx12_renderer_style_state.arq|1|ERROR|S265|semantic
+invalid_dx12_renderer_style_unsupported_property.arq|1|ERROR|S266|semantic
+invalid_dx12_renderer_style_preset_unsupported_property.arq|1|ERROR|S266|semantic
+invalid_dx12_renderer_style_duplicate_clear_sources.arq|1|ERROR|S267|semantic
+invalid_dx12_renderer_style_preset_state.arq|1|ERROR|S265|semantic
+
+valid_dx12_clear_ready_direct_style.arq|0|MESSAGE|dx12 clear ready direct
+valid_dx12_clear_ready_preset_style.arq|0|MESSAGE|dx12 clear ready preset
+valid_dx12_style_without_parent_metadata_only.arq|0|MESSAGE|dx12 style without parent metadata only
+valid_dx12_mixed_ready_and_metadata_renderers.arq|0|MESSAGE|dx12 mixed ready and metadata renderers
+invalid_dx12_renderer_conflicts_variable_before.arq|1|ERROR|S260|semantic
+invalid_dx12_variable_conflicts_renderer_after.arq|1|ERROR|S260|semantic
+invalid_dx12_renderer_conflicts_ui_object_before.arq|1|ERROR|S260|semantic
+invalid_dx12_renderer_conflicts_window_before.arq|1|ERROR|S260|semantic
+invalid_dx12_window_conflicts_renderer_after.arq|1|ERROR|S260|semantic
+invalid_dx12_parent_to_button_instead_of_window.arq|1|ERROR|S262|semantic
+invalid_dx12_clear_style_duplicate_direct_blocks.arq|1|ERROR|S202|semantic
+invalid_dx12_clear_style_preset_then_direct.arq|1|ERROR|S267|semantic
+
+valid_dx12_frame_clear_sequence.arq|0|MESSAGE|dx12 frame clear sequence
+valid_dx12_frame_preset_style_sequence.arq|0|MESSAGE|dx12 frame preset style sequence
+valid_dx12_frame_two_renderers_one_presented.arq|0|MESSAGE|dx12 two renderers one frame
+valid_dx12_frame_metadata_only_no_run.arq|0|MESSAGE|dx12 frame metadata only
+invalid_dx12_frame_begin_unknown_renderer.arq|1|ERROR|S268|semantic
+invalid_dx12_frame_begin_unparented_renderer.arq|1|ERROR|S268|semantic
+invalid_dx12_frame_begin_twice.arq|1|ERROR|S269|semantic
+invalid_dx12_frame_clear_outside_begin.arq|1|ERROR|S269|semantic
+invalid_dx12_frame_clear_without_style.arq|1|ERROR|S268|semantic
+invalid_dx12_frame_end_without_begin.arq|1|ERROR|S269|semantic
+invalid_dx12_frame_end_without_clear.arq|1|ERROR|S269|semantic
+invalid_dx12_frame_present_without_end.arq|1|ERROR|S269|semantic
+invalid_dx12_frame_present_twice.arq|1|ERROR|S269|semantic
+
+valid_dx12_shader_define.arq|0|MESSAGE|dx12 shader define
+valid_dx12_pipeline_define_bind.arq|0|MESSAGE|dx12 pipeline define bind
+valid_dx12_pipeline_with_frame_sequence.arq|0|MESSAGE|dx12 pipeline frame metadata
+valid_dx12_pipeline_two_renderers.arq|0|MESSAGE|dx12 two pipelines
+invalid_dx12_shader_empty_name.arq|1|ERROR|S280|semantic
+invalid_dx12_shader_duplicate.arq|1|ERROR|S280|semantic
+invalid_dx12_shader_missing_vertex.arq|1|ERROR|S282|semantic
+invalid_dx12_shader_missing_pixel.arq|1|ERROR|S282|semantic
+invalid_dx12_shader_duplicate_vertex.arq|1|ERROR|S281|semantic
+invalid_dx12_pipeline_duplicate.arq|1|ERROR|S283|semantic
+invalid_dx12_pipeline_unknown_renderer.arq|1|ERROR|S285|semantic
+invalid_dx12_pipeline_unparented_renderer.arq|1|ERROR|S285|semantic
+invalid_dx12_pipeline_unknown_shader.arq|1|ERROR|S285|semantic
+invalid_dx12_pipeline_invalid_topology.arq|1|ERROR|S284|semantic
+invalid_dx12_pipeline_bind_unknown_pipeline.arq|1|ERROR|S286|semantic
+invalid_dx12_pipeline_bind_renderer_mismatch.arq|1|ERROR|S286|semantic
+invalid_dx12_pipeline_bind_duplicate.arq|1|ERROR|S286|semantic
+
+valid_dx12_vertex_buffer_define.arq|0|MESSAGE|dx12 vertex buffer define
+valid_dx12_vertex_buffer_bind_draw.arq|0|MESSAGE|dx12 vertex buffer draw
+valid_dx12_vertex_buffer_draw_three_of_four.arq|0|MESSAGE|dx12 draw three of four
+valid_dx12_first_triangle_metadata.arq|0|MESSAGE|dx12 first triangle metadata
+invalid_dx12_vertex_buffer_empty_name.arq|1|ERROR|S287|semantic
+invalid_dx12_vertex_buffer_duplicate.arq|1|ERROR|S287|semantic
+invalid_dx12_vertex_position_vec2.arq|1|ERROR|S288|semantic
+invalid_dx12_vertex_color_vec3.arq|1|ERROR|S288|semantic
+invalid_dx12_vertex_color_range.arq|1|ERROR|S288|semantic
+invalid_dx12_vertex_buffer_too_few.arq|1|ERROR|S289|semantic
+invalid_dx12_vertex_buffer_bind_unknown_buffer.arq|1|ERROR|S290|semantic
+invalid_dx12_vertex_buffer_bind_unknown_renderer.arq|1|ERROR|S291|semantic
+invalid_dx12_vertex_buffer_bind_duplicate.arq|1|ERROR|S292|semantic
+invalid_dx12_draw_outside_frame.arq|1|ERROR|S293|semantic
+invalid_dx12_draw_before_clear.arq|1|ERROR|S293|semantic
+invalid_dx12_draw_without_pipeline.arq|1|ERROR|S293|semantic
+invalid_dx12_draw_without_vertex_buffer.arq|1|ERROR|S293|semantic
+invalid_dx12_draw_too_many_vertices.arq|1|ERROR|S293|semantic
+invalid_dx12_draw_duplicate.arq|1|ERROR|S293|semantic
+
+valid_dx12_constant_buffer_tint_bind.arq|0|MESSAGE|dx12 constant buffer tint bind
+valid_dx12_color_sequence_animation.arq|0|MESSAGE|dx12 color sequence animation
+valid_dx12_animated_triangle_metadata.arq|0|MESSAGE|dx12 animated triangle metadata
+invalid_dx12_constant_buffer_empty_name.arq|1|ERROR|S294|semantic
+invalid_dx12_constant_buffer_duplicate.arq|1|ERROR|S294|semantic
+invalid_dx12_constant_buffer_unknown_field.arq|1|ERROR|S295|semantic
+invalid_dx12_constant_buffer_missing_tint.arq|1|ERROR|S295|semantic
+invalid_dx12_constant_buffer_bind_unknown_buffer.arq|1|ERROR|S297|semantic
+invalid_dx12_constant_buffer_bind_unknown_pipeline.arq|1|ERROR|S298|semantic
+invalid_dx12_constant_buffer_bind_duplicate.arq|1|ERROR|S299|semantic
+invalid_dx12_color_sequence_empty_name.arq|1|ERROR|S300|semantic
+invalid_dx12_color_sequence_too_few.arq|1|ERROR|S302|semantic
+invalid_dx12_color_sequence_bad_color.arq|1|ERROR|S301|semantic
+invalid_dx12_animate_unknown_target.arq|1|ERROR|S303|semantic
+invalid_dx12_animate_unknown_sequence.arq|1|ERROR|S304|semantic
+invalid_dx12_animate_every_zero.arq|1|ERROR|S305|semantic
+invalid_dx12_animate_duplicate.arq|1|ERROR|S306|semantic
+
+valid_dx12_object_draw_metadata.arq|0|MESSAGE|dx12 object draw metadata
+valid_dx12_explicit_multi_draw_metadata.arq|0|MESSAGE|dx12 explicit multi draw metadata
+invalid_dx12_object_duplicate.arq|1|ERROR|S320|semantic
+invalid_dx12_object_unknown_draw.arq|1|ERROR|S321|semantic
+invalid_dx12_object_unknown_buffer.arq|1|ERROR|S324|semantic
+invalid_dx12_object_draw_before_clear.arq|1|ERROR|S326|semantic
+
+valid_dx12_transform_camera_input_metadata.arq|0|MESSAGE|dx12 transform camera input metadata
+invalid_dx12_transform_unknown_object.arq|1|ERROR|S321|semantic
+invalid_dx12_camera_unknown_use.arq|1|ERROR|S348|semantic
+invalid_dx12_input_unknown_camera.arq|1|ERROR|S348|semantic
+invalid_dx12_input_bad_key.arq|1|ERROR|S360|semantic
+
+valid_dx12_perspective_camera_metadata.arq|0|MESSAGE|dx12 perspective camera metadata
+invalid_dx12_camera_bad_projection.arq|1|ERROR|S352|semantic
+invalid_dx12_camera_bad_fov.arq|1|ERROR|S354|semantic
+invalid_dx12_camera_bad_near_plane.arq|1|ERROR|S355|semantic
+
+valid_dx12_window_style_titlebar_metadata.arq|0|MESSAGE|dx12 window titlebar style metadata
+invalid_dx12_window_style_unknown_target.arq|1|ERROR|S370|semantic
+invalid_dx12_window_style_named_color.arq|1|ERROR|S372|semantic
+
+valid_dx12_box_primitive_metadata.arq|0|MESSAGE|dx12 box primitive metadata
+invalid_dx12_box_duplicate_object.arq|1|ERROR|S380|semantic
+invalid_dx12_box_unknown_draw.arq|1|ERROR|S321|semantic
+invalid_dx12_box_manual_vertex_buffer.arq|1|ERROR|S381|semantic
+
+valid_dx12_full_peripheral_input_metadata.arq|0|MESSAGE|dx12 full peripheral input metadata
+invalid_dx12_mouse_capture_unknown_window.arq|1|ERROR|S382|semantic
+invalid_dx12_mouse_move_bad_vector.arq|1|ERROR|S383|semantic
+invalid_dx12_mouse_button_bad_button.arq|1|ERROR|S385|semantic
+invalid_dx12_mouse_wheel_unknown_camera.arq|1|ERROR|S348|semantic

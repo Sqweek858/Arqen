@@ -47,6 +47,159 @@ static partial class Program
 
         readonly List<UiResourceUse> _uiResourceUses = new();
 
+        readonly List<Dx12Renderer> _dx12Renderers = new();
+
+        readonly List<Dx12RendererParent> _dx12RendererParents = new();
+
+        readonly List<Dx12RendererClearStyle> _dx12RendererClearStyles = new();
+
+        readonly List<Dx12RendererClearReady> _dx12RendererClearReadies = new();
+
+        readonly List<Dx12FrameCommand> _dx12FrameCommands = new();
+
+        readonly List<Dx12Shader> _dx12Shaders = new();
+
+        readonly List<Dx12Pipeline> _dx12Pipelines = new();
+
+        readonly List<Dx12PipelineBind> _dx12PipelineBinds = new();
+
+        readonly List<Dx12VertexBuffer> _dx12VertexBuffers = new();
+
+        readonly List<Dx12Vertex> _dx12Vertices = new();
+
+        readonly List<Dx12VertexBufferBind> _dx12VertexBufferBinds = new();
+
+        readonly List<Dx12Draw> _dx12Draws = new();
+
+        readonly List<Dx12Object> _dx12Objects = new();
+
+        readonly List<Dx12ObjectBinding> _dx12ObjectBindings = new();
+
+        readonly List<Dx12DrawObject> _dx12DrawObjects = new();
+
+        readonly List<Dx12ObjectTransform> _dx12ObjectTransforms = new();
+
+        readonly List<Dx12ObjectPrimitive> _dx12ObjectPrimitives = new();
+
+        readonly List<Dx12Camera> _dx12Cameras = new();
+
+        readonly List<Dx12CameraUse> _dx12CameraUses = new();
+
+        readonly List<Dx12CameraProjection> _dx12CameraProjections = new();
+
+        readonly List<Dx12CameraTransform> _dx12CameraTransforms = new();
+
+        readonly List<Dx12KeyBinding> _dx12KeyBindings = new();
+
+        readonly List<Dx12MouseCapture> _dx12MouseCaptures = new();
+
+        readonly List<Dx12MouseMoveBinding> _dx12MouseMoveBindings = new();
+
+        readonly List<Dx12MouseButtonBinding> _dx12MouseButtonBindings = new();
+
+        readonly List<Dx12MouseWheelBinding> _dx12MouseWheelBindings = new();
+
+        readonly List<Dx12ConstantBuffer> _dx12ConstantBuffers = new();
+
+        readonly List<Dx12ConstantBufferBind> _dx12ConstantBufferBinds = new();
+
+        readonly List<Dx12ColorSequence> _dx12ColorSequences = new();
+
+        readonly List<Dx12ColorKey> _dx12ColorKeys = new();
+
+        readonly List<Dx12AnimateColor> _dx12AnimateColors = new();
+
+        readonly HashSet<string> _dx12RendererNames = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12RendererWindowByName = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12RendererClearStyleKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12FrameOpenRenderers = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12FrameClearedRenderers = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12FrameEndedRenderers = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12FramePresentedRenderers = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12ShaderNames = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12ShaderVertexByName = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12ShaderPixelByName = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12PipelineNames = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12PipelineRendererByName = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12PipelineShaderByName = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12PipelineBindKeys = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12PipelineByRenderer = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12VertexBufferNames = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, int> _dx12VertexBufferCountByName = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12VertexBufferByRenderer = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12ConstantBufferNames = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12ConstantBufferTintByName = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12ConstantBufferByPipeline = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12ConstantBufferBindKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12ColorSequenceNames = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, int> _dx12ColorSequenceCountByName = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12AnimateColorTargets = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12DrawnRenderers = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12ObjectNames = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12ObjectPrimitiveByName = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12ObjectRendererByName = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12ObjectPipelineByName = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12ObjectVertexBufferByName = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, int> _dx12ObjectVertexCountByName = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12ObjectBindingKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12DrawnObjects = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12CameraNames = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12CameraByRenderer = new(StringComparer.Ordinal);
+
+        readonly Dictionary<string, string> _dx12CameraRendererByName = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12CameraProjectionKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12ObjectTransformKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12CameraTransformKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12KeyBindingKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12MouseCaptureWindows = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12MouseMoveBindingKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12MouseButtonBindingKeys = new(StringComparer.Ordinal);
+
+        readonly HashSet<string> _dx12MouseWheelBindingKeys = new(StringComparer.Ordinal);
+
+
         readonly Dictionary<string, string> _uiObjectTypes = new(StringComparer.Ordinal);
 
         readonly HashSet<string> _uiPropertyKeys = new(StringComparer.Ordinal);
@@ -129,6 +282,30 @@ static partial class Program
                 new StatementRule(() => IsKeyword("define") && LooksLikeUiObjectDefinition(), ParseUiObjectDefinitionStatement),
                 new StatementRule(() => IsKeyword("set") && LooksLikeUiPropertySet(), ParseUiPropertySetStatement),
                 new StatementRule(() => IsKeyword("add") && LooksLikeUiDropdownOption(), ParseUiDropdownOptionStatement),
+                new StatementRule(() => CurrentWordIs("parent") && PeekWord("renderer"), ParseDx12RendererParentStatement),
+                new StatementRule(() => CurrentWordIs("begin") && PeekWord("frame"), ParseDx12FrameBeginStatement),
+                new StatementRule(() => CurrentWordIs("clear") && PeekWord("renderer"), ParseDx12RendererClearStatement),
+                new StatementRule(() => CurrentWordIs("end") && PeekWord("frame"), ParseDx12FrameEndStatement),
+                new StatementRule(() => CurrentWordIs("present") && PeekWord("frame"), ParseDx12FramePresentStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("shader"), ParseDx12ShaderDefinitionStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("dx12") && PeekWord("pipeline", 2), ParseDx12PipelineDefinitionStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("box"), ParseDx12BoxPrimitiveDefinitionStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("object"), ParseDx12ObjectDefinitionStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("camera"), ParseDx12CameraDefinitionStatement),
+                new StatementRule(() => IsKeyword("use") && PeekWord("camera"), ParseDx12CameraUseStatement),
+                new StatementRule(() => IsKeyword("use") && PeekWord("renderer"), ParseDx12ObjectRendererUseStatement),
+                new StatementRule(() => IsKeyword("use") && PeekWord("pipeline"), ParseDx12PipelineUseStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("vertex") && PeekWord("buffer", 2), ParseDx12VertexBufferDefinitionStatement),
+                new StatementRule(() => IsKeyword("use") && PeekWord("vertex") && PeekWord("buffer", 2), ParseDx12VertexBufferUseStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("constant") && PeekWord("buffer", 2), ParseDx12ConstantBufferDefinitionStatement),
+                new StatementRule(() => IsKeyword("use") && PeekWord("constant") && PeekWord("buffer", 2), ParseDx12ConstantBufferUseStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("color") && PeekWord("sequence", 2), ParseDx12ColorSequenceDefinitionStatement),
+                new StatementRule(() => CurrentWordIs("animate") && PeekWord("color"), ParseDx12AnimateColorStatement),
+                new StatementRule(() => IsKeyword("set") && LooksLikeDx12TransformOrCameraStatement(), ParseDx12TransformOrCameraStatement),
+                new StatementRule(() => CurrentWordIs("capture") && PeekWord("mouse"), ParseDx12MouseCaptureStatement),
+                new StatementRule(() => CurrentWordIs("when") && PeekWord("mouse"), ParseDx12MouseInputStatement),
+                new StatementRule(() => CurrentWordIs("when") && PeekWord("key") && !PeekWord("pressed", 2), ParseDx12KeyboardInputStatement),
+                new StatementRule(() => CurrentWordIs("draw"), ParseDx12DrawStatement),
                 new StatementRule(() => CurrentWordIs("parent"), ParseUiParentStatement),
                 new StatementRule(() => CurrentWordIs("dock"), ParseUiDockStatement),
                 new StatementRule(() => CurrentWordIs("link"), ParseUiBindingStatement),
@@ -136,6 +313,7 @@ static partial class Program
                 new StatementRule(() => IsKeyword("set") && LooksLikeUiResourceUse(), ParseUiResourceUseStatement),
                 new StatementRule(() => IsKeyword("set") && LooksLikeUiStateSet(), ParseUiStateStatement),
                 new StatementRule(() => IsKeyword("with") && PeekWord("layout") && PeekKeyword("for", 2), ParseUiLayoutStatement),
+                new StatementRule(() => IsKeyword("define") && PeekWord("dx12") && PeekWord("renderer", 2), ParseDx12RendererDefinitionStatement),
                 new StatementRule(() => IsKeyword("let"), ParseLegacyLetStatement),
                 new StatementRule(() => IsKeyword("define"), ParseCanonicalDefineStatement),
                 new StatementRule(() => IsKeyword("rename"), ParseRenameStatement),
@@ -194,6 +372,9 @@ static partial class Program
             if (_finalCommand == "")
                 throw new CompileError("PARSE", "P001", Current.Line, Current.Column, "Expected final command.");
 
+            FinalizeDx12RendererClearReadiness();
+            FinalizeDx12ObjectBindings();
+
             SkipNewlines();
             ExpectKeyword("end");
             ExpectKeyword("program");
@@ -204,7 +385,7 @@ static partial class Program
             SkipNewlines();
             Expect("EOF", "end of file");
 
-            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow, _runtimeActions, _styles, _stylePresets, _styleApplies, _uiObjects, _uiProperties, _uiLayoutProperties, _uiParents, _uiDocks, _uiEvents, _uiBindings, _uiStates, _uiResources, _uiResourceUses);
+            return new AstModel(program, _varList, _title!, _titleExpr, _titleCommand, _message!, _messageExpr, _messageCommand, _exitCode, _finalCommand, _flow, _runtimeActions, _styles, _stylePresets, _styleApplies, _uiObjects, _uiProperties, _uiLayoutProperties, _uiParents, _uiDocks, _uiEvents, _uiBindings, _uiStates, _uiResources, _uiResourceUses, _dx12Renderers, _dx12RendererParents, _dx12RendererClearStyles, _dx12RendererClearReadies, _dx12FrameCommands, _dx12Shaders, _dx12Pipelines, _dx12PipelineBinds, _dx12VertexBuffers, _dx12Vertices, _dx12VertexBufferBinds, _dx12Draws, _dx12Objects, _dx12ObjectBindings, _dx12DrawObjects, _dx12ObjectTransforms, _dx12ObjectPrimitives, _dx12Cameras, _dx12CameraUses, _dx12CameraProjections, _dx12CameraTransforms, _dx12KeyBindings, _dx12MouseCaptures, _dx12MouseMoveBindings, _dx12MouseButtonBindings, _dx12MouseWheelBindings, _dx12ConstantBuffers, _dx12ConstantBufferBinds, _dx12ColorSequences, _dx12ColorKeys, _dx12AnimateColors);
         }
 
         record CommandExpr(string Value, string Repr, string Command);

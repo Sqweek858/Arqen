@@ -27,6 +27,7 @@ $statementRows = @(
     @{ Rule = "ui_object_statement"; Command = "ui_objects"; Keywords = "define,shape,text,button,slider,input,field,checkbox,dropdown,called,set,content,range,value,placeholder,checked,of,to,add,string"; TestFolder = "ui_objects" },
     @{ Rule = "ui_layout_statement"; Command = "ui_layout"; Keywords = "parent,to,with,layout,for,end,dock,of,x,y,width,height,anchor,offset,margin,padding,mode,direction,gap,columns,rows"; TestFolder = "ui_layout" },
     @{ Rule = "ui_final_statement"; Command = "ui_final"; Keywords = "when,clicked,hovered,pressed,released,focused,unfocused,changed,value,text,dragged,dropped,loaded,resized,link,set,enabled,visible,selected,visibility,state,define,texture,font,sound,called,from,file"; TestFolder = "ui_final" },
+    @{ Rule = "dx12_renderer_statement"; Command = "dx12"; Keywords = "define,dx12,renderer,called,parent,to,window,with,style,for,background,color,begin,frame,clear,end,present,shader,vertex,source,file,pixel,pipeline,topology,triangle,list,use,buffer,position,draw,vertices,constant,tint,sequence,animate,using,every,frames"; TestFolder = "dx12" },
     @{ Rule = "math_update_statement"; Command = "math_update"; Keywords = "add,remove,multiply,divide"; TestFolder = "math_update" },
     @{ Rule = "while_statement"; Command = "while_compile_time"; Keywords = "while"; TestFolder = "while_compile_time" },
     @{ Rule = "function_statement"; Command = "function"; Keywords = "define,function,call"; TestFolder = "function" },

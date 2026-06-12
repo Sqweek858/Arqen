@@ -24,7 +24,7 @@ foreach ($raw in Get-Content $capPath) {
     if ($parts.Length -eq 2) { $cap[$parts[0]] = $parts[1] }
 }
 
-foreach ($op in @('window_create', 'window_set_title', 'window_set_resolution', 'window_set_resizable', 'window_show', 'window_run', 'event_window_closed', 'event_key_pressed', 'event_end', 'exit')) {
+foreach ($op in @('window_create', 'window_set_title', 'window_set_resolution', 'window_set_resizable', 'window_style_title_bar_color', 'window_style_title_text_color', 'window_show', 'window_run', 'event_window_closed', 'event_key_pressed', 'event_end', 'exit')) {
     Add-Result "window_runtime_supported_$op" ($cap.ContainsKey($op) -and $cap[$op] -eq 'supported') "current window runtime action is supported"
 }
 foreach ($op in @('dx12', 'shader', 'render_pass', 'frame_update')) {

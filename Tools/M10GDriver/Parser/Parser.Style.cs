@@ -87,6 +87,8 @@ static partial class Program
             "transition delay",
             "animation duration",
             "animation easing",
+            "title bar color",
+            "title text color",
         };
 
         static readonly HashSet<string> StyleTypeValues = new(StringComparer.Ordinal)
@@ -316,6 +318,9 @@ static partial class Program
             if (!_styleApplications.Add(applyKey))
                 throw new CompileError("SEMANTIC", "S216", styleTok.Line, styleTok.Column, $"Duplicate style application '{styleTok.Value}' for '{targetTok.Value}' state '{state}'.");
 
+            RegisterDx12RendererStylePresetApplication(styleTok, targetTok, state, apply);
+            RegisterNativeWindowStylePresetApplication(styleTok, targetTok, state, apply);
+
             if (apply)
                 _styleApplies.Add(new StyleApplication(styleTok.Value, targetTok.Value, state));
         }
@@ -342,6 +347,8 @@ static partial class Program
 
             ExpectLine();
 
+            ValidateDx12RendererStyleState(targetTok, state);
+
             var blockKey = targetTok.Value + "|" + state;
             if (_styleBlocks.Contains(blockKey))
                 throw new CompileError("SEMANTIC", "S202", targetTok.Line, targetTok.Column, $"Duplicate style block for '{targetTok.Value}' state '{state}'.");
@@ -355,12 +362,111 @@ static partial class Program
                 seenProperties: seenProperties,
                 onProperty: parsed =>
                 {
+                    RegisterDx12RendererStyleProperty(targetTok, state, parsed, apply);
+                    RegisterNativeWindowStyleProperty(targetTok, state, parsed, apply);
                     if (apply)
                         _styles.Add(new StyleProperty(targetTok.Value, state, parsed.Property, parsed.Value.Kind, parsed.Value.Value, parsed.Value.Unit, parsed.Value.Source));
                 });
 
             if (count == 0)
                 throw new CompileError("SEMANTIC", "S205", targetTok.Line, targetTok.Column, $"Style block for '{targetTok.Value}' cannot be empty.");
+        }
+
+        void ValidateDx12RendererStyleState(Token targetTok, string state)
+        {
+            if (!_dx12RendererNames.Contains(targetTok.Value))
+                return;
+            if (state != "default")
+                throw new CompileError("SEMANTIC", "S265", targetTok.Line, targetTok.Column, "DX12 renderer styles only support the default state in M20C.");
+        }
+
+
+        void ValidateNativeWindowStyleState(Token targetTok, string state)
+        {
+            if (!_definedWindows.Contains(targetTok.Value))
+                return;
+            if (state != "default")
+                throw new CompileError("SEMANTIC", "S371", targetTok.Line, targetTok.Column, "Native window styles only support the default state in M27D.");
+        }
+
+        bool IsNativeWindowStyleProperty(string property)
+            => property == "title bar color" || property == "title text color";
+
+        void RegisterNativeWindowStyleProperty(Token targetTok, string state, ParsedStyleProperty parsed, bool apply)
+        {
+            if (!IsNativeWindowStyleProperty(parsed.Property))
+                return;
+            if (!_definedWindows.Contains(targetTok.Value))
+                throw new CompileError("SEMANTIC", "S370", targetTok.Line, targetTok.Column, $"Native window style property '{parsed.Property}' can only target a defined window.");
+            ValidateNativeWindowStyleState(targetTok, state);
+            if (parsed.Value.Kind != "color")
+                throw new CompileError("SEMANTIC", "S372", targetTok.Line, targetTok.Column, $"Native window style property '{parsed.Property}' requires a #RRGGBB color literal.");
+            if (apply)
+            {
+                var op = parsed.Property == "title bar color" ? "window_style_title_bar_color" : "window_style_title_text_color";
+                _runtimeActions.Add(new RuntimeAction(op, "", parsed.Value.Kind, parsed.Value.Value, targetTok.Value));
+            }
+        }
+
+        void RegisterNativeWindowStylePresetApplication(Token styleTok, Token targetTok, string state, bool apply)
+        {
+            if (!_definedWindows.Contains(targetTok.Value))
+                return;
+            ValidateNativeWindowStyleState(targetTok, state);
+
+            var presetProperties = _stylePresets.Where(p => p.Name == styleTok.Value).ToList();
+            foreach (var prop in presetProperties)
+            {
+                if (!IsNativeWindowStyleProperty(prop.Property))
+                    throw new CompileError("SEMANTIC", "S370", styleTok.Line, styleTok.Column, $"Native window style preset '{styleTok.Value}' contains unsupported property '{prop.Property}'.");
+                if (prop.ValueKind != "color")
+                    throw new CompileError("SEMANTIC", "S372", styleTok.Line, styleTok.Column, $"Native window style property '{prop.Property}' requires a #RRGGBB color literal.");
+            }
+
+            foreach (var prop in presetProperties)
+            {
+                if (!apply)
+                    continue;
+                var op = prop.Property == "title bar color" ? "window_style_title_bar_color" : "window_style_title_text_color";
+                _runtimeActions.Add(new RuntimeAction(op, "", prop.ValueKind, prop.Value, targetTok.Value));
+            }
+        }
+
+        void RegisterDx12RendererStyleProperty(Token targetTok, string state, ParsedStyleProperty parsed, bool apply)
+        {
+            if (!_dx12RendererNames.Contains(targetTok.Value))
+                return;
+            ValidateDx12RendererStyleState(targetTok, state);
+            if (parsed.Property != "background color")
+                throw new CompileError("SEMANTIC", "S266", targetTok.Line, targetTok.Column, $"DX12 renderer style supports only background color in M20C, not '{parsed.Property}'.");
+            if (apply)
+                AddDx12RendererClearStyle(targetTok, state, parsed.Value.Kind, parsed.Value.Value, parsed.Value.Unit, "style.background_color");
+        }
+
+        void RegisterDx12RendererStylePresetApplication(Token styleTok, Token targetTok, string state, bool apply)
+        {
+            if (!_dx12RendererNames.Contains(targetTok.Value))
+                return;
+            ValidateDx12RendererStyleState(targetTok, state);
+
+            var presetProperties = _stylePresets.Where(p => p.Name == styleTok.Value).ToList();
+            foreach (var prop in presetProperties)
+            {
+                if (prop.Property != "background color")
+                    throw new CompileError("SEMANTIC", "S266", styleTok.Line, styleTok.Column, $"DX12 renderer style preset '{styleTok.Value}' contains unsupported property '{prop.Property}'.");
+            }
+
+            var background = presetProperties.FirstOrDefault(p => p.Property == "background color");
+            if (background != null && apply)
+                AddDx12RendererClearStyle(targetTok, state, background.ValueKind, background.Value, background.Unit, $"style_preset.{styleTok.Value}.background_color");
+        }
+
+        void AddDx12RendererClearStyle(Token targetTok, string state, string valueKind, string value, string unit, string source)
+        {
+            var key = targetTok.Value + "|" + state;
+            if (!_dx12RendererClearStyleKeys.Add(key))
+                throw new CompileError("SEMANTIC", "S267", targetTok.Line, targetTok.Column, $"DX12 renderer '{targetTok.Value}' already has a default background color style.");
+            _dx12RendererClearStyles.Add(new Dx12RendererClearStyle(targetTok.Value, state, valueKind, value, unit, source));
         }
 
         record ParsedStyleProperty(string Property, ParsedStyleValue Value);
@@ -476,7 +582,7 @@ static partial class Program
                 "scale y" => ParseStyleNonNegativeNumberValue(property),
                 "aspect ratio" => ParseStylePositiveNumberValue(property),
                 "rotation" => ParseStyleAngleValue(property),
-                "color" or "background color" or "foreground color" or "accent color" or "border color" or "outline color" or "shadow color" => ParseStyleColorValue(property),
+                "color" or "background color" or "foreground color" or "accent color" or "border color" or "outline color" or "shadow color" or "title bar color" or "title text color" => ParseStyleColorValue(property),
                 _ => throw new CompileError("SEMANTIC", "S203", propertyTok.Line, propertyTok.Column, $"Unknown style property '{property}'."),
             };
         }

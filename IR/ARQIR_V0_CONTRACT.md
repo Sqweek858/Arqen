@@ -117,3 +117,191 @@ M18I makes ARQIR v0 strict enough for pre-DX12 work:
 - Every entry action must pass the C# backend capability gate, not only wrapper-side PowerShell checks.
 
 These rules intentionally keep DX12, shader, render pass, and frame update operations rejected until a real runtime/backend implementation exists.
+
+
+## M20A DX12 note
+
+M20A does not add new ARQIR action kinds. The native DX12 clear bridge is source-level backend/runtime infrastructure only.
+
+Reserved DX12-related operations remain rejected by backend capability validation:
+
+```text
+dx12
+shader
+render_pass
+frame_update
+```
+
+A later M20 slice may add visible ARQIR actions only after parser syntax, AST nodes, semantic validation, backend execution, capability gates, and proportional command tests are all present.
+
+
+## M20B DX12 renderer metadata
+
+ARQIR v0 accepts DX12 renderer metadata lines beginning in M20B:
+
+```text
+DX12_RENDERER|name=MainRenderer
+DX12_PARENT|renderer=MainRenderer|window=MainWindow
+```
+
+These are metadata records, not executable actions. They may appear before constants/actions and are ignored by the WindowsX64PE backend until a DX12 backend slice consumes them.
+
+Required fields:
+
+```text
+DX12_RENDERER: name
+DX12_PARENT: renderer, window
+```
+
+Capability status remains unsupported for executable DX12 action families.
+## M20C DX12 style-derived clear metadata
+
+M20C adds one DX12 renderer style metadata line:
+
+```text
+DX12_CLEAR_STYLE|renderer=MainRenderer|state=default|kind=color|value=#101820|unit=|source=style.background_color
+```
+
+`DX12_CLEAR_STYLE` is metadata, not an executable `ACTION`. It may appear before constants/actions and is accepted by strict IR parsing so a later DX12 backend slice can consume style-derived clear/background color without adding a duplicate public `set clear color` command.
+
+Required fields:
+
+```text
+DX12_CLEAR_STYLE: renderer, state, kind, value, source
+```
+
+Capability status remains unsupported for executable DX12 action families.
+
+## M20E0 DX12 clear-readiness metadata
+
+`DX12_CLEAR_READY` is a derived metadata line produced only when the compiler sees a renderer definition, parent window relationship, and style-derived clear/background color for the same renderer.
+
+Format:
+
+```text
+DX12_CLEAR_READY|renderer=<name>|window=<window>|kind=<kind>|value=<value>|unit=<unit>|source=<source>
+```
+
+It is not an executable action. The WindowsX64PE backend accepts it through strict IR validation but must ignore it until a later DX12 integration milestone consumes it.
+
+
+## M20E1 DX12 clear lowering note
+
+M20E1 does not add a new ARQIR action kind. It consumes existing metadata lines offline:
+
+```text
+DX12_RENDERER
+DX12_PARENT
+DX12_CLEAR_STYLE
+DX12_CLEAR_READY
+```
+
+`Tools/lower_m20e1_dx12_clear_from_ir.ps1` also reads normal window runtime actions such as `window_create`, `window_set_title`, and `window_set_resolution` to generate a native clear bridge config. This is an explicit tooling path, not normal WindowsX64PE backend execution.
+## M20G DX12 frame metadata
+
+M20G adds a metadata-only frame record:
+
+```text
+DX12_FRAME|command=<begin|clear|end|present>|renderer=<name>
+```
+
+`DX12_FRAME` is not an executable `ACTION`. It records public frame syntax after semantic validation, while WindowsX64PE continues to ignore DX12 metadata during normal executable generation.
+
+Required fields:
+
+```text
+DX12_FRAME: command, renderer
+```
+
+Capability status remains unsupported for executable DX12 action families.
+
+## M20H frame-aware DX12 lowering metadata
+
+M20H does not add new ARQIR line types. It constrains existing `DX12_FRAME` metadata when the explicit lowerer is run with `-RequireFrame`.
+
+The selected renderer must contain the ordered sequence:
+
+```text
+DX12_FRAME|command=begin|renderer=MainRenderer
+DX12_FRAME|command=clear|renderer=MainRenderer
+DX12_FRAME|command=end|renderer=MainRenderer
+DX12_FRAME|command=present|renderer=MainRenderer
+```
+
+The lowerer may generate manifest/config metadata such as `FRAME_MODE`, `FRAME_SEQUENCE`, and smoke hold settings. These are generated artifacts, not ARQIR runtime actions.
+
+## M21B DX12 shader/pipeline metadata
+
+ARQIR v0 accepts the following metadata-only lines:
+
+```text
+DX12_SHADER|name=<shader>|vertex=<path>|pixel=<path>
+DX12_PIPELINE|name=<pipeline>|renderer=<renderer>|shader=<shader>|topology=triangle_list
+DX12_PIPELINE_BIND|pipeline=<pipeline>|renderer=<renderer>
+```
+
+These lines are not ACTION records and do not imply backend support.
+
+## M21C/M21D DX12 vertex/draw metadata
+
+Accepted metadata records:
+
+```text
+DX12_VERTEX_BUFFER|name=<buffer>
+DX12_VERTEX|buffer=<buffer>|index=<n>|position=[x,y,z]|color=[r,g,b,a]
+DX12_VERTEX_BUFFER_BIND|buffer=<buffer>|renderer=<renderer>
+DX12_DRAW|renderer=<renderer>|vertices=<n>|buffer=<buffer>|pipeline=<pipeline>
+```
+
+M21D lowerer can consume these with `DX12_SHADER`, `DX12_PIPELINE`, `DX12_PIPELINE_BIND`, `DX12_CLEAR_READY`, and `DX12_FRAME` to produce a native triangle smoke config.
+
+## M21G/M21H DX12 tint animation metadata
+
+M21G introduces metadata-only constant buffer lines:
+
+```text
+DX12_CONSTANT_BUFFER|name=TriangleParams|field=tint|type=color4|value=#38FFC0
+DX12_CONSTANT_BUFFER_BIND|buffer=TriangleParams|pipeline=TrianglePipeline
+```
+
+M21H introduces metadata-only color sequence and animation lines:
+
+```text
+DX12_COLOR_SEQUENCE|name=TriangleColors
+DX12_COLOR_KEY|sequence=TriangleColors|index=0|value=#FF4040
+DX12_ANIMATE_COLOR|target=TriangleParams.tint|buffer=TriangleParams|field=tint|sequence=TriangleColors|every_frames=12
+```
+
+These records are consumed only by explicit DX12 smoke tooling. They do not promote general DX12 support.
+
+## M27 DX12 camera projection metadata
+
+`DX12_CAMERA_PROJECTION|camera=<name>|projection=<orthographic|perspective>` records the selected projection mode for a defined DX12 camera. Strict IR requires both `camera` and `projection`. If omitted, lowering keeps M25 orthographic compatibility.
+
+
+## M27D/M28A DX12 metadata
+
+M27D native window title-bar style is represented as ordinary runtime actions:
+
+```text
+ACTION|op=window_style_title_bar_color|target=MainWindow|kind=color|value=#000000
+ACTION|op=window_style_title_text_color|target=MainWindow|kind=color|value=#FFFFFF
+```
+
+M28A generated primitive boxes use:
+
+```text
+DX12_OBJECT|name=CubeA
+DX12_OBJECT_PRIMITIVE|object=CubeA|kind=box
+```
+
+Strict IR requires `object` and `kind` fields for `DX12_OBJECT_PRIMITIVE`. M28A only accepts `kind=box` in the lowerer/runtime contract.
+
+## M28B DX12 peripheral input metadata
+
+```text
+DX12_MOUSE_CAPTURE|window=MainWindow
+DX12_MOUSE_MOVE|target=MainCamera|sensitivity=[0.12,0.12]
+DX12_MOUSE_BUTTON|button=Left|action=move_camera_held|target=MainCamera|delta=[0,0,3]
+DX12_MOUSE_WHEEL|action=move_camera_wheel|target=MainCamera|delta=[0,0,1.25]
+```

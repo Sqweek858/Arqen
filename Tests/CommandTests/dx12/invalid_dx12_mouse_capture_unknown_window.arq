@@ -1,0 +1,8 @@
+program "InvalidDx12MouseCaptureUnknownWindow"
+set title to string "invalid dx12 mouse capture unknown window"
+
+capture mouse for window "MissingWindow"
+
+show message "invalid dx12 mouse capture unknown window"
+blend mix to code 0
+end program "InvalidDx12MouseCaptureUnknownWindow"

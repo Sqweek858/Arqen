@@ -1,0 +1,14 @@
+program "InvalidDx12RendererStylePresetState"
+set title to string "M20C DX12"
+
+define dx12 renderer called "MainRenderer"
+
+define style called "RendererClear"
+    background color: color "#203040"
+end style
+
+use style "RendererClear" for "MainRenderer" when hovered
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12RendererStylePresetState"

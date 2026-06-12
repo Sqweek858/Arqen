@@ -1,0 +1,44 @@
+program "ValidDx12ExplicitMultiDrawMetadata"
+set title to string "M23 DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+define shader called "TriangleShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+define vertex buffer called "TriangleA"
+    vertex position [-0.7, -0.4, 0.0] color [1.0, 0.0, 0.0, 1.0]
+    vertex position [-0.4, 0.4, 0.0] color [0.0, 1.0, 0.0, 1.0]
+    vertex position [-0.1, -0.4, 0.0] color [0.0, 0.0, 1.0, 1.0]
+end vertex buffer
+
+define vertex buffer called "TriangleB"
+    vertex position [0.1, -0.4, 0.0] color [1.0, 1.0, 0.0, 1.0]
+    vertex position [0.4, 0.4, 0.0] color [0.0, 1.0, 1.0, 1.0]
+    vertex position [0.7, -0.4, 0.0] color [1.0, 0.0, 1.0, 1.0]
+end vertex buffer
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw 3 vertices from buffer "TriangleA" with pipeline "TrianglePipeline" using renderer "MainRenderer"
+draw 3 vertices from buffer "TriangleB" with pipeline "TrianglePipeline" using renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "dx12 explicit multi draw metadata"
+blend mix to code 0
+end program "ValidDx12ExplicitMultiDrawMetadata"

@@ -1,0 +1,70 @@
+program "Dx12AnimatedTriangleM21H"
+set title to string "Arqen M21H Animated Triangle"
+
+// Window + DX12 renderer
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M21H Animated Triangle"
+set resolution of "MainWindow" to 1280 x 720
+show window "MainWindow"
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+// Shader/pipeline. Pixel shader consumes TriangleParams.tint from b0.
+
+define shader called "TriangleShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "TrianglePipeline" for renderer "MainRenderer"
+
+// White-ish vertices so the animated tint is visible.
+
+define vertex buffer called "TriangleVertices"
+    vertex position [-0.50, -0.50, 0.0] color [1.0, 1.0, 1.0, 1.0]
+    vertex position [0.00, 0.55, 0.0] color [1.0, 1.0, 1.0, 1.0]
+    vertex position [0.50, -0.50, 0.0] color [1.0, 1.0, 1.0, 1.0]
+end vertex buffer
+
+use vertex buffer "TriangleVertices" for renderer "MainRenderer"
+
+// M21G constant buffer + M21H color animation metadata.
+
+define constant buffer called "TriangleParams"
+    color tint: color "#38FFC0"
+end constant buffer
+
+use constant buffer "TriangleParams" for pipeline "TrianglePipeline"
+
+define color sequence called "TriangleColors"
+    color "#FF4040"
+    color "#38FFC0"
+    color "#4080FF"
+    color "#FFD040"
+end color sequence
+
+animate color "TriangleParams.tint"
+    using sequence "TriangleColors"
+    every 12 frames
+end animate
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw 3 vertices with renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+run window "MainWindow"
+end program "Dx12AnimatedTriangleM21H"

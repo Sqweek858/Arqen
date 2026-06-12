@@ -1,0 +1,8 @@
+program "InvalidDx12TransformUnknownObject"
+set title to string "M24 DX12"
+
+set position of object "GhostObject" to [0.0, 0.0, 0.0]
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12TransformUnknownObject"

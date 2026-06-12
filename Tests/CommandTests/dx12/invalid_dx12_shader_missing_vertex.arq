@@ -1,0 +1,10 @@
+program "InvalidDx12ShaderMissingVertex"
+set title to string "M21B DX12"
+
+define shader called "TriangleShader"
+    pixel source file "Shaders/triangle_ps.hlsl"
+end shader
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12ShaderMissingVertex"

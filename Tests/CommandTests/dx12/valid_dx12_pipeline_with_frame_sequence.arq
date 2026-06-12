@@ -1,0 +1,31 @@
+program "ValidDx12PipelineWithFrameSequence"
+set title to string "M21B DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+define shader called "TriangleShader"
+    vertex source file "Shaders/triangle_vs.hlsl"
+    pixel source file "Shaders/triangle_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "TrianglePipeline" for renderer "MainRenderer"
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "dx12 pipeline frame metadata"
+blend mix to code 0
+end program "ValidDx12PipelineWithFrameSequence"

@@ -20,6 +20,8 @@ static partial class Program
         "window_set_title",
         "window_set_resolution",
         "window_set_resizable",
+        "window_style_title_bar_color",
+        "window_style_title_text_color",
         "window_show",
         "window_run",
         "window_close",

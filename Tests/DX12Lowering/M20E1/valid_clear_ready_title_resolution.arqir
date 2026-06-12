@@ -1,0 +1,15 @@
+ARQIR|version=0
+TARGET|kind=program|name=M20E1TitleResolution
+META|source=Tests/DX12Lowering/M20E1/valid_clear_ready_title_resolution.arqir
+STYLE|target=MainRenderer|state=default|property=background color|kind=color|value=#101820|unit=
+DX12_RENDERER|name=MainRenderer
+DX12_PARENT|renderer=MainRenderer|window=MainWindow
+DX12_CLEAR_STYLE|renderer=MainRenderer|state=default|kind=color|value=#101820|unit=|source=style.background_color
+DX12_CLEAR_READY|renderer=MainRenderer|window=MainWindow|kind=color|value=#101820|unit=|source=style.background_color
+ACTION|id=act_0|op=window_create|path=|value_kind=static|value=|target=MainWindow
+ACTION|id=act_1|op=window_set_title|path=|value_kind=static|value=Arqen DX12 From IR|target=MainWindow
+ACTION|id=act_2|op=window_set_resolution|path=|value_kind=static|value=1280x720|target=MainWindow
+ACTION|id=act_3|op=exit|code=i32_0
+CONST|id=i32_0|type=int|value=0
+ENTRY|actions=act_0,act_1,act_2,act_3
+END

@@ -1,0 +1,123 @@
+
+program "Dx12UiTriangleStaticTest"
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen DX12 UI + Triangle Static Test"
+set resolution of "MainWindow" to 1280 x 720
+set resizable of "MainWindow" to true
+show window "MainWindow"
+
+// ------------------------------------------------------------
+// UI metadata layer
+// Important: in M21D this is metadata, not native DX12 UI rendering yet.
+// ------------------------------------------------------------
+
+define shape called "RootPanel"
+define shape called "HeaderPanel"
+define text called "TitleText"
+define text called "InfoText"
+define button called "TestButton"
+
+parent "HeaderPanel" to "RootPanel"
+parent "TitleText" to "HeaderPanel"
+parent "InfoText" to "RootPanel"
+parent "TestButton" to "RootPanel"
+
+set content of "TitleText" to string "Arqen Render Test"
+set content of "InfoText" to string "DX12 triangle path active"
+set content of "TestButton" to string "Not clickable in DX12 yet"
+
+with style for "RootPanel"
+    type: rounded rectangle
+    background color: color "#07110E"
+    foreground color: white
+    corner radius: 18 px
+    padding: 16 px
+    opacity: 0.88
+end style
+
+with style for "HeaderPanel"
+    type: rounded rectangle
+    background color: color "#101820"
+    foreground color: white
+    corner radius: 12 px
+    padding: 10 px
+end style
+
+with style for "TitleText"
+    font: "Arial"
+    size: 28 px
+    font weight: bold
+    text align: center
+end style
+
+with style for "InfoText"
+    font: "Arial"
+    size: 18 px
+    foreground color: color "#38FFC0"
+end style
+
+with style for "TestButton"
+    type: button
+    background color: color "#0B2A22"
+    foreground color: white
+    accent color: color "#38FFC0"
+    border color: color "#38FFC0"
+    border size: 1 px
+    corner radius: 10 px
+    padding: 12 px
+end style
+
+// ------------------------------------------------------------
+// DX12 renderer
+// ------------------------------------------------------------
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+// ------------------------------------------------------------
+// Shader + pipeline
+// ------------------------------------------------------------
+
+define shader called "TriangleShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "TrianglePipeline" for renderer "MainRenderer"
+
+// ------------------------------------------------------------
+// Triangle vertex data
+// ------------------------------------------------------------
+
+define vertex buffer called "TriangleVertices"
+    vertex position [-0.50, -0.50, 0.0] color [1.0, 0.1, 0.1, 1.0]
+    vertex position [0.00, 0.55, 0.0] color [0.1, 1.0, 0.3, 1.0]
+    vertex position [0.50, -0.50, 0.0] color [0.1, 0.4, 1.0, 1.0]
+end vertex buffer
+
+use vertex buffer "TriangleVertices" for renderer "MainRenderer"
+
+// ------------------------------------------------------------
+// One-shot M21D frame
+// ------------------------------------------------------------
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw 3 vertices with renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+run window "MainWindow"
+
+end program "Dx12UiTriangleStaticTest"

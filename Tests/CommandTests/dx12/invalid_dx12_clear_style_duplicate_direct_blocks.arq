@@ -1,0 +1,16 @@
+program "InvalidDx12ClearStyleDuplicateDirectBlocks"
+set title to string "M20D DX12"
+
+define dx12 renderer called "MainRenderer"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+with style for "MainRenderer"
+    background color: color "#203040"
+end style
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12ClearStyleDuplicateDirectBlocks"

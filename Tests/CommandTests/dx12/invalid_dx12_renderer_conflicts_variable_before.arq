@@ -1,0 +1,9 @@
+program "InvalidDx12RendererConflictsVariableBefore"
+set title to string "M20D DX12"
+
+define string called "MainRenderer" be string "taken"
+define dx12 renderer called "MainRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12RendererConflictsVariableBefore"

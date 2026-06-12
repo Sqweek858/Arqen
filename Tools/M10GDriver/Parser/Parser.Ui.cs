@@ -95,7 +95,7 @@ static partial class Program
         {
             if (string.IsNullOrWhiteSpace(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S230", nameTok.Line, nameTok.Column, "UI object name cannot be empty.");
-            if (_uiObjectTypes.ContainsKey(nameTok.Value) || SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value))
+            if (_uiObjectTypes.ContainsKey(nameTok.Value) || SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S230", nameTok.Line, nameTok.Column, $"UI object '{nameTok.Value}' is already defined.");
         }
 

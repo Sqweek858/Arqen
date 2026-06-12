@@ -37,7 +37,7 @@ $supported = @(
     "show_message", "print_stdout", "print_runtime_slot",
     "file_write", "file_append", "file_load",
     "command_arg_count", "command_arg_index",
-    "window_create", "window_set_title", "window_set_resolution", "window_set_resizable", "window_show", "window_run", "window_close",
+    "window_create", "window_set_title", "window_set_resolution", "window_set_resizable", "window_style_title_bar_color", "window_style_title_text_color", "window_show", "window_run", "window_close",
     "event_window_closed", "event_key_pressed", "event_end",
     "exit"
 )

@@ -24,6 +24,10 @@ static partial class Program
         {
             if (SymbolExists(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S001", nameTok.Line, nameTok.Column, $"{label} \"{nameTok.Value}\" is already defined.");
+            if (_dx12RendererNames.Contains(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S260", nameTok.Line, nameTok.Column, $"{label} \"{nameTok.Value}\" conflicts with an existing DX12 renderer name.");
+            if (_dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S280", nameTok.Line, nameTok.Column, $"{label} \"{nameTok.Value}\" conflicts with an existing DX12 shader, pipeline, vertex buffer, or object name.");
         }
 
         bool SymbolExists(string name) => _vars.ContainsKey(name);

@@ -1,0 +1,19 @@
+ARQIR|version=0
+TARGET|kind=program|name=valid_frame_title_resolution
+META|source=Tests/DX12Lowering/M20H/valid_frame_title_resolution.arqir
+STYLE|target=MainRenderer|state=default|property=background color|kind=color|value=#101820|unit=
+DX12_RENDERER|name=MainRenderer
+DX12_PARENT|renderer=MainRenderer|window=MainWindow
+DX12_CLEAR_STYLE|renderer=MainRenderer|state=default|kind=color|value=#101820|unit=|source=style.background_color
+DX12_CLEAR_READY|renderer=MainRenderer|window=MainWindow|kind=color|value=#101820|unit=|source=style.background_color
+DX12_FRAME|command=begin|renderer=MainRenderer
+DX12_FRAME|command=clear|renderer=MainRenderer
+DX12_FRAME|command=end|renderer=MainRenderer
+DX12_FRAME|command=present|renderer=MainRenderer
+ACTION|id=act_0|op=window_create|path=|value_kind=static|value=|target=MainWindow
+ACTION|id=act_1|op=window_set_title|path=|value_kind=static|value=Arqen M20H DX12 Frame Clear|target=MainWindow
+ACTION|id=act_2|op=window_set_resolution|path=|value_kind=static|value=1280x720|target=MainWindow
+ACTION|id=act_9|op=exit|code=i32_0
+CONST|id=i32_0|type=int|value=0
+ENTRY|actions=act_0,act_9
+END

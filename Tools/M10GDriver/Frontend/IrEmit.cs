@@ -34,6 +34,68 @@ static partial class Program
             yield return UiResourceIrLine(resource);
         foreach (var use in ast.UiResourceUses)
             yield return UiResourceUseIrLine(use);
+        foreach (var renderer in ast.Dx12Renderers)
+            yield return Dx12RendererIrLine(renderer);
+        foreach (var relation in ast.Dx12RendererParents)
+            yield return Dx12ParentIrLine(relation);
+        foreach (var clear in ast.Dx12RendererClearStyles)
+            yield return Dx12ClearStyleIrLine(clear);
+        foreach (var ready in ast.Dx12RendererClearReadies)
+            yield return Dx12ClearReadyIrLine(ready);
+        foreach (var frame in ast.Dx12FrameCommands)
+            yield return Dx12FrameIrLine(frame);
+        foreach (var shader in ast.Dx12Shaders)
+            yield return Dx12ShaderIrLine(shader);
+        foreach (var pipeline in ast.Dx12Pipelines)
+            yield return Dx12PipelineIrLine(pipeline);
+        foreach (var bind in ast.Dx12PipelineBinds)
+            yield return Dx12PipelineBindIrLine(bind);
+        foreach (var buffer in ast.Dx12VertexBuffers)
+            yield return Dx12VertexBufferIrLine(buffer);
+        foreach (var vertex in ast.Dx12Vertices)
+            yield return Dx12VertexIrLine(vertex);
+        foreach (var bind in ast.Dx12VertexBufferBinds)
+            yield return Dx12VertexBufferBindIrLine(bind);
+        foreach (var draw in ast.Dx12Draws)
+            yield return Dx12DrawIrLine(draw);
+        foreach (var obj in ast.Dx12Objects)
+            yield return Dx12ObjectIrLine(obj);
+        foreach (var binding in ast.Dx12ObjectBindings)
+            yield return Dx12ObjectBindIrLine(binding);
+        foreach (var drawObj in ast.Dx12DrawObjects)
+            yield return Dx12DrawObjectIrLine(drawObj);
+        foreach (var transform in ast.Dx12ObjectTransforms)
+            yield return Dx12ObjectTransformIrLine(transform);
+        foreach (var primitive in ast.Dx12ObjectPrimitives)
+            yield return Dx12ObjectPrimitiveIrLine(primitive);
+        foreach (var camera in ast.Dx12Cameras)
+            yield return Dx12CameraIrLine(camera);
+        foreach (var cameraUse in ast.Dx12CameraUses)
+            yield return Dx12CameraUseIrLine(cameraUse);
+        foreach (var projection in ast.Dx12CameraProjections)
+            yield return Dx12CameraProjectionIrLine(projection);
+        foreach (var cameraTransform in ast.Dx12CameraTransforms)
+            yield return Dx12CameraTransformIrLine(cameraTransform);
+        foreach (var key in ast.Dx12KeyBindings)
+            yield return Dx12KeyBindingIrLine(key);
+        foreach (var capture in ast.Dx12MouseCaptures)
+            yield return Dx12MouseCaptureIrLine(capture);
+        foreach (var move in ast.Dx12MouseMoveBindings)
+            yield return Dx12MouseMoveIrLine(move);
+        foreach (var button in ast.Dx12MouseButtonBindings)
+            yield return Dx12MouseButtonIrLine(button);
+        foreach (var wheel in ast.Dx12MouseWheelBindings)
+            yield return Dx12MouseWheelIrLine(wheel);
+        foreach (var buffer in ast.Dx12ConstantBuffers)
+            yield return Dx12ConstantBufferIrLine(buffer);
+        foreach (var bind in ast.Dx12ConstantBufferBinds)
+            yield return Dx12ConstantBufferBindIrLine(bind);
+        foreach (var sequence in ast.Dx12ColorSequences)
+            yield return Dx12ColorSequenceIrLine(sequence);
+        foreach (var key in ast.Dx12ColorKeys)
+            yield return Dx12ColorKeyIrLine(key);
+        foreach (var anim in ast.Dx12AnimateColors)
+            yield return Dx12AnimateColorIrLine(anim);
         if (ast.RuntimeActions.Count > 0)
         {
             foreach (var v in ast.Vars)
@@ -96,6 +158,99 @@ static partial class Program
 
     static string UiResourceUseIrLine(UiResourceUse use)
         => $"UI_RESOURCE_USE|target={Esc(use.Target)}|property={Esc(use.Property)}|resource={Esc(use.ResourceName)}|resource_type={Esc(use.ResourceType)}";
+
+    static string Dx12RendererIrLine(Dx12Renderer renderer)
+        => $"DX12_RENDERER|name={Esc(renderer.Name)}";
+
+    static string Dx12ParentIrLine(Dx12RendererParent relation)
+        => $"DX12_PARENT|renderer={Esc(relation.Renderer)}|window={Esc(relation.Window)}";
+
+    static string Dx12ClearStyleIrLine(Dx12RendererClearStyle clear)
+        => $"DX12_CLEAR_STYLE|renderer={Esc(clear.Renderer)}|state={Esc(clear.State)}|kind={Esc(clear.ValueKind)}|value={Esc(clear.Value)}|unit={Esc(clear.Unit)}|source={Esc(clear.Source)}";
+
+    static string Dx12ClearReadyIrLine(Dx12RendererClearReady ready)
+        => $"DX12_CLEAR_READY|renderer={Esc(ready.Renderer)}|window={Esc(ready.Window)}|kind={Esc(ready.ValueKind)}|value={Esc(ready.Value)}|unit={Esc(ready.Unit)}|source={Esc(ready.Source)}";
+
+    static string Dx12FrameIrLine(Dx12FrameCommand frame)
+        => $"DX12_FRAME|command={Esc(frame.Command)}|renderer={Esc(frame.Renderer)}";
+
+    static string Dx12ShaderIrLine(Dx12Shader shader)
+        => $"DX12_SHADER|name={Esc(shader.Name)}|vertex={Esc(shader.VertexSource)}|pixel={Esc(shader.PixelSource)}";
+
+    static string Dx12PipelineIrLine(Dx12Pipeline pipeline)
+        => $"DX12_PIPELINE|name={Esc(pipeline.Name)}|renderer={Esc(pipeline.Renderer)}|shader={Esc(pipeline.Shader)}|topology={Esc(pipeline.Topology)}";
+
+    static string Dx12PipelineBindIrLine(Dx12PipelineBind bind)
+        => $"DX12_PIPELINE_BIND|pipeline={Esc(bind.Pipeline)}|renderer={Esc(bind.Renderer)}";
+
+    static string Dx12VertexBufferIrLine(Dx12VertexBuffer buffer)
+        => $"DX12_VERTEX_BUFFER|name={Esc(buffer.Name)}";
+
+    static string Dx12VertexIrLine(Dx12Vertex vertex)
+        => $"DX12_VERTEX|buffer={Esc(vertex.Buffer)}|index={vertex.Index}|position={Esc(vertex.Position)}|color={Esc(vertex.Color)}";
+
+    static string Dx12VertexBufferBindIrLine(Dx12VertexBufferBind bind)
+        => $"DX12_VERTEX_BUFFER_BIND|buffer={Esc(bind.Buffer)}|renderer={Esc(bind.Renderer)}";
+
+    static string Dx12DrawIrLine(Dx12Draw draw)
+        => $"DX12_DRAW|renderer={Esc(draw.Renderer)}|vertices={draw.Vertices}|buffer={Esc(draw.Buffer)}|pipeline={Esc(draw.Pipeline)}";
+
+    static string Dx12ObjectIrLine(Dx12Object obj)
+        => $"DX12_OBJECT|name={Esc(obj.Name)}";
+
+    static string Dx12ObjectBindIrLine(Dx12ObjectBinding binding)
+        => $"DX12_OBJECT_BIND|object={Esc(binding.Object)}|renderer={Esc(binding.Renderer)}|pipeline={Esc(binding.Pipeline)}|buffer={Esc(binding.VertexBuffer)}|vertices={binding.Vertices}";
+
+    static string Dx12DrawObjectIrLine(Dx12DrawObject draw)
+        => $"DX12_DRAW_OBJECT|object={Esc(draw.Object)}|renderer={Esc(draw.Renderer)}|vertices={draw.Vertices}|buffer={Esc(draw.Buffer)}|pipeline={Esc(draw.Pipeline)}";
+
+    static string Dx12ObjectTransformIrLine(Dx12ObjectTransform transform)
+        => $"DX12_OBJECT_TRANSFORM|object={Esc(transform.Object)}|property={Esc(transform.Property)}|value={Esc(transform.Value)}";
+
+    static string Dx12ObjectPrimitiveIrLine(Dx12ObjectPrimitive primitive)
+        => $"DX12_OBJECT_PRIMITIVE|object={Esc(primitive.Object)}|kind={Esc(primitive.Kind)}";
+
+    static string Dx12CameraIrLine(Dx12Camera camera)
+        => $"DX12_CAMERA|name={Esc(camera.Name)}";
+
+    static string Dx12CameraUseIrLine(Dx12CameraUse cameraUse)
+        => $"DX12_CAMERA_USE|camera={Esc(cameraUse.Camera)}|renderer={Esc(cameraUse.Renderer)}";
+
+    static string Dx12CameraProjectionIrLine(Dx12CameraProjection projection)
+        => $"DX12_CAMERA_PROJECTION|camera={Esc(projection.Camera)}|projection={Esc(projection.Projection)}";
+
+    static string Dx12CameraTransformIrLine(Dx12CameraTransform cameraTransform)
+        => $"DX12_CAMERA_TRANSFORM|camera={Esc(cameraTransform.Camera)}|property={Esc(cameraTransform.Property)}|value={Esc(cameraTransform.Value)}";
+
+    static string Dx12KeyBindingIrLine(Dx12KeyBinding key)
+        => $"DX12_KEY_BINDING|key={Esc(key.Key)}|action={Esc(key.Action)}|target={Esc(key.Target)}|delta={Esc(key.Delta)}";
+
+    static string Dx12MouseCaptureIrLine(Dx12MouseCapture capture)
+        => $"DX12_MOUSE_CAPTURE|window={Esc(capture.Window)}";
+
+    static string Dx12MouseMoveIrLine(Dx12MouseMoveBinding move)
+        => $"DX12_MOUSE_MOVE|target={Esc(move.Target)}|sensitivity={Esc(move.Sensitivity)}";
+
+    static string Dx12MouseButtonIrLine(Dx12MouseButtonBinding button)
+        => $"DX12_MOUSE_BUTTON|button={Esc(button.Button)}|action={Esc(button.Action)}|target={Esc(button.Target)}|delta={Esc(button.Delta)}";
+
+    static string Dx12MouseWheelIrLine(Dx12MouseWheelBinding wheel)
+        => $"DX12_MOUSE_WHEEL|action={Esc(wheel.Action)}|target={Esc(wheel.Target)}|delta={Esc(wheel.Delta)}";
+
+    static string Dx12ConstantBufferIrLine(Dx12ConstantBuffer buffer)
+        => $"DX12_CONSTANT_BUFFER|name={Esc(buffer.Name)}|field={Esc(buffer.Field)}|type={Esc(buffer.FieldType)}|value={Esc(buffer.Value)}";
+
+    static string Dx12ConstantBufferBindIrLine(Dx12ConstantBufferBind bind)
+        => $"DX12_CONSTANT_BUFFER_BIND|buffer={Esc(bind.Buffer)}|pipeline={Esc(bind.Pipeline)}";
+
+    static string Dx12ColorSequenceIrLine(Dx12ColorSequence sequence)
+        => $"DX12_COLOR_SEQUENCE|name={Esc(sequence.Name)}";
+
+    static string Dx12ColorKeyIrLine(Dx12ColorKey key)
+        => $"DX12_COLOR_KEY|sequence={Esc(key.Sequence)}|index={key.Index}|value={Esc(key.Value)}";
+
+    static string Dx12AnimateColorIrLine(Dx12AnimateColor anim)
+        => $"DX12_ANIMATE_COLOR|target={Esc(anim.Target)}|buffer={Esc(anim.Buffer)}|field={Esc(anim.Field)}|sequence={Esc(anim.Sequence)}|every_frames={anim.EveryFrames}";
 
     static string IrConstLine(string id, string type, string value) => $"CONST|id={id}|type={type}|value={Esc(value)}";
     static string IrSymbolLine(string name, string type, string value) => $"SYMBOL|name={Esc(name)}|type={Esc(type)}|value={Esc(value)}";

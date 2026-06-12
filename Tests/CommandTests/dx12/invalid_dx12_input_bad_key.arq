@@ -1,0 +1,9 @@
+program "InvalidDx12InputBadKey"
+set title to string "M26 DX12"
+
+define camera called "MainCamera"
+when key "Mouse1" is pressed reset camera "MainCamera"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12InputBadKey"

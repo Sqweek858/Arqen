@@ -502,3 +502,259 @@ Backend: metadata only in M19D; strict IR accepts it but WindowsX64PE ignores it
 Tests: `Tests\CommandTests\ui_layout`.
 
 - `ui_final` - M19E/F/G/H UI final foundation: UI event metadata, binding/link metadata, state metadata, and UI resource metadata.
+
+
+## dx12 renderer metadata
+
+Canonical syntax:
+
+```text
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+```
+
+Renderer background/clear color should be provided through existing style metadata:
+
+```text
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+```
+
+Parser rule:
+
+```text
+Dx12Renderer := define dx12 renderer called String
+Dx12Parent := parent renderer String to window String
+```
+
+AST:
+
+```text
+DX12_RENDERER|name=MainRenderer
+DX12_PARENT|renderer=MainRenderer|window=MainWindow
+```
+
+IR:
+
+```text
+DX12_RENDERER|name=MainRenderer
+DX12_PARENT|renderer=MainRenderer|window=MainWindow
+```
+
+Semantic:
+
+- renderer name must be non-empty and unique
+- renderer name must not conflict with existing window/UI object names
+- parent relationship requires a known renderer and known window
+- renderer may only have one parent window in M20B
+
+Codegen:
+
+- metadata only in M20B
+- WindowsX64PE strict IR accepts the metadata but does not execute DX12 work yet
+
+Tests:
+
+- `Tests\CommandTests\dx12`
+
+Limitations:
+
+- no runtime renderer creation from generated PE yet
+- no frame begin/end, clear, present, shader, render pass, pipeline, or draw syntax is supported yet
+- DX12 capabilities remain unsupported until backend/runtime execution exists
+## DX12 renderer style bridge metadata (M20C)
+
+Public syntax remains the existing style syntax:
+
+```text
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+```
+
+M20C adds semantic validation for DX12 renderer style targets and emits:
+
+```text
+DX12_CLEAR_STYLE|renderer=MainRenderer|state=default|kind=color|value=#101820|unit=|source=style.background_color
+```
+
+Semantic:
+
+- renderer styles support only default state in M20C
+- renderer styles support only `background color` in M20C
+- renderer clear/background style cannot be declared twice
+
+Tests:
+
+- `Tests\CommandTests\dx12`
+
+Limitations:
+
+- metadata only
+- no public `set clear color` DX12 command
+- no runtime/backend clear from generated PE yet
+
+## M20D/M20E0 DX12 semantic/readiness notes
+
+- `define dx12 renderer called "Name"` now participates in object-name collision checks against variables, windows, and UI objects.
+- `parent renderer "Renderer" to window "Window"` remains metadata-only and requires a defined runtime window.
+- style-derived `background color` for a renderer can produce `DX12_CLEAR_STYLE`.
+- when renderer, parent, and clear style metadata are complete, the compiler derives `DX12_CLEAR_READY` metadata.
+- no DX12 runtime command is supported yet.
+
+
+## M20E1 DX12 lowering registry note
+
+M20E1 adds no public command syntax. It registers an explicit tooling path that consumes existing DX12 metadata:
+
+```text
+DX12_CLEAR_READY -> Tools/lower_m20e1_dx12_clear_from_ir.ps1 -> Build/M20E1/dx12_clear_config.generated.h
+```
+
+The public syntax remains the M20B/M20C renderer + style form. Capability status remains unsupported.
+## M20F/M20G DX12 smoke and frame metadata
+
+M20F adds no public syntax. It adds `Tools/build_m20f_dx12_clear_smoke.ps1`, a safe wrapper that compiles the official DX12 clear smoke sample, verifies `DX12_CLEAR_READY`, and runs the M20E1 lowerer into `Build/M20F`.
+
+M20G adds frame metadata syntax:
+
+```arqen
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+```
+
+The compiler emits:
+
+```text
+DX12_FRAME|command=begin|renderer=MainRenderer
+DX12_FRAME|command=clear|renderer=MainRenderer
+DX12_FRAME|command=end|renderer=MainRenderer
+DX12_FRAME|command=present|renderer=MainRenderer
+```
+
+These are metadata records, not executable runtime actions. Capability status remains unsupported.
+
+## M20H/M20I DX12 lowering/smoke notes
+
+M20H/M20I add no public command syntax. They consume the existing M20G `DX12_FRAME` metadata in explicit tooling:
+
+```text
+Tools\lower_m20e1_dx12_clear_from_ir.ps1 -RequireFrame
+Tools\build_m20i_dx12_frame_clear_smoke.ps1
+```
+
+Frame-aware lowering is considered a tool milestone, not a supported backend capability promotion.
+
+## M21A/M21B DX12 shader/pipeline metadata
+
+```text
+define shader called "TriangleShader"
+    vertex source file "Shaders/triangle_vs.hlsl"
+    pixel source file "Shaders/triangle_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "TrianglePipeline" for renderer "MainRenderer"
+```
+
+M21B emits `DX12_SHADER`, `DX12_PIPELINE`, and `DX12_PIPELINE_BIND` metadata. No HLSL compilation, PSO creation, root signature, vertex buffer, or draw call is implemented in M21B.
+
+## M21C/M21D DX12 vertex/draw metadata and triangle smoke
+
+M21C adds metadata-only vertex buffers, vertex-buffer binding, and one-shot draw commands:
+
+```arqen
+define vertex buffer called "TriangleVertices"
+    vertex position [-0.5, -0.5, 0.0] color [1.0, 0.0, 0.0, 1.0]
+    vertex position [0.0, 0.5, 0.0] color [0.0, 1.0, 0.0, 1.0]
+    vertex position [0.5, -0.5, 0.0] color [0.0, 0.0, 1.0, 1.0]
+end vertex buffer
+
+use vertex buffer "TriangleVertices" for renderer "MainRenderer"
+draw 3 vertices with renderer "MainRenderer"
+```
+
+M21C emits `DX12_VERTEX_BUFFER`, `DX12_VERTEX`, `DX12_VERTEX_BUFFER_BIND`, and `DX12_DRAW`. M21D extends the lowering/native smoke path with `-RequireTriangle` and optional `DrawInstanced` execution. Capabilities remain unsupported until a general backend/runtime renderer exists.
+
+## M21G/M21H DX12 constant tint and color animation metadata
+
+M21G adds metadata-only constant buffer syntax for the existing triangle pipeline:
+
+```arqen
+define constant buffer called "TriangleParams"
+    color tint: color "#38FFC0"
+end constant buffer
+
+use constant buffer "TriangleParams" for pipeline "TrianglePipeline"
+```
+
+M21H adds color sequence animation metadata:
+
+```arqen
+define color sequence called "TriangleColors"
+    color "#FF4040"
+    color "#38FFC0"
+end color sequence
+
+animate color "TriangleParams.tint"
+    using sequence "TriangleColors"
+    every 12 frames
+end animate
+```
+
+The smoke-path lowerer emits `DX12_CONSTANT_BUFFER`, `DX12_CONSTANT_BUFFER_BIND`, `DX12_COLOR_SEQUENCE`, `DX12_COLOR_KEY`, and `DX12_ANIMATE_COLOR` metadata. Native execution remains limited to the M21D/M21F triangle smoke path.
+
+### M21I/M21J DX12 color animation polish and hardening
+
+M21I adds tooling/runtime-marker polish for the existing M21H animated triangle smoke path. M21J hardens `DX12_ANIMATE_COLOR` metadata by requiring selected tint-only animation, a positive frame interval, a known color sequence with at least two contiguous keys, and a constant-buffer target bound to exactly one pipeline before animation.
+
+## M27 DX12 perspective camera commands
+
+- `set camera "Name" projection to perspective|orthographic`
+- `set rotation of camera "Name" to [pitch,yaw,roll]`
+- `set field of view of camera "Name" to N deg`
+- `set near plane of camera "Name" to N`
+- `set far plane of camera "Name" to N`
+
+
+## M27D/M28A DX12 additions
+
+```text
+with style for "MainWindow"
+    title bar color: color "#000000"
+    title text color: color "#FFFFFF"
+end style
+```
+
+- M27D adds native window chrome style properties for defined windows only.
+- Metadata lowers through runtime actions `window_style_title_bar_color` and `window_style_title_text_color`.
+
+```text
+define box called "CubeA"
+draw "CubeA"
+```
+
+- M28A adds one generated primitive object command: `define box called`.
+- Metadata: `DX12_OBJECT_PRIMITIVE|object=CubeA|kind=box`.
+- Box primitives own generated 36-vertex data and reject manual vertex-buffer binding.
+
+## M28B DX12 full peripheral input commands
+
+```arq
+capture mouse for window "MainWindow"
+when mouse moves rotate camera "MainCamera" by [0.12, 0.12]
+when mouse wheel moves move camera "MainCamera" by [0.0, 0.0, 1.25]
+when mouse button "Left" is held move camera "MainCamera" by [0.0, 0.0, 3.0]
+when mouse button "Right" is pressed reset camera "MainCamera"
+when mouse button "Middle" is pressed toggle animation
+```
+
+M28B does not add key remapping. Q/E are normal M26 key bindings and may be used for vertical movement.

@@ -1,0 +1,17 @@
+program "InvalidDx12PipelineUnknownRenderer"
+set title to string "M21B DX12"
+
+define shader called "TriangleShader"
+    vertex source file "Shaders/triangle_vs.hlsl"
+    pixel source file "Shaders/triangle_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MissingRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12PipelineUnknownRenderer"

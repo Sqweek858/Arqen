@@ -27,6 +27,8 @@ static partial class Program
             yield return line;
         foreach (var line in AstUiFinalLines(ast))
             yield return line;
+        foreach (var line in AstDx12Lines(ast))
+            yield return line;
         foreach (var line in AstTitleLines(ast))
             yield return line;
         foreach (var line in AstMessageLines(ast))
@@ -99,6 +101,72 @@ static partial class Program
             yield return $"UI_RESOURCE|type={Esc(resource.Type)}|name={Esc(resource.Name)}|path={Esc(resource.Path)}";
         foreach (var use in ast.UiResourceUses)
             yield return $"UI_RESOURCE_USE|target={Esc(use.Target)}|property={Esc(use.Property)}|resource={Esc(use.ResourceName)}|resource_type={Esc(use.ResourceType)}";
+    }
+
+    static IEnumerable<string> AstDx12Lines(AstModel ast)
+    {
+        foreach (var renderer in ast.Dx12Renderers)
+            yield return $"DX12_RENDERER|name={Esc(renderer.Name)}";
+        foreach (var relation in ast.Dx12RendererParents)
+            yield return $"DX12_PARENT|renderer={Esc(relation.Renderer)}|window={Esc(relation.Window)}";
+        foreach (var clear in ast.Dx12RendererClearStyles)
+            yield return $"DX12_CLEAR_STYLE|renderer={Esc(clear.Renderer)}|state={Esc(clear.State)}|kind={Esc(clear.ValueKind)}|value={Esc(clear.Value)}|unit={Esc(clear.Unit)}|source={Esc(clear.Source)}";
+        foreach (var ready in ast.Dx12RendererClearReadies)
+            yield return $"DX12_CLEAR_READY|renderer={Esc(ready.Renderer)}|window={Esc(ready.Window)}|kind={Esc(ready.ValueKind)}|value={Esc(ready.Value)}|unit={Esc(ready.Unit)}|source={Esc(ready.Source)}";
+        foreach (var frame in ast.Dx12FrameCommands)
+            yield return $"DX12_FRAME|command={Esc(frame.Command)}|renderer={Esc(frame.Renderer)}";
+        foreach (var shader in ast.Dx12Shaders)
+            yield return $"DX12_SHADER|name={Esc(shader.Name)}|vertex={Esc(shader.VertexSource)}|pixel={Esc(shader.PixelSource)}";
+        foreach (var pipeline in ast.Dx12Pipelines)
+            yield return $"DX12_PIPELINE|name={Esc(pipeline.Name)}|renderer={Esc(pipeline.Renderer)}|shader={Esc(pipeline.Shader)}|topology={Esc(pipeline.Topology)}";
+        foreach (var bind in ast.Dx12PipelineBinds)
+            yield return $"DX12_PIPELINE_BIND|pipeline={Esc(bind.Pipeline)}|renderer={Esc(bind.Renderer)}";
+        foreach (var buffer in ast.Dx12VertexBuffers)
+            yield return $"DX12_VERTEX_BUFFER|name={Esc(buffer.Name)}";
+        foreach (var vertex in ast.Dx12Vertices)
+            yield return $"DX12_VERTEX|buffer={Esc(vertex.Buffer)}|index={vertex.Index}|position={Esc(vertex.Position)}|color={Esc(vertex.Color)}";
+        foreach (var bind in ast.Dx12VertexBufferBinds)
+            yield return $"DX12_VERTEX_BUFFER_BIND|buffer={Esc(bind.Buffer)}|renderer={Esc(bind.Renderer)}";
+        foreach (var draw in ast.Dx12Draws)
+            yield return $"DX12_DRAW|renderer={Esc(draw.Renderer)}|vertices={draw.Vertices}|buffer={Esc(draw.Buffer)}|pipeline={Esc(draw.Pipeline)}";
+        foreach (var obj in ast.Dx12Objects)
+            yield return $"DX12_OBJECT|name={Esc(obj.Name)}";
+        foreach (var binding in ast.Dx12ObjectBindings)
+            yield return $"DX12_OBJECT_BIND|object={Esc(binding.Object)}|renderer={Esc(binding.Renderer)}|pipeline={Esc(binding.Pipeline)}|buffer={Esc(binding.VertexBuffer)}|vertices={binding.Vertices}";
+        foreach (var drawObj in ast.Dx12DrawObjects)
+            yield return $"DX12_DRAW_OBJECT|object={Esc(drawObj.Object)}|renderer={Esc(drawObj.Renderer)}|vertices={drawObj.Vertices}|buffer={Esc(drawObj.Buffer)}|pipeline={Esc(drawObj.Pipeline)}";
+        foreach (var transform in ast.Dx12ObjectTransforms)
+            yield return $"DX12_OBJECT_TRANSFORM|object={Esc(transform.Object)}|property={Esc(transform.Property)}|value={Esc(transform.Value)}";
+        foreach (var primitive in ast.Dx12ObjectPrimitives)
+            yield return $"DX12_OBJECT_PRIMITIVE|object={Esc(primitive.Object)}|kind={Esc(primitive.Kind)}";
+        foreach (var camera in ast.Dx12Cameras)
+            yield return $"DX12_CAMERA|name={Esc(camera.Name)}";
+        foreach (var cameraUse in ast.Dx12CameraUses)
+            yield return $"DX12_CAMERA_USE|camera={Esc(cameraUse.Camera)}|renderer={Esc(cameraUse.Renderer)}";
+        foreach (var projection in ast.Dx12CameraProjections)
+            yield return $"DX12_CAMERA_PROJECTION|camera={Esc(projection.Camera)}|projection={Esc(projection.Projection)}";
+        foreach (var cameraTransform in ast.Dx12CameraTransforms)
+            yield return $"DX12_CAMERA_TRANSFORM|camera={Esc(cameraTransform.Camera)}|property={Esc(cameraTransform.Property)}|value={Esc(cameraTransform.Value)}";
+        foreach (var key in ast.Dx12KeyBindings)
+            yield return $"DX12_KEY_BINDING|key={Esc(key.Key)}|action={Esc(key.Action)}|target={Esc(key.Target)}|delta={Esc(key.Delta)}";
+        foreach (var capture in ast.Dx12MouseCaptures)
+            yield return $"DX12_MOUSE_CAPTURE|window={Esc(capture.Window)}";
+        foreach (var move in ast.Dx12MouseMoveBindings)
+            yield return $"DX12_MOUSE_MOVE|target={Esc(move.Target)}|sensitivity={Esc(move.Sensitivity)}";
+        foreach (var button in ast.Dx12MouseButtonBindings)
+            yield return $"DX12_MOUSE_BUTTON|button={Esc(button.Button)}|action={Esc(button.Action)}|target={Esc(button.Target)}|delta={Esc(button.Delta)}";
+        foreach (var wheel in ast.Dx12MouseWheelBindings)
+            yield return $"DX12_MOUSE_WHEEL|action={Esc(wheel.Action)}|target={Esc(wheel.Target)}|delta={Esc(wheel.Delta)}";
+        foreach (var buffer in ast.Dx12ConstantBuffers)
+            yield return $"DX12_CONSTANT_BUFFER|name={Esc(buffer.Name)}|field={Esc(buffer.Field)}|type={Esc(buffer.FieldType)}|value={Esc(buffer.Value)}";
+        foreach (var bind in ast.Dx12ConstantBufferBinds)
+            yield return $"DX12_CONSTANT_BUFFER_BIND|buffer={Esc(bind.Buffer)}|pipeline={Esc(bind.Pipeline)}";
+        foreach (var sequence in ast.Dx12ColorSequences)
+            yield return $"DX12_COLOR_SEQUENCE|name={Esc(sequence.Name)}";
+        foreach (var key in ast.Dx12ColorKeys)
+            yield return $"DX12_COLOR_KEY|sequence={Esc(key.Sequence)}|index={key.Index}|value={Esc(key.Value)}";
+        foreach (var anim in ast.Dx12AnimateColors)
+            yield return $"DX12_ANIMATE_COLOR|target={Esc(anim.Target)}|buffer={Esc(anim.Buffer)}|field={Esc(anim.Field)}|sequence={Esc(anim.Sequence)}|every_frames={anim.EveryFrames}";
     }
 
     static IEnumerable<string> AstTitleLines(AstModel ast)

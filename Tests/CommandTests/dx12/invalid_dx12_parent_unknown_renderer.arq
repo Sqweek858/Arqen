@@ -1,0 +1,9 @@
+program "InvalidDx12ParentUnknownRenderer"
+set title to string "M20B DX12"
+
+define window called "MainWindow"
+parent renderer "MissingRenderer" to window "MainWindow"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12ParentUnknownRenderer"

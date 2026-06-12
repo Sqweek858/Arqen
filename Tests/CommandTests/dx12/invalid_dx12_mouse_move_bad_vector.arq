@@ -1,0 +1,14 @@
+program "InvalidDx12MouseMoveBadVector"
+set title to string "invalid dx12 mouse move bad vector"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+
+when mouse moves rotate camera "MainCamera" by [0.12, 0.12, 0.12]
+
+show message "invalid dx12 mouse move bad vector"
+blend mix to code 0
+end program "InvalidDx12MouseMoveBadVector"

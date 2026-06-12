@@ -1,0 +1,21 @@
+program "InvalidDx12PipelineInvalidTopology"
+set title to string "M21B DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+define shader called "TriangleShader"
+    vertex source file "Shaders/triangle_vs.hlsl"
+    pixel source file "Shaders/triangle_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: line list
+end pipeline
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12PipelineInvalidTopology"

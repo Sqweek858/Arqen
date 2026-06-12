@@ -1,0 +1,111 @@
+program "Dx12FullPeripheralInputSceneM28B"
+set title to string "Arqen M28B full peripheral input"
+
+// M28B official input scene:
+// - Q/E vertical camera movement
+// - mouse capture + mouse look
+// - mouse wheel camera movement
+// - mouse buttons for held move / reset / toggle animation
+// - no key remapping, controller, physics, collision, UI widgets, lighting, or mesh import
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M28B Peripheral Input"
+set resolution of "MainWindow" to 1280 x 720
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainWindow"
+    title bar color: color "#000000"
+    title text color: color "#FFFFFF"
+end style
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shader called "BoxShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "BoxPipeline"
+    renderer: "MainRenderer"
+    shader: "BoxShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "BoxPipeline" for renderer "MainRenderer"
+
+define constant buffer called "SceneParams"
+    color tint: color "#D8FFF4"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "BoxPipeline"
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -5.5]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+capture mouse for window "MainWindow"
+when mouse moves rotate camera "MainCamera" by [0.12, 0.12]
+when mouse wheel moves move camera "MainCamera" by [0.0, 0.0, 1.25]
+when mouse button "Left" is held move camera "MainCamera" by [0.0, 0.0, 3.0]
+when mouse button "Right" is pressed reset camera "MainCamera"
+when mouse button "Middle" is pressed toggle animation
+when key "W" is held move camera "MainCamera" by [0.0, 0.0, 3.0]
+when key "S" is held move camera "MainCamera" by [0.0, 0.0, -3.0]
+when key "A" is held move camera "MainCamera" by [-3.0, 0.0, 0.0]
+when key "D" is held move camera "MainCamera" by [3.0, 0.0, 0.0]
+when key "Q" is held move camera "MainCamera" by [0.0, -3.0, 0.0]
+when key "E" is held move camera "MainCamera" by [0.0, 3.0, 0.0]
+when key "R" is pressed reset camera "MainCamera"
+when key "Space" is pressed toggle animation
+
+define color sequence called "PulseSequence"
+    color "#D8FFF4"
+    color "#8FE8FF"
+    color "#CBA6FF"
+end color sequence
+
+animate color "SceneParams.tint"
+    using sequence "PulseSequence"
+    every 24 frames
+end animate
+
+define box called "CubeA"
+use renderer "MainRenderer" for object "CubeA"
+use pipeline "BoxPipeline" for object "CubeA"
+set position of object "CubeA" to [-1.20, 0.0, 2.5]
+set rotation z of object "CubeA" to 18 deg
+set scale of object "CubeA" to [1.0, 1.0, 1.0]
+
+define box called "CubeB"
+use renderer "MainRenderer" for object "CubeB"
+use pipeline "BoxPipeline" for object "CubeB"
+set position of object "CubeB" to [1.10, -0.1, 3.8]
+set rotation z of object "CubeB" to -28 deg
+set scale of object "CubeB" to [0.75, 0.75, 0.75]
+
+define box called "CubeC"
+use renderer "MainRenderer" for object "CubeC"
+use pipeline "BoxPipeline" for object "CubeC"
+set position of object "CubeC" to [0.0, 0.85, 5.6]
+set rotation z of object "CubeC" to 42 deg
+set scale of object "CubeC" to [0.55, 0.55, 0.55]
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "CubeA"
+draw "CubeB"
+draw "CubeC"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "M28B full peripheral input: WASD/QE, mouse look, wheel, buttons"
+blend mix to code 0
+end program "Dx12FullPeripheralInputSceneM28B"

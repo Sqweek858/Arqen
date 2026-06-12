@@ -1,0 +1,75 @@
+program "Dx12WindowStyleBoxSceneM28A"
+set title to string "Arqen M27D M28A native window style + box primitive"
+
+// M27D + M28A official smoke scene:
+// - native Win32/DWM title bar style driven by Arqen style metadata
+// - generated M28A box primitive, no mesh import and no material system
+// - perspective camera + depth buffer path remains from M27
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M28A Box Primitive"
+set resolution of "MainWindow" to 1280 x 720
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainWindow"
+    title bar color: color "#000000"
+    title text color: color "#FFFFFF"
+end style
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shader called "BoxShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "BoxPipeline"
+    renderer: "MainRenderer"
+    shader: "BoxShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "BoxPipeline" for renderer "MainRenderer"
+
+define constant buffer called "SceneParams"
+    color tint: color "#D8FFF4"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "BoxPipeline"
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -4.5]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+define box called "CubeA"
+use renderer "MainRenderer" for object "CubeA"
+use pipeline "BoxPipeline" for object "CubeA"
+set position of object "CubeA" to [-0.85, 0.0, 2.3]
+set rotation z of object "CubeA" to 18 deg
+set scale of object "CubeA" to [1.0, 1.0, 1.0]
+
+define box called "CubeB"
+use renderer "MainRenderer" for object "CubeB"
+use pipeline "BoxPipeline" for object "CubeB"
+set position of object "CubeB" to [0.90, -0.10, 3.4]
+set rotation z of object "CubeB" to -28 deg
+set scale of object "CubeB" to [0.75, 0.75, 0.75]
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "CubeA"
+draw "CubeB"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "M27D dark title bar + M28A generated box primitive scene"
+blend mix to code 0
+end program "Dx12WindowStyleBoxSceneM28A"
