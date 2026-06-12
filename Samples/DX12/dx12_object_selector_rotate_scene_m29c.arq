@@ -1,0 +1,124 @@
+program "Dx12ObjectSelectorRotateSceneM29C"
+set title to string "Arqen M29C Object Selector Rotate"
+
+// M29C official scene:
+// - RMB held = UE-style viewport navigation from M29B
+// - LMB pressed = select nearest drawn object through PrimarySelector
+// - R held + mouse X = rotate selected object around local/world Y at object center
+// - no outline, screen gizmo, UI handles, multi-select, undo, mesh import, materials, physics, or collision
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M29C Selector Rotate"
+set resolution of "MainWindow" to 1280 x 720
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainWindow"
+    title bar color: color "#000000"
+    title text color: color "#FFFFFF"
+end style
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shader called "BoxShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "BoxPipeline"
+    renderer: "MainRenderer"
+    shader: "BoxShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "BoxPipeline" for renderer "MainRenderer"
+
+define constant buffer called "SceneParams"
+    color tint: color "#D8FFF4"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "BoxPipeline"
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -6.0]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+capture mouse for window "MainWindow"
+when mouse moves rotate camera "MainCamera" by [0.10, 0.10]
+when mouse wheel moves move camera "MainCamera" by [0.0, 0.0, 1.0]
+when key "W" is held move camera "MainCamera" by [0.0, 0.0, 3.0]
+when key "S" is held move camera "MainCamera" by [0.0, 0.0, -3.0]
+when key "A" is held move camera "MainCamera" by [-3.0, 0.0, 0.0]
+when key "D" is held move camera "MainCamera" by [3.0, 0.0, 0.0]
+when key "Q" is held move camera "MainCamera" by [0.0, -3.0, 0.0]
+when key "E" is held move camera "MainCamera" by [0.0, 3.0, 0.0]
+
+define object selector called "PrimarySelector"
+use object selector "PrimarySelector" for renderer "MainRenderer"
+when mouse button "Left" is pressed select object using "PrimarySelector"
+when key "R" is held rotate selected object around y by mouse x sensitivity 0.35
+
+define color sequence called "PulseSequence"
+    color "#D8FFF4"
+    color "#8FE8FF"
+    color "#CBA6FF"
+end color sequence
+
+animate color "SceneParams.tint"
+    using sequence "PulseSequence"
+    every 30 frames
+end animate
+
+define directional light called "KeyLight"
+use light "KeyLight" for renderer "MainRenderer"
+set direction of light "KeyLight" to [-0.35, -0.70, -0.60]
+set intensity of light "KeyLight" to 0.95
+set ambient of light "KeyLight" to 0.16
+
+define box called "CubeA"
+use renderer "MainRenderer" for object "CubeA"
+use pipeline "BoxPipeline" for object "CubeA"
+set position of object "CubeA" to [-1.35, -0.05, 2.7]
+set rotation of object "CubeA" to [18.0, 35.0, 12.0]
+set scale of object "CubeA" to [1.0, 1.0, 1.0]
+
+define box called "CubeB"
+use renderer "MainRenderer" for object "CubeB"
+use pipeline "BoxPipeline" for object "CubeB"
+set position of object "CubeB" to [1.20, -0.20, 4.2]
+set rotation of object "CubeB" to [-12.0, 48.0, -22.0]
+set scale of object "CubeB" to [0.85, 0.85, 0.85]
+
+define box called "CubeC"
+use renderer "MainRenderer" for object "CubeC"
+use pipeline "BoxPipeline" for object "CubeC"
+set position of object "CubeC" to [0.05, 1.05, 5.9]
+set rotation of object "CubeC" to [35.0, -20.0, 42.0]
+set scale of object "CubeC" to [0.55, 0.55, 0.55]
+
+define box called "CubeD"
+use renderer "MainRenderer" for object "CubeD"
+use pipeline "BoxPipeline" for object "CubeD"
+set position of object "CubeD" to [-2.20, 0.65, 7.0]
+set rotation of object "CubeD" to [-20.0, -32.0, 15.0]
+set scale of object "CubeD" to [0.70, 0.70, 0.70]
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "CubeA"
+draw "CubeB"
+draw "CubeC"
+draw "CubeD"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "M29C: LMB selects a cube; hold R and move mouse X to rotate selected cube; RMB navigates viewport"
+blend mix to code 0
+end program "Dx12ObjectSelectorRotateSceneM29C"

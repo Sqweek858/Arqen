@@ -758,3 +758,29 @@ when mouse button "Middle" is pressed toggle animation
 ```
 
 M28B does not add key remapping. Q/E are normal M26 key bindings and may be used for vertical movement.
+
+## M28C/M29A DX12 commands
+
+```arq
+set rotation of object "CubeA" to [20.0, 35.0, 10.0]
+set rotation x of object "CubeA" to 20 deg
+set rotation y of object "CubeA" to 35 deg
+define directional light called "KeyLight"
+use light "KeyLight" for renderer "MainRenderer"
+set direction of light "KeyLight" to [-0.35, -0.70, -0.60]
+set intensity of light "KeyLight" to 0.95
+set ambient of light "KeyLight" to 0.16
+```
+
+## M29B viewport navigation note
+
+M29B adds no new public command syntax. It reuses `capture mouse for window`, `when mouse moves rotate camera`, and `when key ... move camera` from M28B/M26. Runtime behavior is UE-style: hold RMB to activate mouse look and camera-relative WASD/QE; release RMB for a free cursor.
+
+## M29C DX12 object selector rotate commands
+
+```arq
+define object selector called "PrimarySelector"
+use object selector "PrimarySelector" for renderer "MainRenderer"
+when mouse button "Left" is pressed select object using "PrimarySelector"
+when key "R" is held rotate selected object around y by mouse x sensitivity 0.35
+```

@@ -86,6 +86,20 @@ static partial class Program
             yield return Dx12MouseButtonIrLine(button);
         foreach (var wheel in ast.Dx12MouseWheelBindings)
             yield return Dx12MouseWheelIrLine(wheel);
+        foreach (var selector in ast.Dx12ObjectSelectors)
+            yield return Dx12ObjectSelectorIrLine(selector);
+        foreach (var selectorUse in ast.Dx12ObjectSelectorUses)
+            yield return Dx12ObjectSelectorUseIrLine(selectorUse);
+        foreach (var select in ast.Dx12ObjectSelectionBindings)
+            yield return Dx12ObjectSelectionBindingIrLine(select);
+        foreach (var rotate in ast.Dx12SelectedObjectRotateBindings)
+            yield return Dx12SelectedObjectRotateBindingIrLine(rotate);
+        foreach (var light in ast.Dx12DirectionalLights)
+            yield return Dx12DirectionalLightIrLine(light);
+        foreach (var lightUse in ast.Dx12LightUses)
+            yield return Dx12LightUseIrLine(lightUse);
+        foreach (var prop in ast.Dx12LightProperties)
+            yield return Dx12LightPropertyIrLine(prop);
         foreach (var buffer in ast.Dx12ConstantBuffers)
             yield return Dx12ConstantBufferIrLine(buffer);
         foreach (var bind in ast.Dx12ConstantBufferBinds)
@@ -236,6 +250,27 @@ static partial class Program
 
     static string Dx12MouseWheelIrLine(Dx12MouseWheelBinding wheel)
         => $"DX12_MOUSE_WHEEL|action={Esc(wheel.Action)}|target={Esc(wheel.Target)}|delta={Esc(wheel.Delta)}";
+
+    static string Dx12ObjectSelectorIrLine(Dx12ObjectSelector selector)
+        => $"DX12_OBJECT_SELECTOR|name={Esc(selector.Name)}";
+
+    static string Dx12ObjectSelectorUseIrLine(Dx12ObjectSelectorUse selectorUse)
+        => $"DX12_OBJECT_SELECTOR_USE|selector={Esc(selectorUse.Selector)}|renderer={Esc(selectorUse.Renderer)}";
+
+    static string Dx12ObjectSelectionBindingIrLine(Dx12ObjectSelectionBinding select)
+        => $"DX12_OBJECT_SELECT_BINDING|button={Esc(select.Button)}|selector={Esc(select.Selector)}";
+
+    static string Dx12SelectedObjectRotateBindingIrLine(Dx12SelectedObjectRotateBinding rotate)
+        => $"DX12_SELECTED_OBJECT_ROTATE|key={Esc(rotate.Key)}|axis={Esc(rotate.Axis)}|mouse_axis={Esc(rotate.MouseAxis)}|sensitivity={Esc(rotate.Sensitivity)}";
+
+    static string Dx12DirectionalLightIrLine(Dx12DirectionalLight light)
+        => $"DX12_DIRECTIONAL_LIGHT|name={Esc(light.Name)}";
+
+    static string Dx12LightUseIrLine(Dx12LightUse lightUse)
+        => $"DX12_LIGHT_USE|light={Esc(lightUse.Light)}|renderer={Esc(lightUse.Renderer)}";
+
+    static string Dx12LightPropertyIrLine(Dx12LightProperty prop)
+        => $"DX12_LIGHT_PROPERTY|light={Esc(prop.Light)}|property={Esc(prop.Property)}|value={Esc(prop.Value)}";
 
     static string Dx12ConstantBufferIrLine(Dx12ConstantBuffer buffer)
         => $"DX12_CONSTANT_BUFFER|name={Esc(buffer.Name)}|field={Esc(buffer.Field)}|type={Esc(buffer.FieldType)}|value={Esc(buffer.Value)}";

@@ -1,0 +1,8 @@
+program "InvalidDx12RotateSelectedWithoutSelector"
+set title to string "invalid dx12 rotate selected without selector"
+
+when key "R" is held rotate selected object around y by mouse x sensitivity 0.35
+
+show message "invalid"
+blend mix to code 0
+end program "InvalidDx12RotateSelectedWithoutSelector"

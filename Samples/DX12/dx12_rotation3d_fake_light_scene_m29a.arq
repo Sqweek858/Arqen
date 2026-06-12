@@ -1,0 +1,103 @@
+program "Dx12Rotation3dFakeLightSceneM29A"
+set title to string "Arqen M28C M29A rotation3d fake light"
+
+// M28C + M29A official scene:
+// - full object rotation on X/Y/Z
+// - directional fake lighting from Arqen metadata
+// - generated box primitive, perspective camera, depth, dark window chrome
+// - no gizmo, mesh import, materials, textures, real light/shadow system, or editor camera overhaul
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M29A Fake Light"
+set resolution of "MainWindow" to 1280 x 720
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainWindow"
+    title bar color: color "#000000"
+    title text color: color "#FFFFFF"
+end style
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shader called "BoxShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "BoxPipeline"
+    renderer: "MainRenderer"
+    shader: "BoxShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "BoxPipeline" for renderer "MainRenderer"
+
+define constant buffer called "SceneParams"
+    color tint: color "#D8FFF4"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "BoxPipeline"
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -6.0]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+capture mouse for window "MainWindow"
+when mouse moves rotate camera "MainCamera" by [0.10, 0.10]
+when mouse wheel moves move camera "MainCamera" by [0.0, 0.0, 1.0]
+when key "W" is held move camera "MainCamera" by [0.0, 0.0, 3.0]
+when key "S" is held move camera "MainCamera" by [0.0, 0.0, -3.0]
+when key "A" is held move camera "MainCamera" by [-3.0, 0.0, 0.0]
+when key "D" is held move camera "MainCamera" by [3.0, 0.0, 0.0]
+when key "Q" is held move camera "MainCamera" by [0.0, -3.0, 0.0]
+when key "E" is held move camera "MainCamera" by [0.0, 3.0, 0.0]
+when key "R" is pressed reset camera "MainCamera"
+
+define directional light called "KeyLight"
+use light "KeyLight" for renderer "MainRenderer"
+set direction of light "KeyLight" to [-0.35, -0.70, -0.60]
+set intensity of light "KeyLight" to 0.95
+set ambient of light "KeyLight" to 0.16
+
+define box called "CubeA"
+use renderer "MainRenderer" for object "CubeA"
+use pipeline "BoxPipeline" for object "CubeA"
+set position of object "CubeA" to [-1.35, -0.05, 2.7]
+set rotation of object "CubeA" to [18.0, 35.0, 12.0]
+set scale of object "CubeA" to [1.0, 1.0, 1.0]
+
+define box called "CubeB"
+use renderer "MainRenderer" for object "CubeB"
+use pipeline "BoxPipeline" for object "CubeB"
+set position of object "CubeB" to [1.20, -0.20, 4.2]
+set rotation x of object "CubeB" to -12 deg
+set rotation y of object "CubeB" to 48 deg
+set rotation z of object "CubeB" to -22 deg
+set scale of object "CubeB" to [0.85, 0.85, 0.85]
+
+define box called "CubeC"
+use renderer "MainRenderer" for object "CubeC"
+use pipeline "BoxPipeline" for object "CubeC"
+set position of object "CubeC" to [0.05, 1.05, 5.9]
+set rotation of object "CubeC" to [35.0, -20.0, 42.0]
+set scale of object "CubeC" to [0.55, 0.55, 0.55]
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "CubeA"
+draw "CubeB"
+draw "CubeC"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "M28C/M29A: full object rotation and fake directional lighting"
+blend mix to code 0
+end program "Dx12Rotation3dFakeLightSceneM29A"

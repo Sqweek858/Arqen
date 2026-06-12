@@ -1,0 +1,9 @@
+program "InvalidDx12RotateSelectedBadAxis"
+set title to string "invalid dx12 rotate selected bad axis"
+
+define object selector called "PrimarySelector"
+when key "R" is held rotate selected object around x by mouse x sensitivity 0.35
+
+show message "invalid"
+blend mix to code 0
+end program "InvalidDx12RotateSelectedBadAxis"

@@ -305,3 +305,45 @@ DX12_MOUSE_MOVE|target=MainCamera|sensitivity=[0.12,0.12]
 DX12_MOUSE_BUTTON|button=Left|action=move_camera_held|target=MainCamera|delta=[0,0,3]
 DX12_MOUSE_WHEEL|action=move_camera_wheel|target=MainCamera|delta=[0,0,1.25]
 ```
+
+## M28C/M29A DX12 IR
+
+```text
+DX12_OBJECT_TRANSFORM|object=CubeA|property=rotation|value=[20,35,10]
+DX12_OBJECT_TRANSFORM|object=CubeA|property=rotation_x|value=20
+DX12_OBJECT_TRANSFORM|object=CubeA|property=rotation_y|value=35
+DX12_DIRECTIONAL_LIGHT|name=KeyLight
+DX12_LIGHT_USE|light=KeyLight|renderer=MainRenderer
+DX12_LIGHT_PROPERTY|light=KeyLight|property=direction|value=[-0.35,-0.70,-0.60]
+DX12_LIGHT_PROPERTY|light=KeyLight|property=intensity|value=0.95
+DX12_LIGHT_PROPERTY|light=KeyLight|property=ambient|value=0.16
+```
+
+
+## M29B_UE_STYLE_VIEWPORT_NAVIGATION
+
+M29B does not add new IR opcodes. The lowerer emits manifest/config markers when the existing M28B mouse capture/move input, M26 keyboard input, and M27 perspective camera contracts combine into UE-style viewport navigation:
+
+```text
+M29B_UE_STYLE_VIEWPORT_NAVIGATION|True
+M29B_CAMERA_RELATIVE_MOVEMENT|True
+M29B_RMB_HOLD_NAVIGATION|True
+```
+
+Runtime semantics: RMB held activates mouse look and camera-relative WASD/QE. RMB released leaves the cursor free and suppresses camera movement/look.
+
+## M29C DX12 object selector rotate metadata
+
+```text
+DX12_OBJECT_SELECTOR|name=PrimarySelector
+DX12_OBJECT_SELECTOR_USE|selector=PrimarySelector|renderer=MainRenderer
+DX12_OBJECT_SELECT_BINDING|button=Left|selector=PrimarySelector
+DX12_SELECTED_OBJECT_ROTATE|key=R|axis=y|mouse_axis=x|sensitivity=0.35
+```
+
+Strict IR requires:
+
+- `DX12_OBJECT_SELECTOR`: `name`
+- `DX12_OBJECT_SELECTOR_USE`: `selector`, `renderer`
+- `DX12_OBJECT_SELECT_BINDING`: `button`, `selector`
+- `DX12_SELECTED_OBJECT_ROTATE`: `key`, `axis`, `mouse_axis`, `sensitivity`

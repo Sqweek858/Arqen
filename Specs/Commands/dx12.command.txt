@@ -128,3 +128,36 @@ VALID_TEST|Tests\CommandTests\dx12\valid_dx12_window_style_titlebar_metadata.arq
 INVALID_TEST|Tests\CommandTests\dx12\invalid_dx12_window_style_unknown_target.arq;Tests\CommandTests\dx12\invalid_dx12_window_style_named_color.arq;Tests\CommandTests\dx12\invalid_dx12_box_duplicate_object.arq;Tests\CommandTests\dx12\invalid_dx12_box_unknown_draw.arq;Tests\CommandTests\dx12\invalid_dx12_box_manual_vertex_buffer.arq
 STATUS|m27d_m28a_native_window_style_box_primitive
 M28B_FULL_PERIPHERAL_INPUT_SYNTAX|capture mouse for window "MainWindow"; when mouse moves rotate camera "MainCamera" by [0.12,0.12]; when mouse wheel moves move camera "MainCamera" by [0,0,1]; when mouse button "Left" is held move camera "MainCamera" by [0,0,3]
+
+M28C_OBJECT_ROTATION_3D_SYNTAX
+  set rotation of object "CubeA" to [20.0, 35.0, 10.0]
+  set rotation x of object "CubeA" to 20 deg
+  set rotation y of object "CubeA" to 35 deg
+  set rotation z of object "CubeA" to 10 deg
+
+M29A_FAKE_LIGHTING_SYNTAX
+  define directional light called "KeyLight"
+  use light "KeyLight" for renderer "MainRenderer"
+  set direction of light "KeyLight" to [-0.35, -0.70, -0.60]
+  set intensity of light "KeyLight" to 0.95
+  set ambient of light "KeyLight" to 0.16
+
+M29A_SCOPE
+  Fake directional lighting only. No materials, textures, mesh import, shadows, gizmo, or editor camera overhaul.
+
+
+# M29B_UE_STYLE_VIEWPORT_NAVIGATION
+M29B adds no new public syntax. Existing M28B input commands are interpreted by the DX12 perspective runtime as UE-style viewport navigation when `capture mouse for window` is present: hold RMB to activate mouse look and camera-relative WASD/QE; release RMB to free the cursor and suppress movement/look.
+
+M29C_OBJECT_SELECTOR_ROTATE:
+  define object selector called "PrimarySelector"
+  use object selector "PrimarySelector" for renderer "MainRenderer"
+  when mouse button "Left" is pressed select object using "PrimarySelector"
+  when key "R" is held rotate selected object around y by mouse x sensitivity 0.35
+
+M29C constraints:
+  - selector must be defined before use.
+  - selector must bind to a known renderer.
+  - select binding must reference a known selector.
+  - selected-object rotate currently supports axis y and mouse x only.
+  - pivot is the object transform center.

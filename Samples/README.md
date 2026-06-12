@@ -131,3 +131,11 @@ Run locally:
 
 - `Samples/DX12/dx12_full_peripheral_input_scene_m28b.arq`
 - Demonstrates M27D dark native title bar, M28A generated boxes, M27 perspective/depth, M26 keyboard input, and M28B mouse capture/look/buttons/wheel.
+
+## DX12 M28C/M29A rotation + fake lighting
+
+- `Samples/DX12/dx12_rotation3d_fake_light_scene_m29a.arq` demonstrates full 3D object rotation and fake directional lighting on generated box primitives.
+
+- `Samples/DX12/dx12_ue_style_viewport_navigation_scene_m29b.arq` - M29B perspective DX12 sample using dark window chrome, boxes, fake lighting, RMB-held UE-style viewport navigation, and camera-relative WASD/QE movement.
+
+- `Samples/DX12/dx12_object_selector_rotate_scene_m29c.arq` - M29C minimal object selector + selected-object Y rotate tool on top of M29B UE-style viewport navigation.

@@ -21,7 +21,7 @@ static partial class Program
 
             if (string.IsNullOrWhiteSpace(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S260", nameTok.Line, nameTok.Column, "DX12 renderer name cannot be empty.");
-            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value))
+            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value) || _dx12LightNames.Contains(nameTok.Value) || _dx12ObjectSelectorNames.Contains(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S260", nameTok.Line, nameTok.Column, $"DX12 renderer '{nameTok.Value}' conflicts with an existing object name.");
             if (!_dx12RendererNames.Add(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S260", nameTok.Line, nameTok.Column, $"Duplicate DX12 renderer '{nameTok.Value}'.");
@@ -166,7 +166,7 @@ static partial class Program
 
             if (string.IsNullOrWhiteSpace(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S280", nameTok.Line, nameTok.Column, "DX12 shader name cannot be empty.");
-            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value))
+            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value) || _dx12LightNames.Contains(nameTok.Value) || _dx12ObjectSelectorNames.Contains(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S280", nameTok.Line, nameTok.Column, $"DX12 shader '{nameTok.Value}' conflicts with an existing object name.");
             if (!_dx12ShaderNames.Add(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S280", nameTok.Line, nameTok.Column, $"Duplicate DX12 shader '{nameTok.Value}'.");
@@ -243,7 +243,7 @@ static partial class Program
 
             if (string.IsNullOrWhiteSpace(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S283", nameTok.Line, nameTok.Column, "DX12 pipeline name cannot be empty.");
-            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value))
+            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value) || _dx12LightNames.Contains(nameTok.Value) || _dx12ObjectSelectorNames.Contains(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S283", nameTok.Line, nameTok.Column, $"DX12 pipeline '{nameTok.Value}' conflicts with an existing object name.");
             if (!_dx12PipelineNames.Add(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S283", nameTok.Line, nameTok.Column, $"Duplicate DX12 pipeline '{nameTok.Value}'.");
@@ -389,7 +389,7 @@ static partial class Program
 
             if (string.IsNullOrWhiteSpace(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S287", nameTok.Line, nameTok.Column, "DX12 vertex buffer name cannot be empty.");
-            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value))
+            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value) || _dx12LightNames.Contains(nameTok.Value) || _dx12ObjectSelectorNames.Contains(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S287", nameTok.Line, nameTok.Column, $"DX12 vertex buffer '{nameTok.Value}' conflicts with an existing object name.");
             if (!_dx12VertexBufferNames.Add(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S287", nameTok.Line, nameTok.Column, $"Duplicate DX12 vertex buffer '{nameTok.Value}'.");
@@ -587,7 +587,7 @@ static partial class Program
         {
             if (string.IsNullOrWhiteSpace(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S320", nameTok.Line, nameTok.Column, "DX12 object name cannot be empty.");
-            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value))
+            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value) || _dx12LightNames.Contains(nameTok.Value) || _dx12ObjectSelectorNames.Contains(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S320", nameTok.Line, nameTok.Column, $"DX12 object '{nameTok.Value}' conflicts with an existing object name.");
         }
 
@@ -764,7 +764,7 @@ static partial class Program
         }
 
         bool LooksLikeDx12TransformOrCameraStatement()
-            => (PeekWord("position") || PeekWord("rotation") || PeekWord("scale") || PeekWord("zoom") || PeekWord("camera") || PeekWord("field") || PeekWord("near") || PeekWord("far"));
+            => (PeekWord("position") || PeekWord("rotation") || PeekWord("scale") || PeekWord("zoom") || PeekWord("camera") || PeekWord("field") || PeekWord("near") || PeekWord("far") || PeekWord("direction") || PeekWord("intensity") || PeekWord("ambient"));
 
         void ParseDx12TransformOrCameraStatement(bool apply, bool inIf)
         {
@@ -835,34 +835,104 @@ static partial class Program
             if (CurrentWordIs("rotation"))
             {
                 ExpectWord("rotation", "P341", "Expected rotation after set.");
-                if (CurrentWordIs("z"))
+                if (CurrentWordIs("x") || CurrentWordIs("y") || CurrentWordIs("z"))
                 {
-                    ExpectWord("z", "P341", "Expected z after rotation.");
+                    var axisTok = Advance();
                     ExpectKeyword("of");
                     ExpectWord("object", "P341", "Expected object after of.");
                     var objectTok = Expect("STRING", "DX12 object name");
                     ExpectKeyword("to");
                     var valueTok = Current;
-                    var rotationDegrees = ParseDx12SignedNumber(valueTok, "S341", "DX12 object rotation z must be numeric degrees.", consumeDeg: true);
+                    var rotationDegrees = ParseDx12SignedNumber(valueTok, "S341", $"DX12 object rotation {axisTok.Value} must be numeric degrees.", consumeDeg: true);
                     ExpectLine();
-                    AddDx12ObjectTransform(objectTok, "rotation_z", FormatNumber(rotationDegrees, "double"), apply);
+                    AddDx12ObjectTransform(objectTok, "rotation_" + axisTok.Value, FormatNumber(rotationDegrees, "double"), apply);
                     return;
                 }
                 if (CurrentWordIs("of"))
                 {
                     ExpectKeyword("of");
+                    if (CurrentWordIs("object"))
+                    {
+                        ExpectWord("object", "P356", "Expected object after of.");
+                        var objectTok = Expect("STRING", "DX12 object name");
+                        ExpectKeyword("to");
+                        var valueTok = Current;
+                        var rotation = ParseAddExpression(legacyQuotedStrings: false);
+                        if (rotation.Type != "vec3")
+                            throw new CompileError("SEMANTIC", "S356", valueTok.Line, valueTok.Column, "DX12 object rotation must be a vec3 of pitch/yaw/roll degrees.");
+                        ExpectLine();
+                        AddDx12ObjectTransform(objectTok, "rotation", FormatVector(ToVector(rotation)), apply);
+                        return;
+                    }
                     ExpectWord("camera", "P353", "Expected camera after of.");
                     var cameraTok = Expect("STRING", "DX12 camera name");
                     ExpectKeyword("to");
-                    var valueTok = Current;
-                    var rotation = ParseAddExpression(legacyQuotedStrings: false);
-                    if (rotation.Type != "vec3")
-                        throw new CompileError("SEMANTIC", "S353", valueTok.Line, valueTok.Column, "DX12 camera rotation must be a vec3 of pitch/yaw/roll degrees.");
+                    var camValueTok = Current;
+                    var cameraRotation = ParseAddExpression(legacyQuotedStrings: false);
+                    if (cameraRotation.Type != "vec3")
+                        throw new CompileError("SEMANTIC", "S353", camValueTok.Line, camValueTok.Column, "DX12 camera rotation must be a vec3 of pitch/yaw/roll degrees.");
                     ExpectLine();
-                    AddDx12CameraTransform(cameraTok, "rotation", FormatVector(ToVector(rotation)), apply);
+                    AddDx12CameraTransform(cameraTok, "rotation", FormatVector(ToVector(cameraRotation)), apply);
                     return;
                 }
-                throw new CompileError("PARSE", "P341", Current.Line, Current.Column, "Expected z for object rotation or of camera for camera rotation.");
+                throw new CompileError("PARSE", "P341", Current.Line, Current.Column, "Expected x/y/z for object rotation or of object/camera for full rotation.");
+            }
+
+            if (CurrentWordIs("direction"))
+            {
+                ExpectWord("direction", "P390", "Expected direction after set.");
+                ExpectKeyword("of");
+                ExpectWord("light", "P390", "Expected light after of.");
+                var lightTok = Expect("STRING", "DX12 directional light name");
+                ExpectKeyword("to");
+                var valueTok = Current;
+                var direction = ParseAddExpression(legacyQuotedStrings: false);
+                if (direction.Type != "vec3")
+                    throw new CompileError("SEMANTIC", "S390", valueTok.Line, valueTok.Column, "DX12 directional light direction must be a vec3.");
+                var values = ToVector(direction);
+                if (Math.Abs(values[0]) < NumericEpsilon && Math.Abs(values[1]) < NumericEpsilon && Math.Abs(values[2]) < NumericEpsilon)
+                    throw new CompileError("SEMANTIC", "S390", valueTok.Line, valueTok.Column, "DX12 directional light direction cannot be zero.");
+                ExpectLine();
+                AddDx12LightProperty(lightTok, "direction", FormatVector(values), apply);
+                return;
+            }
+
+            if (CurrentWordIs("intensity"))
+            {
+                ExpectWord("intensity", "P391", "Expected intensity after set.");
+                ExpectKeyword("of");
+                ExpectWord("light", "P391", "Expected light after of.");
+                var lightTok = Expect("STRING", "DX12 directional light name");
+                ExpectKeyword("to");
+                var valueTok = Current;
+                var intensity = ParseAddExpression(legacyQuotedStrings: false);
+                if (!IsNumeric(intensity.Type))
+                    throw new CompileError("SEMANTIC", "S391", valueTok.Line, valueTok.Column, "DX12 directional light intensity must be numeric.");
+                var value = ToNumber(intensity);
+                if (value < 0.0 || value > 4.0)
+                    throw new CompileError("SEMANTIC", "S391", valueTok.Line, valueTok.Column, "DX12 directional light intensity must be between 0 and 4.");
+                ExpectLine();
+                AddDx12LightProperty(lightTok, "intensity", FormatNumber(value, "double"), apply);
+                return;
+            }
+
+            if (CurrentWordIs("ambient"))
+            {
+                ExpectWord("ambient", "P392", "Expected ambient after set.");
+                ExpectKeyword("of");
+                ExpectWord("light", "P392", "Expected light after of.");
+                var lightTok = Expect("STRING", "DX12 directional light name");
+                ExpectKeyword("to");
+                var valueTok = Current;
+                var ambient = ParseAddExpression(legacyQuotedStrings: false);
+                if (!IsNumeric(ambient.Type))
+                    throw new CompileError("SEMANTIC", "S392", valueTok.Line, valueTok.Column, "DX12 directional light ambient must be numeric.");
+                var value = ToNumber(ambient);
+                if (value < 0.0 || value > 1.0)
+                    throw new CompileError("SEMANTIC", "S392", valueTok.Line, valueTok.Column, "DX12 directional light ambient must be between 0 and 1.");
+                ExpectLine();
+                AddDx12LightProperty(lightTok, "ambient", FormatNumber(value, "double"), apply);
+                return;
             }
 
             if (CurrentWordIs("scale"))
@@ -1054,6 +1124,100 @@ static partial class Program
 
 
 
+
+
+        // M29C syntax:
+        // define object selector called "PrimarySelector"
+        // use object selector "PrimarySelector" for renderer "MainRenderer"
+        // when mouse button "Left" is pressed select object using "PrimarySelector"
+        // when key "R" is held rotate selected object around y by mouse x sensitivity 0.35
+        void ParseDx12ObjectSelectorDefinitionStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "DX12 object selector definitions inside compile-time if are not supported in M29C.");
+
+            ExpectKeyword("define");
+            ExpectWord("object", "P393", "Expected object after define.");
+            ExpectWord("selector", "P393", "Expected selector after object.");
+            ExpectKeyword("called");
+            var nameTok = Expect("STRING", "DX12 object selector name");
+            ExpectLine();
+
+            if (string.IsNullOrWhiteSpace(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S393", nameTok.Line, nameTok.Column, "DX12 object selector name cannot be empty.");
+            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value) || _dx12LightNames.Contains(nameTok.Value) || _dx12ObjectSelectorNames.Contains(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S393", nameTok.Line, nameTok.Column, $"DX12 object selector '{nameTok.Value}' conflicts with an existing object name.");
+            if (!_dx12ObjectSelectorNames.Add(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S393", nameTok.Line, nameTok.Column, $"Duplicate DX12 object selector '{nameTok.Value}'.");
+
+            if (apply)
+                _dx12ObjectSelectors.Add(new Dx12ObjectSelector(nameTok.Value));
+        }
+
+        void ParseDx12ObjectSelectorUseStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "DX12 object selector use statements inside compile-time if are not supported in M29C.");
+
+            ExpectKeyword("use");
+            ExpectWord("object", "P394", "Expected object after use.");
+            ExpectWord("selector", "P394", "Expected selector after object.");
+            var selectorTok = Expect("STRING", "DX12 object selector name");
+            ExpectKeyword("for");
+            ExpectWord("renderer", "P394", "Expected renderer after for.");
+            var rendererTok = Expect("STRING", "DX12 renderer name");
+            ExpectLine();
+
+            ValidateExistingDx12ObjectSelector(selectorTok);
+            if (!_dx12RendererNames.Contains(rendererTok.Value))
+                throw new CompileError("SEMANTIC", "S394", rendererTok.Line, rendererTok.Column, $"Unknown DX12 renderer '{rendererTok.Value}'.");
+            if (!_dx12RendererWindowByName.ContainsKey(rendererTok.Value))
+                throw new CompileError("SEMANTIC", "S394", rendererTok.Line, rendererTok.Column, $"DX12 object selector renderer '{rendererTok.Value}' must be parented to a window.");
+            if (_dx12ObjectSelectorRendererByName.ContainsKey(selectorTok.Value))
+                throw new CompileError("SEMANTIC", "S394", selectorTok.Line, selectorTok.Column, $"DX12 object selector '{selectorTok.Value}' is already bound to a renderer.");
+            if (_dx12ObjectSelectorRendererByName.ContainsValue(rendererTok.Value))
+                throw new CompileError("SEMANTIC", "S394", rendererTok.Line, rendererTok.Column, $"DX12 renderer '{rendererTok.Value}' already has an object selector in M29C.");
+
+            _dx12ObjectSelectorRendererByName[selectorTok.Value] = rendererTok.Value;
+            if (!_dx12ObjectSelectorUseKeys.Add(selectorTok.Value + "|" + rendererTok.Value))
+                throw new CompileError("SEMANTIC", "S394", selectorTok.Line, selectorTok.Column, $"Duplicate DX12 object selector use for '{selectorTok.Value}'.");
+            if (apply)
+                _dx12ObjectSelectorUses.Add(new Dx12ObjectSelectorUse(selectorTok.Value, rendererTok.Value));
+        }
+
+        void ValidateExistingDx12ObjectSelector(Token selectorTok)
+        {
+            if (!_dx12ObjectSelectorNames.Contains(selectorTok.Value))
+                throw new CompileError("SEMANTIC", "S393", selectorTok.Line, selectorTok.Column, $"Unknown DX12 object selector '{selectorTok.Value}'.");
+        }
+
+        void AddDx12ObjectSelectionBinding(Token buttonTok, Token selectorTok, bool apply)
+        {
+            ValidateExistingDx12ObjectSelector(selectorTok);
+            var normalized = NormalizeDx12MouseButtonName(buttonTok.Value);
+            if (normalized == "")
+                throw new CompileError("SEMANTIC", "S395", buttonTok.Line, buttonTok.Column, $"Unsupported mouse button '{buttonTok.Value}'.");
+            var key = normalized + "|select_object|" + selectorTok.Value;
+            if (!_dx12ObjectSelectionBindingKeys.Add(key))
+                throw new CompileError("SEMANTIC", "S395", buttonTok.Line, buttonTok.Column, $"Duplicate object selection binding for mouse button '{buttonTok.Value}'.");
+            if (apply)
+                _dx12ObjectSelectionBindings.Add(new Dx12ObjectSelectionBinding(normalized, selectorTok.Value));
+        }
+
+        void AddDx12SelectedObjectRotateBinding(Token keyTok, string axis, string mouseAxis, double sensitivity, bool apply)
+        {
+            if (_dx12ObjectSelectorNames.Count < 1)
+                throw new CompileError("SEMANTIC", "S396", keyTok.Line, keyTok.Column, "M29C selected object rotation requires a defined object selector.");
+            var normalized = NormalizeDx12KeyName(keyTok.Value);
+            if (normalized == "")
+                throw new CompileError("SEMANTIC", "S396", keyTok.Line, keyTok.Column, $"Unsupported keyboard key '{keyTok.Value}'.");
+            var key = normalized + "|rotate_selected_object|" + axis + "|" + mouseAxis;
+            if (!_dx12SelectedObjectRotateBindingKeys.Add(key))
+                throw new CompileError("SEMANTIC", "S396", keyTok.Line, keyTok.Column, $"Duplicate selected object rotate binding for key '{keyTok.Value}'.");
+            if (apply)
+                _dx12SelectedObjectRotateBindings.Add(new Dx12SelectedObjectRotateBinding(normalized, axis, mouseAxis, FormatNumber(sensitivity, "double")));
+        }
+
         // M28B syntax: capture mouse for window "MainWindow"
         void ParseDx12MouseCaptureStatement(bool apply, bool inIf)
         {
@@ -1145,6 +1309,16 @@ static partial class Program
                 if (CurrentWordIs("pressed"))
                 {
                     ExpectWord("pressed", "P385", "Expected held or pressed after mouse button is.");
+                    if (CurrentWordIs("select"))
+                    {
+                        ExpectWord("select", "P395", "Expected select.");
+                        ExpectWord("object", "P395", "Expected object after select.");
+                        ExpectWord("using", "P395", "Expected using after select object.");
+                        var selectorTok = Expect("STRING", "DX12 object selector name");
+                        ExpectLine();
+                        AddDx12ObjectSelectionBinding(buttonTok, selectorTok, apply);
+                        return;
+                    }
                     if (CurrentWordIs("reset"))
                     {
                         ExpectWord("reset", "P385", "Expected reset.");
@@ -1223,6 +1397,34 @@ static partial class Program
             if (CurrentWordIs("held"))
             {
                 ExpectWord("held", "P360", "Expected held or pressed after key is.");
+                if (CurrentWordIs("rotate"))
+                {
+                    ExpectWord("rotate", "P396", "Expected rotate after held.");
+                    ExpectWord("selected", "P396", "Expected selected after rotate.");
+                    ExpectWord("object", "P396", "Expected object after selected.");
+                    ExpectWord("around", "P396", "Expected around after object.");
+                    var axisTok = Current;
+                    if (!CurrentWordIs("y"))
+                        throw new CompileError("SEMANTIC", "S396", axisTok.Line, axisTok.Column, "M29C selected object rotation currently supports only axis y.");
+                    ExpectWord("y", "P396", "Expected y axis.");
+                    ExpectKeyword("by");
+                    ExpectWord("mouse", "P396", "Expected mouse after by.");
+                    var mouseAxisTok = Current;
+                    if (!CurrentWordIs("x"))
+                        throw new CompileError("SEMANTIC", "S396", mouseAxisTok.Line, mouseAxisTok.Column, "M29C selected object rotation currently supports only mouse x.");
+                    ExpectWord("x", "P396", "Expected mouse x.");
+                    ExpectWord("sensitivity", "P396", "Expected sensitivity after mouse axis.");
+                    var sensitivityTok = Current;
+                    var sensitivityExpr = ParseAddExpression(legacyQuotedStrings: false);
+                    if (!IsNumeric(sensitivityExpr.Type))
+                        throw new CompileError("SEMANTIC", "S396", sensitivityTok.Line, sensitivityTok.Column, "M29C selected object rotation sensitivity must be numeric.");
+                    var sensitivity = ToNumber(sensitivityExpr);
+                    if (sensitivity <= 0.0 || sensitivity > 10.0)
+                        throw new CompileError("SEMANTIC", "S396", sensitivityTok.Line, sensitivityTok.Column, "M29C selected object rotation sensitivity must be greater than 0 and at most 10.");
+                    ExpectLine();
+                    AddDx12SelectedObjectRotateBinding(keyTok, "y", "x", sensitivity, apply);
+                    return;
+                }
                 ExpectWord("move", "P360", "Expected move after held.");
                 ExpectWord("camera", "P360", "Expected camera after move.");
                 var cameraTok = Expect("STRING", "DX12 camera name");
@@ -1292,6 +1494,78 @@ static partial class Program
 
 
 
+        // M29A syntax:
+        // define directional light called "KeyLight"
+        // use light "KeyLight" for renderer "MainRenderer"
+        // set direction of light "KeyLight" to [-0.35, -0.70, -0.60]
+        // set intensity of light "KeyLight" to 0.95
+        // set ambient of light "KeyLight" to 0.16
+        // M28C syntax:
+        // set rotation of object "CubeA" to [20.0, 35.0, 10.0]
+        // emits rotation_x / rotation_y / rotation_z object transform metadata
+        void ParseDx12DirectionalLightDefinitionStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "DX12 directional light definitions inside compile-time if are not supported in M29A.");
+
+            ExpectKeyword("define");
+            ExpectWord("directional", "P388", "Expected directional after define.");
+            ExpectWord("light", "P388", "Expected light after directional.");
+            ExpectKeyword("called");
+            var nameTok = Expect("STRING", "DX12 directional light name");
+            ExpectLine();
+
+            if (string.IsNullOrWhiteSpace(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S388", nameTok.Line, nameTok.Column, "DX12 directional light name cannot be empty.");
+            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value) || _dx12LightNames.Contains(nameTok.Value) || _dx12ObjectSelectorNames.Contains(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S388", nameTok.Line, nameTok.Column, $"DX12 directional light '{nameTok.Value}' conflicts with an existing object name.");
+            if (!_dx12LightNames.Add(nameTok.Value))
+                throw new CompileError("SEMANTIC", "S388", nameTok.Line, nameTok.Column, $"Duplicate DX12 directional light '{nameTok.Value}'.");
+            if (apply)
+                _dx12DirectionalLights.Add(new Dx12DirectionalLight(nameTok.Value));
+        }
+
+        void ParseDx12LightUseStatement(bool apply, bool inIf)
+        {
+            if (inIf)
+                throw new CompileError("SEMANTIC", "S024", Current.Line, Current.Column, "DX12 light use statements inside compile-time if are not supported in M29A.");
+
+            ExpectKeyword("use");
+            ExpectWord("light", "P389", "Expected light after use.");
+            var lightTok = Expect("STRING", "DX12 directional light name");
+            ExpectKeyword("for");
+            ExpectWord("renderer", "P389", "Expected renderer after for.");
+            var rendererTok = Expect("STRING", "DX12 renderer name");
+            ExpectLine();
+
+            ValidateExistingDx12Light(lightTok);
+            if (!_dx12RendererNames.Contains(rendererTok.Value))
+                throw new CompileError("SEMANTIC", "S389", rendererTok.Line, rendererTok.Column, $"Unknown DX12 renderer '{rendererTok.Value}'.");
+            if (_dx12LightRendererByName.ContainsKey(lightTok.Value))
+                throw new CompileError("SEMANTIC", "S389", lightTok.Line, lightTok.Column, $"DX12 directional light '{lightTok.Value}' is already bound to a renderer.");
+            if (_dx12LightRendererByName.ContainsValue(rendererTok.Value))
+                throw new CompileError("SEMANTIC", "S389", rendererTok.Line, rendererTok.Column, $"DX12 renderer '{rendererTok.Value}' already has a directional light in M29A.");
+            _dx12LightRendererByName[lightTok.Value] = rendererTok.Value;
+            if (apply)
+                _dx12LightUses.Add(new Dx12LightUse(lightTok.Value, rendererTok.Value));
+        }
+
+        void ValidateExistingDx12Light(Token lightTok)
+        {
+            if (!_dx12LightNames.Contains(lightTok.Value))
+                throw new CompileError("SEMANTIC", "S389", lightTok.Line, lightTok.Column, $"Unknown DX12 directional light '{lightTok.Value}'.");
+        }
+
+        void AddDx12LightProperty(Token lightTok, string property, string value, bool apply)
+        {
+            ValidateExistingDx12Light(lightTok);
+            var key = lightTok.Value + "|" + property;
+            if (!_dx12LightPropertyKeys.Add(key))
+                throw new CompileError("SEMANTIC", "S390", lightTok.Line, lightTok.Column, $"DX12 directional light '{lightTok.Value}' already has property '{property}'.");
+            if (apply)
+                _dx12LightProperties.Add(new Dx12LightProperty(lightTok.Value, property, value));
+        }
+
         void ParseDx12ConstantBufferDefinitionStatement(bool apply, bool inIf)
         {
             if (inIf)
@@ -1306,7 +1580,7 @@ static partial class Program
 
             if (string.IsNullOrWhiteSpace(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S294", nameTok.Line, nameTok.Column, "DX12 constant buffer name cannot be empty.");
-            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value))
+            if (SymbolExists(nameTok.Value) || _definedWindows.Contains(nameTok.Value) || _uiObjectTypes.ContainsKey(nameTok.Value) || _dx12RendererNames.Contains(nameTok.Value) || _dx12ShaderNames.Contains(nameTok.Value) || _dx12PipelineNames.Contains(nameTok.Value) || _dx12VertexBufferNames.Contains(nameTok.Value) || _dx12ConstantBufferNames.Contains(nameTok.Value) || _dx12ColorSequenceNames.Contains(nameTok.Value) || _dx12ObjectNames.Contains(nameTok.Value) || _dx12CameraNames.Contains(nameTok.Value) || _dx12LightNames.Contains(nameTok.Value) || _dx12ObjectSelectorNames.Contains(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S294", nameTok.Line, nameTok.Column, $"DX12 constant buffer '{nameTok.Value}' conflicts with an existing object name.");
             if (!_dx12ConstantBufferNames.Add(nameTok.Value))
                 throw new CompileError("SEMANTIC", "S294", nameTok.Line, nameTok.Column, $"Duplicate DX12 constant buffer '{nameTok.Value}'.");

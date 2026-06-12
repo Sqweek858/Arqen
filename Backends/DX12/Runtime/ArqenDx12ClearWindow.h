@@ -37,10 +37,21 @@ struct ArqenDx12ObjectTransform
     float x;
     float y;
     float z;
+    float rotationXDegrees;
+    float rotationYDegrees;
     float rotationZDegrees;
     float sx;
     float sy;
     float sz;
+};
+
+struct ArqenDx12DirectionalLight
+{
+    float x;
+    float y;
+    float z;
+    float intensity;
+    float ambient;
 };
 
 struct ArqenDx12OrthographicCamera
@@ -90,6 +101,16 @@ enum : uint32_t
     ARQEN_DX12_MOUSE_WHEEL_ACTION_MOVE_CAMERA = 1,
 };
 
+enum : uint32_t
+{
+    ARQEN_DX12_SELECTOR_ROTATE_AXIS_Y = 2,
+};
+
+enum : uint32_t
+{
+    ARQEN_DX12_SELECTOR_MOUSE_AXIS_X = 1,
+};
+
 struct ArqenDx12KeyBinding
 {
     uint32_t virtualKey;
@@ -120,6 +141,14 @@ struct ArqenDx12MouseWheelBinding
     float x;
     float y;
     float z;
+};
+
+struct ArqenDx12SelectedObjectRotateBinding
+{
+    uint32_t virtualKey;
+    uint32_t axis;
+    uint32_t mouseAxis;
+    float sensitivity;
 };
 
 struct ArqenDx12ClearWindowDesc
@@ -157,6 +186,8 @@ struct ArqenDx12TriangleWindowDesc
     ArqenDx12PerspectiveCamera perspectiveCamera;
     bool enablePerspectiveCamera;
     bool enableDepth;
+    bool enableFakeLighting;
+    ArqenDx12DirectionalLight directionalLight;
     const ArqenDx12KeyBinding* keyBindings;
     uint32_t keyBindingCount;
     bool enableKeyboardInput;
@@ -169,6 +200,10 @@ struct ArqenDx12TriangleWindowDesc
     const ArqenDx12MouseWheelBinding* mouseWheelBindings;
     uint32_t mouseWheelBindingCount;
     volatile LONG* mouseWheelDelta;
+    bool enableObjectSelector;
+    uint32_t objectSelectButton;
+    const ArqenDx12SelectedObjectRotateBinding* selectedObjectRotateBindings;
+    uint32_t selectedObjectRotateBindingCount;
     bool enableTint;
     ArqenDx12ClearColor tintColor;
     const ArqenDx12ClearColor* animationColors;

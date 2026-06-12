@@ -1,0 +1,12 @@
+program "InvalidDx12LightUnknownUse"
+set title to string "invalid dx12 light unknown use"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+use light "MissingLight" for renderer "MainRenderer"
+
+show message "invalid dx12 light unknown use"
+blend mix to code 0
+end program "InvalidDx12LightUnknownUse"

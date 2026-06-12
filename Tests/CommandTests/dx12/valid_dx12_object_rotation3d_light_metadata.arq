@@ -1,0 +1,53 @@
+program "ValidDx12ObjectRotation3dLightMetadata"
+set title to string "dx12 object rotation3d light metadata"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shader called "BoxShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "BoxPipeline"
+    renderer: "MainRenderer"
+    shader: "BoxShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "BoxPipeline" for renderer "MainRenderer"
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -4.0]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+define directional light called "KeyLight"
+use light "KeyLight" for renderer "MainRenderer"
+set direction of light "KeyLight" to [-0.35, -0.70, -0.60]
+set intensity of light "KeyLight" to 0.85
+set ambient of light "KeyLight" to 0.20
+
+define box called "CubeA"
+set position of object "CubeA" to [0.0, 0.0, 2.0]
+set rotation of object "CubeA" to [20.0, 35.0, 10.0]
+set scale of object "CubeA" to [1.0, 1.0, 1.0]
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "CubeA"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "dx12 object rotation3d light metadata"
+blend mix to code 0
+end program "ValidDx12ObjectRotation3dLightMetadata"

@@ -111,8 +111,13 @@ function Format-FloatLiteral {
 }
 
 function Format-TransformLiteral {
-    param([double[]]$Position, [double]$RotationZ, [double[]]$Scale)
-    return ("{{ {0}, {1}, {2}, {3}, {4}, {5}, {6} }}" -f (Format-FloatLiteral $Position[0]), (Format-FloatLiteral $Position[1]), (Format-FloatLiteral $Position[2]), (Format-FloatLiteral $RotationZ), (Format-FloatLiteral $Scale[0]), (Format-FloatLiteral $Scale[1]), (Format-FloatLiteral $Scale[2]))
+    param([double[]]$Position, [double[]]$Rotation, [double[]]$Scale)
+    return ("{{ {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8} }}" -f (Format-FloatLiteral $Position[0]), (Format-FloatLiteral $Position[1]), (Format-FloatLiteral $Position[2]), (Format-FloatLiteral $Rotation[0]), (Format-FloatLiteral $Rotation[1]), (Format-FloatLiteral $Rotation[2]), (Format-FloatLiteral $Scale[0]), (Format-FloatLiteral $Scale[1]), (Format-FloatLiteral $Scale[2]))
+}
+
+function Format-DirectionalLightLiteral {
+    param([double[]]$Direction, [double]$Intensity, [double]$Ambient)
+    return ("{{ {0}, {1}, {2}, {3}, {4} }}" -f (Format-FloatLiteral $Direction[0]), (Format-FloatLiteral $Direction[1]), (Format-FloatLiteral $Direction[2]), (Format-FloatLiteral $Intensity), (Format-FloatLiteral $Ambient))
 }
 
 function Format-PerspectiveCameraLiteral {
@@ -171,6 +176,22 @@ function Resolve-MouseWheelActionLiteral {
     switch ($Action) {
         'move_camera_wheel' { return 'ARQEN_DX12_MOUSE_WHEEL_ACTION_MOVE_CAMERA' }
         default { Fail-M20E1 "unsupported M28B mouse wheel action '$Action'." }
+    }
+}
+
+function Resolve-SelectorAxisLiteral {
+    param([string]$Axis)
+    switch ($Axis) {
+        'y' { return 'ARQEN_DX12_SELECTOR_ROTATE_AXIS_Y' }
+        default { Fail-M20E1 "unsupported M29C selected object rotation axis '$Axis'." }
+    }
+}
+
+function Resolve-SelectorMouseAxisLiteral {
+    param([string]$Axis)
+    switch ($Axis) {
+        'x' { return 'ARQEN_DX12_SELECTOR_MOUSE_AXIS_X' }
+        default { Fail-M20E1 "unsupported M29C selected object rotation mouse axis '$Axis'." }
     }
 }
 
@@ -310,6 +331,13 @@ $mouseCaptures = @()
 $mouseMoveBindings = @()
 $mouseButtonBindings = @()
 $mouseWheelBindings = @()
+$objectSelectors = @()
+$objectSelectorUses = @()
+$objectSelectionBindings = @()
+$selectedObjectRotateBindings = @()
+$directionalLights = @()
+$lightUses = @()
+$lightProperties = @()
 $constantBuffers = @()
 $constantBufferBinds = @()
 $colorSequences = @()
@@ -499,6 +527,45 @@ foreach ($rawLine in [System.IO.File]::ReadAllLines($IrPath, [System.Text.Encodi
                 Delta = Get-Field $fields 'delta' 'DX12_MOUSE_WHEEL'
             }
         }
+        'DX12_OBJECT_SELECTOR' {
+            $objectSelectors += [pscustomobject]@{ Name = Get-Field $fields 'name' 'DX12_OBJECT_SELECTOR' }
+        }
+        'DX12_OBJECT_SELECTOR_USE' {
+            $objectSelectorUses += [pscustomobject]@{
+                Selector = Get-Field $fields 'selector' 'DX12_OBJECT_SELECTOR_USE'
+                Renderer = Get-Field $fields 'renderer' 'DX12_OBJECT_SELECTOR_USE'
+            }
+        }
+        'DX12_OBJECT_SELECT_BINDING' {
+            $objectSelectionBindings += [pscustomobject]@{
+                Button = Get-Field $fields 'button' 'DX12_OBJECT_SELECT_BINDING'
+                Selector = Get-Field $fields 'selector' 'DX12_OBJECT_SELECT_BINDING'
+            }
+        }
+        'DX12_SELECTED_OBJECT_ROTATE' {
+            $selectedObjectRotateBindings += [pscustomobject]@{
+                Key = Get-Field $fields 'key' 'DX12_SELECTED_OBJECT_ROTATE'
+                Axis = Get-Field $fields 'axis' 'DX12_SELECTED_OBJECT_ROTATE'
+                MouseAxis = Get-Field $fields 'mouse_axis' 'DX12_SELECTED_OBJECT_ROTATE'
+                Sensitivity = Get-Field $fields 'sensitivity' 'DX12_SELECTED_OBJECT_ROTATE'
+            }
+        }
+        'DX12_DIRECTIONAL_LIGHT' {
+            $directionalLights += [pscustomobject]@{ Name = Get-Field $fields 'name' 'DX12_DIRECTIONAL_LIGHT' }
+        }
+        'DX12_LIGHT_USE' {
+            $lightUses += [pscustomobject]@{
+                Light = Get-Field $fields 'light' 'DX12_LIGHT_USE'
+                Renderer = Get-Field $fields 'renderer' 'DX12_LIGHT_USE'
+            }
+        }
+        'DX12_LIGHT_PROPERTY' {
+            $lightProperties += [pscustomobject]@{
+                Light = Get-Field $fields 'light' 'DX12_LIGHT_PROPERTY'
+                Property = Get-Field $fields 'property' 'DX12_LIGHT_PROPERTY'
+                Value = Get-Field $fields 'value' 'DX12_LIGHT_PROPERTY'
+            }
+        }
         'DX12_CONSTANT_BUFFER' {
             $constantBuffers += [pscustomobject]@{
                 Name = Get-Field $fields 'name' 'DX12_CONSTANT_BUFFER'
@@ -663,6 +730,18 @@ $m28bMouseButtonCount = 0
 $m28bMouseWheelRows = @()
 $m28bMouseWheelData = "{ { 0u, 0.000000f, 0.000000f, 0.000000f } }"
 $m28bMouseWheelCount = 0
+$m29cObjectSelectorEnabled = $false
+$m29cObjectSelectorName = ""
+$m29cObjectSelectButton = "0u"
+$m29cObjectSelectBindingCount = 0
+$m29cSelectedObjectRotateRows = @()
+$m29cSelectedObjectRotateData = "{ { 0u, 0u, 0u, 0.000000f } }"
+$m29cSelectedObjectRotateCount = 0
+$m29FakeLightingEnabled = $false
+$m29LightName = ""
+$m29LightDirection = @( -0.35, -0.70, -0.60 )
+$m29LightIntensity = 0.85
+$m29LightAmbient = 0.18
 $m28bPeripheralInputEnabled = $false
 $m28BoxPrimitiveEnabled = $false
 $m28BoxPrimitiveCount = 0
@@ -778,29 +857,40 @@ if ($RequireTriangle) {
     $drawObjectNames = @($triangleDraws | ForEach-Object { if ($_.PSObject.Properties.Name -contains 'Object') { $_.Object } else { "" } } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Sort-Object -Unique)
     foreach ($objectName in $drawObjectNames) {
         $position = @(0.0, 0.0, 0.0)
-        $rotationZ = 0.0
+        $rotation = @(0.0, 0.0, 0.0)
         $scale = @(1.0, 1.0, 1.0)
         $props = @($objectTransforms | Where-Object { $_.Object -eq $objectName })
         foreach ($prop in $props) {
             switch ($prop.Property) {
                 'position' { $position = @(Parse-VectorValue $prop.Value 3 "M24 object position") }
                 'scale' { $scale = @(Parse-VectorValue $prop.Value 3 "M24 object scale") }
+                'rotation' { $rotation = @(Parse-VectorValue $prop.Value 3 "M28C object rotation") }
+                'rotation_x' {
+                    $rx = 0.0
+                    if (-not [double]::TryParse($prop.Value, [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$rx)) { Fail-M20E1 "M28C object rotation_x must be numeric." }
+                    $rotation[0] = $rx
+                }
+                'rotation_y' {
+                    $ry = 0.0
+                    if (-not [double]::TryParse($prop.Value, [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$ry)) { Fail-M20E1 "M28C object rotation_y must be numeric." }
+                    $rotation[1] = $ry
+                }
                 'rotation_z' {
                     $rz = 0.0
                     if (-not [double]::TryParse($prop.Value, [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$rz)) { Fail-M20E1 "M24 object rotation_z must be numeric." }
-                    $rotationZ = $rz
+                    $rotation[2] = $rz
                 }
-                default { Fail-M20E1 "unsupported M24 object transform property '$($prop.Property)'." }
+                default { Fail-M20E1 "unsupported M24/M28C object transform property '$($prop.Property)'." }
             }
         }
         $index = $m24TransformRows.Count
         $m24TransformIndexByObject[$objectName] = $index
-        $m24TransformRows += (Format-TransformLiteral $position $rotationZ $scale)
+        $m24TransformRows += (Format-TransformLiteral $position $rotation $scale)
         $m24TransformNames += $objectName
         if ($props.Count -gt 0) { $m24TransformEnabled = $true }
     }
     if ($m24TransformRows.Count -eq 0) {
-        $m24TransformRows += (Format-TransformLiteral @(0.0, 0.0, 0.0) 0.0 @(1.0, 1.0, 1.0))
+        $m24TransformRows += (Format-TransformLiteral @(0.0, 0.0, 0.0) @(0.0, 0.0, 0.0) @(1.0, 1.0, 1.0))
         $m24TransformNames += "identity"
     }
     $m24TransformData = "{ " + ($m24TransformRows -join ", ") + " }"
@@ -857,7 +947,67 @@ if ($RequireTriangle) {
         $m28bMouseWheelData = "{ " + ($m28bMouseWheelRows -join ", ") + " }"
         $m28bMouseWheelCount = $m28bMouseWheelRows.Count
     }
-    $m28bPeripheralInputEnabled = $m28bMouseCaptureEnabled -or $m28bMouseMoveCount -gt 0 -or $m28bMouseButtonCount -gt 0 -or $m28bMouseWheelCount -gt 0
+
+    if ($objectSelectors.Count -gt 0 -or $objectSelectorUses.Count -gt 0 -or $objectSelectionBindings.Count -gt 0 -or $selectedObjectRotateBindings.Count -gt 0) {
+        if ($objectSelectorUses.Count -ne 1) { Fail-M20E1 "M29C currently requires exactly one object selector bound to renderer '$($ready.Renderer)'." }
+        $selectorUse = $objectSelectorUses[0]
+        if ($selectorUse.Renderer -ne $ready.Renderer) { Fail-M20E1 "M29C object selector renderer '$($selectorUse.Renderer)' must match selected renderer '$($ready.Renderer)'." }
+        $selectorDefs = @($objectSelectors | Where-Object { $_.Name -eq $selectorUse.Selector })
+        if ($selectorDefs.Count -ne 1) { Fail-M20E1 "M29C object selector use references missing selector '$($selectorUse.Selector)'." }
+        if (@($matchingDrawObjects).Count -lt 1 -or -not $m23ObjectMode) { Fail-M20E1 "M29C object selector requires drawn DX12 objects for picking." }
+        $m29cObjectSelectorEnabled = $true
+        $m29cObjectSelectorName = $selectorUse.Selector
+
+        foreach ($select in $objectSelectionBindings) {
+            if ($select.Selector -ne $m29cObjectSelectorName) { Fail-M20E1 "M29C selection binding selector '$($select.Selector)' must match '$m29cObjectSelectorName'." }
+            if ($m29cObjectSelectBindingCount -gt 0) { Fail-M20E1 "M29C currently supports one object selection mouse binding." }
+            $m29cObjectSelectButton = Resolve-MouseButtonLiteral $select.Button
+            $m29cObjectSelectBindingCount = 1
+        }
+        if ($m29cObjectSelectBindingCount -ne 1) { Fail-M20E1 "M29C object selector requires a mouse selection binding." }
+
+        foreach ($rotate in $selectedObjectRotateBindings) {
+            $sensitivity = 0.0
+            if (-not [double]::TryParse($rotate.Sensitivity, [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$sensitivity)) { Fail-M20E1 "M29C selected object rotate sensitivity must be numeric." }
+            if ($sensitivity -le 0.0 -or $sensitivity -gt 10.0) { Fail-M20E1 "M29C selected object rotate sensitivity must be greater than 0 and at most 10." }
+            $m29cSelectedObjectRotateRows += ("{{ {0}, {1}, {2}, {3} }}" -f (Resolve-KeyVirtualCodeLiteral $rotate.Key), (Resolve-SelectorAxisLiteral $rotate.Axis), (Resolve-SelectorMouseAxisLiteral $rotate.MouseAxis), (Format-FloatLiteral $sensitivity))
+        }
+        if ($m29cSelectedObjectRotateRows.Count -gt 0) {
+            $m29cSelectedObjectRotateData = "{ " + ($m29cSelectedObjectRotateRows -join ", ") + " }"
+            $m29cSelectedObjectRotateCount = $m29cSelectedObjectRotateRows.Count
+        }
+        if ($m29cSelectedObjectRotateCount -ne 1) { Fail-M20E1 "M29C object selector requires one selected-object rotate binding." }
+    }
+
+    $m28bPeripheralInputEnabled = $m28bMouseCaptureEnabled -or $m28bMouseMoveCount -gt 0 -or $m28bMouseButtonCount -gt 0 -or $m28bMouseWheelCount -gt 0 -or $m29cObjectSelectorEnabled
+
+    $selectedLightUses = @($lightUses | Where-Object { $_.Renderer -eq $ready.Renderer })
+    if ($selectedLightUses.Count -gt 1) { Fail-M20E1 "M29A renderer '$($ready.Renderer)' has more than one directional light." }
+    if ($selectedLightUses.Count -eq 1) {
+        $m29LightName = $selectedLightUses[0].Light
+        if (@($directionalLights | Where-Object { $_.Name -eq $m29LightName }).Count -ne 1) { Fail-M20E1 "M29A light '$m29LightName' is used but not defined." }
+        $m29FakeLightingEnabled = $true
+        $props = @($lightProperties | Where-Object { $_.Light -eq $m29LightName })
+        foreach ($prop in $props) {
+            switch ($prop.Property) {
+                'direction' { $m29LightDirection = @(Parse-VectorValue $prop.Value 3 "M29A light direction") }
+                'intensity' {
+                    $parsed = 0.0
+                    if (-not [double]::TryParse($prop.Value, [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$parsed)) { Fail-M20E1 "M29A light intensity must be numeric." }
+                    if ($parsed -lt 0.0 -or $parsed -gt 4.0) { Fail-M20E1 "M29A light intensity must be between 0 and 4." }
+                    $m29LightIntensity = $parsed
+                }
+                'ambient' {
+                    $parsed = 0.0
+                    if (-not [double]::TryParse($prop.Value, [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$parsed)) { Fail-M20E1 "M29A light ambient must be numeric." }
+                    if ($parsed -lt 0.0 -or $parsed -gt 1.0) { Fail-M20E1 "M29A light ambient must be between 0 and 1." }
+                    $m29LightAmbient = $parsed
+                }
+                default { Fail-M20E1 "unsupported M29A light property '$($prop.Property)'." }
+            }
+        }
+        if ([Math]::Abs($m29LightDirection[0]) -lt 0.000001 -and [Math]::Abs($m29LightDirection[1]) -lt 0.000001 -and [Math]::Abs($m29LightDirection[2]) -lt 0.000001) { Fail-M20E1 "M29A light direction cannot be zero." }
+    }
 
     foreach ($draw in $triangleDraws) {
         $sourceBufferNames += $draw.Buffer
@@ -1031,11 +1181,17 @@ if ($RequireTriangle) {
 $drawCallData = "{ { 0u, 0u } }"
 $drawCallCount = 0
 $m23ObjectModeFlag = if ($m23ObjectMode) { 1 } else { 0 }
-$m24SceneRuntimeFlag = if ($m24TransformEnabled -or $m25CameraEnabled -or $m26KeyboardEnabled -or $m27PerspectiveEnabled -or $m28bPeripheralInputEnabled) { 1 } else { 0 }
+$m24SceneRuntimeFlag = if ($m24TransformEnabled -or $m25CameraEnabled -or $m26KeyboardEnabled -or $m27PerspectiveEnabled -or $m28bPeripheralInputEnabled -or $m29FakeLightingEnabled -or $m29cObjectSelectorEnabled) { 1 } else { 0 }
 $m25CameraEnabledFlag = if ($m25CameraEnabled) { 1 } else { 0 }
 $m26KeyboardEnabledFlag = if ($m26KeyboardEnabled) { 1 } else { 0 }
 $m28bPeripheralInputEnabledFlag = if ($m28bPeripheralInputEnabled) { 1 } else { 0 }
 $m28bMouseCaptureEnabledFlag = if ($m28bMouseCaptureEnabled) { 1 } else { 0 }
+$m29bViewportNavigationEnabled = $m28bMouseCaptureEnabled -and $m28bMouseMoveCount -gt 0 -and $m26KeyboardEnabled -and $m27PerspectiveEnabled
+$m29bViewportNavigationEnabledFlag = if ($m29bViewportNavigationEnabled) { 1 } else { 0 }
+$m29cObjectSelectorEnabledFlag = if ($m29cObjectSelectorEnabled) { 1 } else { 0 }
+$m29FakeLightingEnabledFlag = if ($m29FakeLightingEnabled) { 1 } else { 0 }
+$m29LightData = Format-DirectionalLightLiteral $m29LightDirection $m29LightIntensity $m29LightAmbient
+$m28cRotation3dEnabled = @($objectTransforms | Where-Object { $_.Property -eq "rotation" -or $_.Property -eq "rotation_x" -or $_.Property -eq "rotation_y" }).Count -gt 0
 $m27PerspectiveEnabledFlag = if ($m27PerspectiveEnabled) { 1 } else { 0 }
 $m27DepthEnabledFlag = if ($m27DepthEnabled) { 1 } else { 0 }
 $m27PerspectiveCameraData = Format-PerspectiveCameraLiteral $m25CameraPosition $m27CameraRotation $m27CameraFovYDegrees $m27CameraNearPlane $m27CameraFarPlane
@@ -1119,6 +1275,19 @@ $manifest = @(
     "M28B_MOUSE_MOVE_BINDINGS|$m28bMouseMoveCount",
     "M28B_MOUSE_BUTTON_BINDINGS|$m28bMouseButtonCount",
     "M28B_MOUSE_WHEEL_BINDINGS|$m28bMouseWheelCount",
+    "M29B_UE_STYLE_VIEWPORT_NAVIGATION|$([bool]$m29bViewportNavigationEnabled)",
+    "M29B_CAMERA_RELATIVE_MOVEMENT|$([bool]$m29bViewportNavigationEnabled)",
+    "M29B_RMB_HOLD_NAVIGATION|$([bool]$m29bViewportNavigationEnabled)",
+    "M29C_OBJECT_SELECTOR|$([bool]$m29cObjectSelectorEnabled)",
+    "M29C_SELECTOR|$m29cObjectSelectorName",
+    "M29C_SELECT_BINDINGS|$m29cObjectSelectBindingCount",
+    "M29C_ROTATE_BINDINGS|$m29cSelectedObjectRotateCount",
+    "M28C_OBJECT_ROTATION_3D|$([bool]$m28cRotation3dEnabled)",
+    "M29_FAKE_LIGHTING|$([bool]$m29FakeLightingEnabled)",
+    "M29_DIRECTIONAL_LIGHT|$m29LightName",
+    "M29_LIGHT_DIRECTION|$(($m29LightDirection | ForEach-Object { Format-FloatLiteral $_ }) -join ',')",
+    "M29_LIGHT_INTENSITY|$(Format-FloatLiteral $m29LightIntensity)",
+    "M29_LIGHT_AMBIENT|$(Format-FloatLiteral $m29LightAmbient)",
     "M27_DEPTH_BUFFER|$([bool]$m27DepthEnabled)",
     "M27_CAMERA_PROJECTION|$m27CameraProjection",
     "M27_PERSPECTIVE_CAMERA|$([bool]$m27PerspectiveEnabled)",
@@ -1174,6 +1343,18 @@ if ($RequireTriangle) {
     }
     foreach ($wheel in $mouseWheelBindings) {
         $manifest += "MOUSE_WHEEL|action=$($wheel.Action)|target=$($wheel.Target)|delta=$($wheel.Delta)"
+    }
+    foreach ($selector in $objectSelectors) {
+        $manifest += "OBJECT_SELECTOR|name=$($selector.Name)"
+    }
+    foreach ($selectorUse in $objectSelectorUses) {
+        $manifest += "OBJECT_SELECTOR_USE|selector=$($selectorUse.Selector)|renderer=$($selectorUse.Renderer)"
+    }
+    foreach ($select in $objectSelectionBindings) {
+        $manifest += "OBJECT_SELECT_BINDING|button=$($select.Button)|selector=$($select.Selector)"
+    }
+    foreach ($rotate in $selectedObjectRotateBindings) {
+        $manifest += "SELECTED_OBJECT_ROTATE|key=$($rotate.Key)|axis=$($rotate.Axis)|mouse_axis=$($rotate.MouseAxis)|sensitivity=$($rotate.Sensitivity)"
     }
     foreach ($key in $animationColors) {
         $manifest += "COLOR_KEY_$($key.Index)|sequence=$($key.Sequence)|value=$($key.Value)"
@@ -1253,6 +1434,22 @@ $config = @(
     ('#define ARQEN_M28B_MOUSE_BUTTON_BINDING_DATA {0}' -f $m28bMouseButtonData),
     ('#define ARQEN_M28B_MOUSE_WHEEL_BINDING_COUNT {0}' -f $m28bMouseWheelCount),
     ('#define ARQEN_M28B_MOUSE_WHEEL_BINDING_DATA {0}' -f $m28bMouseWheelData),
+    '#define ARQEN_M29B_UE_STYLE_VIEWPORT_NAVIGATION 1',
+    ('#define ARQEN_M29B_UE_STYLE_VIEWPORT_NAVIGATION_ENABLED {0}' -f $m29bViewportNavigationEnabledFlag),
+    '#define ARQEN_M29B_CAMERA_RELATIVE_MOVEMENT 1',
+    ('#define ARQEN_M29B_CAMERA_RELATIVE_MOVEMENT_ENABLED {0}' -f $m29bViewportNavigationEnabledFlag),
+    '#define ARQEN_M29C_OBJECT_SELECTOR 1',
+    ('#define ARQEN_M29C_OBJECT_SELECTOR_ENABLED {0}' -f $m29cObjectSelectorEnabledFlag),
+    ('#define ARQEN_M29C_OBJECT_SELECTOR_NAME "{0}"' -f (Escape-CString $m29cObjectSelectorName)),
+    ('#define ARQEN_M29C_OBJECT_SELECT_BUTTON {0}' -f $m29cObjectSelectButton),
+    ('#define ARQEN_M29C_OBJECT_SELECT_BINDING_COUNT {0}' -f $m29cObjectSelectBindingCount),
+    ('#define ARQEN_M29C_SELECTED_OBJECT_ROTATE_BINDING_COUNT {0}' -f $m29cSelectedObjectRotateCount),
+    ('#define ARQEN_M29C_SELECTED_OBJECT_ROTATE_BINDING_DATA {0}' -f $m29cSelectedObjectRotateData),
+    '#define ARQEN_M28C_OBJECT_ROTATION_3D 1',
+    '#define ARQEN_M29_FAKE_LIGHTING 1',
+    ('#define ARQEN_M29_FAKE_LIGHTING_ENABLED {0}' -f $m29FakeLightingEnabledFlag),
+    ('#define ARQEN_M29_DIRECTIONAL_LIGHT_NAME "{0}"' -f (Escape-CString $m29LightName)),
+    ('#define ARQEN_M29_DIRECTIONAL_LIGHT_DATA {0}' -f $m29LightData),
     '#define ARQEN_M27_DEPTH_BUFFER 1',
     ('#define ARQEN_M27_DEPTH_BUFFER_ENABLED {0}' -f $m27DepthEnabledFlag),
     ('#define ARQEN_M27_CAMERA_PROJECTION "{0}"' -f (Escape-CString $m27CameraProjection)),

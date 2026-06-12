@@ -1095,3 +1095,20 @@ Boundary: no custom title bar, no DX12 UI, no scene graph, no lighting, no mater
 ## M28B - DX12 full peripheral input
 
 M28B adds mouse capture, mouse look, mouse buttons, mouse wheel, and Q/E vertical camera movement for the DX12 perspective scene path. It keeps the scope deliberately small: no key remapping, controller input, collision, physics, UI widgets, mouse picking, lighting, scene graph, or mesh import.
+
+## M28C - Full 3D object rotation
+
+Adds `set rotation of object "..." to [x, y, z]` plus `rotation x/y/z` axis commands for DX12 object transforms while preserving `rotation z` compatibility.
+
+## M29A - Fake directional lighting
+
+Adds `define directional light called`, `use light ... for renderer`, and light direction/intensity/ambient metadata. Runtime applies CPU-side fake lighting to generated scene vertices. No mesh import, material system, textures, shadows, gizmo, or editor camera overhaul.
+
+## M29B - DX12 UE-style viewport navigation QoL
+
+M29B reuses the M28B input syntax and changes the runtime contract for perspective DX12 demos: RMB held enables mouse look and camera-relative WASD/QE movement; releasing RMB frees the cursor. No gizmo, selection, key remapping, physics, collision, or editor UI is included.
+
+## M29C - DX12 object selector + selected-object rotate
+
+M29C adds a minimal object selector and selected-object rotate tool:
+LMB selects a drawn object through a renderer-bound selector, and holding R while moving mouse X rotates the selected object around Y at its transform center. It intentionally avoids screen gizmos, outlines, multi-select, undo, and mesh picking.

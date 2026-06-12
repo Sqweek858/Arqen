@@ -157,6 +157,20 @@ static partial class Program
             yield return $"DX12_MOUSE_BUTTON|button={Esc(button.Button)}|action={Esc(button.Action)}|target={Esc(button.Target)}|delta={Esc(button.Delta)}";
         foreach (var wheel in ast.Dx12MouseWheelBindings)
             yield return $"DX12_MOUSE_WHEEL|action={Esc(wheel.Action)}|target={Esc(wheel.Target)}|delta={Esc(wheel.Delta)}";
+        foreach (var selector in ast.Dx12ObjectSelectors)
+            yield return $"DX12_OBJECT_SELECTOR|name={Esc(selector.Name)}";
+        foreach (var selectorUse in ast.Dx12ObjectSelectorUses)
+            yield return $"DX12_OBJECT_SELECTOR_USE|selector={Esc(selectorUse.Selector)}|renderer={Esc(selectorUse.Renderer)}";
+        foreach (var select in ast.Dx12ObjectSelectionBindings)
+            yield return $"DX12_OBJECT_SELECT_BINDING|button={Esc(select.Button)}|selector={Esc(select.Selector)}";
+        foreach (var rotate in ast.Dx12SelectedObjectRotateBindings)
+            yield return $"DX12_SELECTED_OBJECT_ROTATE|key={Esc(rotate.Key)}|axis={Esc(rotate.Axis)}|mouse_axis={Esc(rotate.MouseAxis)}|sensitivity={Esc(rotate.Sensitivity)}";
+        foreach (var light in ast.Dx12DirectionalLights)
+            yield return $"DX12_DIRECTIONAL_LIGHT|name={Esc(light.Name)}";
+        foreach (var lightUse in ast.Dx12LightUses)
+            yield return $"DX12_LIGHT_USE|light={Esc(lightUse.Light)}|renderer={Esc(lightUse.Renderer)}";
+        foreach (var prop in ast.Dx12LightProperties)
+            yield return $"DX12_LIGHT_PROPERTY|light={Esc(prop.Light)}|property={Esc(prop.Property)}|value={Esc(prop.Value)}";
         foreach (var buffer in ast.Dx12ConstantBuffers)
             yield return $"DX12_CONSTANT_BUFFER|name={Esc(buffer.Name)}|field={Esc(buffer.Field)}|type={Esc(buffer.FieldType)}|value={Esc(buffer.Value)}";
         foreach (var bind in ast.Dx12ConstantBufferBinds)

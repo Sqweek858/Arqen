@@ -268,3 +268,17 @@ Tools/validate_m21b_shader_pipeline_metadata.ps1 - validates M21B parser/AST/IR/
 
 - `Tools/build_m28b_dx12_full_peripheral_input_scene.ps1` builds/lowers the official M28B sample and can optionally build/run native DX12.
 - `Tools/validate_m28b_dx12_full_peripheral_input.ps1` validates parser, AST/IR, lowerer, runtime, wrapper, docs, sample, and command tests for M28B.
+
+## M28C/M29A DX12 rotation + fake lighting
+
+- `Tools/validate_m28c_m29a_dx12_rotation_light.ps1` validates M28C object rotation and M29A fake directional lighting contracts.
+- `Tools/build_m29a_dx12_rotation3d_fake_light_scene.ps1` compiles/lowers/builds the official M29A scene.
+- `Samples/DX12/dx12_rotation3d_fake_light_scene_m29a.arq` is the official sample.
+
+- `Tools/validate_m29b_dx12_ue_style_viewport_navigation.ps1` - validates M29B UE-style RMB viewport navigation, camera-relative WASD/QE movement, cursor release, wrapper/sample/docs markers.
+- `Tools/build_m29b_dx12_ue_style_viewport_navigation_scene.ps1` - builds/lowers/runs the official M29B DX12 viewport navigation sample.
+
+## M29C DX12 object selector rotate
+
+- `Tools/build_m29c_dx12_object_selector_rotate_scene.ps1` builds/lowers the official selector/rotate sample.
+- `Tools/validate_m29c_dx12_object_selector_rotate.ps1` validates parser/model/IR/lowerer/runtime/docs/sample coverage for M29C.

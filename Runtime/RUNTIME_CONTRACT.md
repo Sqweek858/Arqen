@@ -202,3 +202,7 @@ The DX12 runtime may consume the following generated input data for native scene
 - mouse wheel deltas from `DX12_MOUSE_WHEEL`.
 
 M28B is limited to camera movement/rotation, camera reset, and animation toggle. It does not define key remapping, controller input, collision, physics, UI widgets, mouse picking, or editor viewport behavior.
+
+## M29C DX12 object selector runtime contract
+
+M29C runtime data enables one renderer-bound object selector for approximate center picking of drawn DX12 objects. The selected object transform is mutable at runtime, and `R` + mouse X rotates the selected object around Y at its transform center. This does not add screen gizmo UI, outline rendering, multi-select, undo, or mesh triangle picking.

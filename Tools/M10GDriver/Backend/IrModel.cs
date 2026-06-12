@@ -214,6 +214,34 @@ static partial class Program
                     if (!fields.ContainsKey("action") || !fields.ContainsKey("target") || !fields.ContainsKey("delta"))
                         throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_MOUSE_WHEEL metadata in IR.");
                     break;
+                case "DX12_OBJECT_SELECTOR":
+                    if (!fields.ContainsKey("name"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_OBJECT_SELECTOR metadata in IR.");
+                    break;
+                case "DX12_OBJECT_SELECTOR_USE":
+                    if (!fields.ContainsKey("selector") || !fields.ContainsKey("renderer"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_OBJECT_SELECTOR_USE metadata in IR.");
+                    break;
+                case "DX12_OBJECT_SELECT_BINDING":
+                    if (!fields.ContainsKey("button") || !fields.ContainsKey("selector"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_OBJECT_SELECT_BINDING metadata in IR.");
+                    break;
+                case "DX12_SELECTED_OBJECT_ROTATE":
+                    if (!fields.ContainsKey("key") || !fields.ContainsKey("axis") || !fields.ContainsKey("mouse_axis") || !fields.ContainsKey("sensitivity"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_SELECTED_OBJECT_ROTATE metadata in IR.");
+                    break;
+                case "DX12_DIRECTIONAL_LIGHT":
+                    if (!fields.ContainsKey("name"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_DIRECTIONAL_LIGHT metadata in IR.");
+                    break;
+                case "DX12_LIGHT_USE":
+                    if (!fields.ContainsKey("light") || !fields.ContainsKey("renderer"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_LIGHT_USE metadata in IR.");
+                    break;
+                case "DX12_LIGHT_PROPERTY":
+                    if (!fields.ContainsKey("light") || !fields.ContainsKey("property") || !fields.ContainsKey("value"))
+                        throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_LIGHT_PROPERTY metadata in IR.");
+                    break;
                 case "DX12_CONSTANT_BUFFER":
                     if (!fields.ContainsKey("name") || !fields.ContainsKey("field") || !fields.ContainsKey("type") || !fields.ContainsKey("value"))
                         throw new CompileError("BACKEND", "B001", 0, 0, "Malformed DX12_CONSTANT_BUFFER metadata in IR.");

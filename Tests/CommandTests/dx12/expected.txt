@@ -132,3 +132,15 @@ invalid_dx12_mouse_capture_unknown_window.arq|1|ERROR|S382|semantic
 invalid_dx12_mouse_move_bad_vector.arq|1|ERROR|S383|semantic
 invalid_dx12_mouse_button_bad_button.arq|1|ERROR|S385|semantic
 invalid_dx12_mouse_wheel_unknown_camera.arq|1|ERROR|S348|semantic
+valid_dx12_object_rotation3d_light_metadata.arq|0|MESSAGE|dx12 object rotation3d light metadata
+invalid_dx12_object_rotation_bad_vector.arq|1|ERROR|S356|semantic
+invalid_dx12_light_unknown_use.arq|1|ERROR|S389|semantic
+invalid_dx12_light_zero_direction.arq|1|ERROR|S390|semantic
+invalid_dx12_light_bad_intensity.arq|1|ERROR|S391|semantic
+
+valid_dx12_object_selector_rotate_metadata.arq|0|MESSAGE|dx12 object selector rotate metadata
+invalid_dx12_selector_unknown_renderer.arq|1|ERROR|S394|semantic
+invalid_dx12_select_with_unknown_selector.arq|1|ERROR|S393|semantic
+invalid_dx12_rotate_selected_without_selector.arq|1|ERROR|S396|semantic
+invalid_dx12_rotate_selected_bad_axis.arq|1|ERROR|S396|semantic
+invalid_dx12_selector_duplicate_name.arq|1|ERROR|S393|semantic

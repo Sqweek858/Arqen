@@ -9,6 +9,7 @@
 #include <climits>
 #include <limits>
 #include <cmath>
+#include <vector>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -291,6 +292,8 @@ namespace
             if (!hasDrawCalls && (desc.drawVertexCount < 3 || desc.drawVertexCount > desc.vertexCount))
                 return FailMessage(result, E_INVALIDARG, "validate", "M21D draw vertex count must be between 3 and generated vertex count.");
             depthEnabled_ = desc.enableDepth;
+            fakeLightingEnabled_ = desc.enableFakeLighting;
+            directionalLight_ = desc.directionalLight;
             perspectiveCameraEnabled_ = desc.enablePerspectiveCamera;
             perspectiveCamera_ = desc.perspectiveCamera;
             initialPerspectiveCamera_ = desc.perspectiveCamera;
@@ -420,8 +423,17 @@ namespace
             baseVertices_ = desc.vertices;
             baseVertexCount_ = desc.vertexCount;
             sceneTransformsEnabled_ = desc.enableSceneTransforms && desc.objectTransforms && desc.objectTransformCount > 0;
-            objectTransforms_ = desc.objectTransforms;
-            objectTransformCount_ = desc.objectTransformCount;
+            dynamicObjectTransforms_.clear();
+            if (desc.objectTransforms && desc.objectTransformCount > 0)
+            {
+                dynamicObjectTransforms_.assign(desc.objectTransforms, desc.objectTransforms + desc.objectTransformCount);
+                objectTransforms_ = dynamicObjectTransforms_.data();
+            }
+            else
+            {
+                objectTransforms_ = nullptr;
+            }
+            objectTransformCount_ = static_cast<UINT>(dynamicObjectTransforms_.size());
             cameraEnabled_ = desc.enableCamera;
             camera_ = desc.camera;
             initialCamera_ = desc.camera;
@@ -440,22 +452,15 @@ namespace
             mouseWheelBindings_ = desc.mouseWheelBindings;
             mouseWheelBindingCount_ = desc.mouseWheelBindingCount;
             mouseWheelDelta_ = desc.mouseWheelDelta;
-            if (mouseCaptureEnabled_ && hwnd_)
-            {
-                SetCapture(hwnd_);
-                RECT client = {};
-                if (GetClientRect(hwnd_, &client))
-                {
-                    mouseCenter_.x = (client.left + client.right) / 2;
-                    mouseCenter_.y = (client.top + client.bottom) / 2;
-                    POINT screenCenter = mouseCenter_;
-                    ClientToScreen(hwnd_, &screenCenter);
-                    SetCursorPos(screenCenter.x, screenCenter.y);
-                    lastMouse_ = mouseCenter_;
-                    mousePositionValid_ = true;
-                }
-            }
-            sceneDynamicVertexBuffer_ = sceneTransformsEnabled_ || cameraEnabled_ || perspectiveCameraEnabled_ || keyboardInputEnabled_ || peripheralInputEnabled_;
+            objectSelectorEnabled_ = desc.enableObjectSelector;
+            objectSelectButton_ = desc.objectSelectButton;
+            selectedObjectRotateBindings_ = desc.selectedObjectRotateBindings;
+            selectedObjectRotateBindingCount_ = desc.selectedObjectRotateBindingCount;
+            // M29B: capture mouse now means UE-style soft viewport navigation.
+            // The cursor remains free until RMB is held, avoiding startup cursor lock/warp.
+            viewportNavigationActive_ = false;
+            mousePositionValid_ = false;
+            sceneDynamicVertexBuffer_ = sceneTransformsEnabled_ || cameraEnabled_ || perspectiveCameraEnabled_ || keyboardInputEnabled_ || peripheralInputEnabled_ || fakeLightingEnabled_ || objectSelectorEnabled_;
             UpdateSceneVertexBuffer();
 
             vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
@@ -508,6 +513,17 @@ namespace
         {
             const float dt = 1.0f / static_cast<float>(EffectiveTargetFps(targetFps));
 
+            if (!HasInputForeground())
+            {
+                if (viewportNavigationActive_)
+                    SetViewportNavigationActive(false);
+                ResetInputTransientState();
+                return;
+            }
+
+            if (peripheralInputEnabled_ && RequiresViewportNavigationHold())
+                SetViewportNavigationActive(IsRightMouseDown());
+
             if (keyboardInputEnabled_ && keyBindings_ && keyBindingCount_ > 0)
             {
             for (UINT i = 0; i < keyBindingCount_; ++i)
@@ -523,18 +539,8 @@ namespace
                 switch (binding.action)
                 {
                 case ARQEN_DX12_KEY_ACTION_MOVE_CAMERA_HELD:
-                    if (down && cameraEnabled_)
-                    {
-                        camera_.x += binding.x * dt;
-                        camera_.y += binding.y * dt;
-                        camera_.z += binding.z * dt;
-                    }
-                    if (down && perspectiveCameraEnabled_)
-                    {
-                        perspectiveCamera_.x += binding.x * dt;
-                        perspectiveCamera_.y += binding.y * dt;
-                        perspectiveCamera_.z += binding.z * dt;
-                    }
+                    if (down && (!RequiresViewportNavigationHold() || viewportNavigationActive_))
+                        MoveActiveCamera(binding.x, binding.y, binding.z, dt);
                     break;
                 case ARQEN_DX12_KEY_ACTION_RESET_CAMERA_PRESSED:
                     if (pressed && cameraEnabled_)
@@ -566,6 +572,96 @@ namespace
             }
         }
 
+        bool RequiresViewportNavigationHold() const
+        {
+            return mouseCaptureEnabled_ && peripheralInputEnabled_ && perspectiveCameraEnabled_;
+        }
+
+        bool IsRightMouseDown() const
+        {
+            return (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+        }
+
+        bool HasInputForeground() const
+        {
+            if (!hwnd_)
+                return false;
+            const HWND foreground = GetForegroundWindow();
+            return foreground == hwnd_ || GetCapture() == hwnd_;
+        }
+
+        void ResetInputTransientState()
+        {
+            std::memset(previousKeyDown_, 0, sizeof(previousKeyDown_));
+            std::memset(previousMouseButtonDown_, 0, sizeof(previousMouseButtonDown_));
+            previousObjectSelectButtonDown_ = false;
+            mousePositionValid_ = false;
+            rotateMousePositionValid_ = false;
+            if (mouseWheelDelta_)
+                InterlockedExchange(mouseWheelDelta_, 0);
+        }
+
+        void UpdateMouseCenter()
+        {
+            if (!hwnd_)
+                return;
+            RECT client = {};
+            if (GetClientRect(hwnd_, &client))
+            {
+                mouseCenter_.x = (client.left + client.right) / 2;
+                mouseCenter_.y = (client.top + client.bottom) / 2;
+            }
+        }
+
+        void SetCursorVisible(bool visible)
+        {
+            if (cursorVisible_ == visible)
+                return;
+            cursorVisible_ = visible;
+            ShowCursor(visible ? TRUE : FALSE);
+        }
+
+        void SetViewportNavigationActive(bool active)
+        {
+            if (viewportNavigationActive_ == active)
+                return;
+
+            viewportNavigationActive_ = active;
+            mousePositionValid_ = false;
+
+            if (!hwnd_)
+                return;
+
+            if (active)
+            {
+                SetCapture(hwnd_);
+                UpdateMouseCenter();
+                POINT centerScreen = mouseCenter_;
+                ClientToScreen(hwnd_, &centerScreen);
+                SetCursorPos(centerScreen.x, centerScreen.y);
+                SetCursorVisible(false);
+            }
+            else
+            {
+                if (GetCapture() == hwnd_)
+                    ReleaseCapture();
+                SetCursorVisible(true);
+                SetCursor(LoadCursorW(nullptr, IDC_ARROW));
+            }
+        }
+
+        void RotatePerspectiveLocalToWorld(float localX, float localY, float localZ, float& worldX, float& worldY, float& worldZ) const
+        {
+            worldX = localX;
+            worldY = localY;
+            worldZ = localZ;
+
+            // Inverse of the view-space camera rotations used by ProjectPerspectiveVertex.
+            RotateX(DegToRad(perspectiveCamera_.pitchDegrees), worldY, worldZ);
+            RotateY(DegToRad(perspectiveCamera_.yawDegrees), worldX, worldZ);
+            RotateZ(DegToRad(perspectiveCamera_.rollDegrees), worldX, worldY);
+        }
+
         void MoveActiveCamera(float dx, float dy, float dz, float scale)
         {
             if (cameraEnabled_)
@@ -576,9 +672,13 @@ namespace
             }
             if (perspectiveCameraEnabled_)
             {
-                perspectiveCamera_.x += dx * scale;
-                perspectiveCamera_.y += dy * scale;
-                perspectiveCamera_.z += dz * scale;
+                float worldX = dx;
+                float worldY = 0.0f;
+                float worldZ = dz;
+                RotatePerspectiveLocalToWorld(dx, 0.0f, dz, worldX, worldY, worldZ);
+                perspectiveCamera_.x += worldX * scale;
+                perspectiveCamera_.y += (worldY + dy) * scale;
+                perspectiveCamera_.z += worldZ * scale;
             }
         }
 
@@ -595,11 +695,15 @@ namespace
             if (!peripheralInputEnabled_)
                 return;
 
-            if (perspectiveCameraEnabled_ && mouseMoveBindings_ && mouseMoveBindingCount_ > 0 && hwnd_)
+            if (RequiresViewportNavigationHold())
+                SetViewportNavigationActive(IsRightMouseDown());
+
+            if (perspectiveCameraEnabled_ && mouseMoveBindings_ && mouseMoveBindingCount_ > 0 && hwnd_ && (!RequiresViewportNavigationHold() || viewportNavigationActive_))
             {
                 POINT clientPos = {};
                 if (mouseCaptureEnabled_)
                 {
+                    UpdateMouseCenter();
                     clientPos = mouseCenter_;
                     POINT screenPos = {};
                     GetCursorPos(&screenPos);
@@ -659,7 +763,7 @@ namespace
                     switch (binding.action)
                     {
                     case ARQEN_DX12_MOUSE_BUTTON_ACTION_MOVE_CAMERA_HELD:
-                        if (down)
+                        if (down && (!RequiresViewportNavigationHold() || viewportNavigationActive_))
                             MoveActiveCamera(binding.x, binding.y, binding.z, dt);
                         break;
                     case ARQEN_DX12_MOUSE_BUTTON_ACTION_RESET_CAMERA_PRESSED:
@@ -685,11 +789,188 @@ namespace
                     for (UINT i = 0; i < mouseWheelBindingCount_; ++i)
                     {
                         const ArqenDx12MouseWheelBinding& binding = mouseWheelBindings_[i];
-                        if (binding.action == ARQEN_DX12_MOUSE_WHEEL_ACTION_MOVE_CAMERA)
+                        if (binding.action == ARQEN_DX12_MOUSE_WHEEL_ACTION_MOVE_CAMERA && (!RequiresViewportNavigationHold() || viewportNavigationActive_))
                             MoveActiveCamera(binding.x, binding.y, binding.z, wheelUnits);
                     }
                 }
             }
+
+            UpdateObjectSelectorInput();
+        }
+
+
+        void UpdateObjectSelectorInput()
+        {
+            if (!objectSelectorEnabled_ || !drawCalls_ || drawCallCount_ == 0 || dynamicObjectTransforms_.empty())
+                return;
+
+            const UINT selectVk = MouseButtonVirtualKey(objectSelectButton_);
+            if (selectVk != 0 && objectSelectButton_ < 8)
+            {
+                const bool down = (GetAsyncKeyState(static_cast<int>(selectVk)) & 0x8000) != 0;
+                const bool pressed = down && !previousObjectSelectButtonDown_;
+                previousObjectSelectButtonDown_ = down;
+                if (pressed && !viewportNavigationActive_)
+                    SelectObjectAtCursor();
+            }
+
+            if (!selectedObjectRotateBindings_ || selectedObjectRotateBindingCount_ == 0 || selectedObjectIndex_ < 0)
+            {
+                rotateMousePositionValid_ = false;
+                return;
+            }
+
+            bool anyRotateDown = false;
+            for (UINT i = 0; i < selectedObjectRotateBindingCount_; ++i)
+            {
+                const ArqenDx12SelectedObjectRotateBinding& binding = selectedObjectRotateBindings_[i];
+                if (binding.virtualKey >= 256)
+                    continue;
+                const bool down = (GetAsyncKeyState(static_cast<int>(binding.virtualKey)) & 0x8000) != 0;
+                anyRotateDown = anyRotateDown || down;
+                if (!down || viewportNavigationActive_)
+                    continue;
+
+                POINT cursor = {};
+                if (!GetCursorPos(&cursor))
+                    continue;
+                if (hwnd_)
+                    ScreenToClient(hwnd_, &cursor);
+                if (!rotateMousePositionValid_)
+                {
+                    lastRotateMouse_ = cursor;
+                    rotateMousePositionValid_ = true;
+                    continue;
+                }
+
+                const LONG dx = cursor.x - lastRotateMouse_.x;
+                const LONG dy = cursor.y - lastRotateMouse_.y;
+                lastRotateMouse_ = cursor;
+                const float delta = binding.mouseAxis == ARQEN_DX12_SELECTOR_MOUSE_AXIS_X ? static_cast<float>(dx) : static_cast<float>(dy);
+                RotateSelectedObject(binding.axis, delta * binding.sensitivity);
+            }
+
+            if (!anyRotateDown || viewportNavigationActive_)
+                rotateMousePositionValid_ = false;
+        }
+
+        bool ProjectDrawCallBounds(const ArqenDx12DrawCall& drawCall, float& minX, float& minY, float& maxX, float& maxY, float& centerDepth) const
+        {
+            if (!baseVertices_ || drawCall.firstVertex >= baseVertexCount_ || drawCall.transformIndex >= objectTransformCount_)
+                return false;
+
+            const ArqenDx12ObjectTransform transform = ResolveTransform(drawCall.transformIndex);
+            const UINT endVertex = drawCall.firstVertex + drawCall.vertexCount;
+            bool any = false;
+            minX = static_cast<float>(width_);
+            minY = static_cast<float>(height_);
+            maxX = 0.0f;
+            maxY = 0.0f;
+            float depthSum = 0.0f;
+            UINT depthCount = 0;
+
+            for (UINT v = drawCall.firstVertex; v < endVertex && v < baseVertexCount_; ++v)
+            {
+                const ArqenDx12VertexPositionColor projected = TransformVertex(baseVertices_[v], transform);
+                if (!std::isfinite(projected.x) || !std::isfinite(projected.y))
+                    continue;
+
+                const float screenX = (projected.x * 0.5f + 0.5f) * static_cast<float>(width_);
+                const float screenY = (0.5f - projected.y * 0.5f) * static_cast<float>(height_);
+                if (screenX < minX) minX = screenX;
+                if (screenY < minY) minY = screenY;
+                if (screenX > maxX) maxX = screenX;
+                if (screenY > maxY) maxY = screenY;
+                depthSum += projected.z;
+                depthCount++;
+                any = true;
+            }
+
+            if (!any || depthCount == 0)
+                return false;
+
+            constexpr float Padding = 10.0f;
+            constexpr float MinPickSize = 24.0f;
+            minX -= Padding;
+            minY -= Padding;
+            maxX += Padding;
+            maxY += Padding;
+            const float width = maxX - minX;
+            const float height = maxY - minY;
+            if (width < MinPickSize)
+            {
+                const float mid = (minX + maxX) * 0.5f;
+                minX = mid - MinPickSize * 0.5f;
+                maxX = mid + MinPickSize * 0.5f;
+            }
+            if (height < MinPickSize)
+            {
+                const float mid = (minY + maxY) * 0.5f;
+                minY = mid - MinPickSize * 0.5f;
+                maxY = mid + MinPickSize * 0.5f;
+            }
+            centerDepth = depthSum / static_cast<float>(depthCount);
+            return true;
+        }
+
+        void SelectObjectAtCursor()
+        {
+            if (!hwnd_ || !perspectiveCameraEnabled_)
+                return;
+
+            POINT cursor = {};
+            if (!GetCursorPos(&cursor))
+                return;
+            ScreenToClient(hwnd_, &cursor);
+
+            float bestDepth = (std::numeric_limits<float>::max)();
+            int bestIndex = -1;
+            for (UINT i = 0; i < drawCallCount_; ++i)
+            {
+                float minX = 0.0f;
+                float minY = 0.0f;
+                float maxX = 0.0f;
+                float maxY = 0.0f;
+                float depth = 0.0f;
+                if (!ProjectDrawCallBounds(drawCalls_[i], minX, minY, maxX, maxY, depth))
+                    continue;
+
+                const float cx = static_cast<float>(cursor.x);
+                const float cy = static_cast<float>(cursor.y);
+                if (cx >= minX && cx <= maxX && cy >= minY && cy <= maxY && depth < bestDepth)
+                {
+                    bestDepth = depth;
+                    bestIndex = static_cast<int>(drawCalls_[i].transformIndex);
+                }
+            }
+
+            selectedObjectIndex_ = bestIndex;
+            rotateMousePositionValid_ = false;
+        }
+
+        void RotateSelectedObject(UINT axis, float deltaDegrees)
+        {
+            if (selectedObjectIndex_ < 0 || static_cast<UINT>(selectedObjectIndex_) >= dynamicObjectTransforms_.size())
+                return;
+            ArqenDx12ObjectTransform& transform = dynamicObjectTransforms_[static_cast<size_t>(selectedObjectIndex_)];
+            if (axis == ARQEN_DX12_SELECTOR_ROTATE_AXIS_Y)
+                transform.rotationYDegrees += deltaDegrees;
+        }
+
+        ArqenDx12VertexPositionColor ApplySelectedObjectFeedback(const ArqenDx12VertexPositionColor& vertex, UINT transformIndex) const
+        {
+            if (selectedObjectIndex_ < 0 || static_cast<UINT>(selectedObjectIndex_) != transformIndex)
+                return vertex;
+
+            return {
+                vertex.x,
+                vertex.y,
+                vertex.z,
+                ClampFloat(vertex.r * 0.82f + 0.10f, 0.0f, 1.0f),
+                ClampFloat(vertex.g * 1.12f + 0.22f, 0.0f, 1.0f),
+                ClampFloat(vertex.b * 1.22f + 0.30f, 0.0f, 1.0f),
+                vertex.a
+            };
         }
 
         void UpdateSceneVertexBuffer()
@@ -715,7 +996,7 @@ namespace
                     {
                         const UINT index = drawCall.firstVertex + v;
                         if (index < baseVertexCount_)
-                            out[index] = TransformVertex(baseVertices_[index], transform);
+                            out[index] = ApplySelectedObjectFeedback(TransformVertex(baseVertices_[index], transform), drawCall.transformIndex);
                     }
                 }
             }
@@ -723,7 +1004,7 @@ namespace
             {
                 const ArqenDx12ObjectTransform transform = ResolveTransform(0);
                 for (UINT i = 0; i < baseVertexCount_; ++i)
-                    out[i] = TransformVertex(baseVertices_[i], transform);
+                    out[i] = ApplySelectedObjectFeedback(TransformVertex(baseVertices_[i], transform), 0);
             }
         }
 
@@ -731,25 +1012,31 @@ namespace
         {
             if (sceneTransformsEnabled_ && objectTransforms_ && objectTransformCount_ > 0 && index < objectTransformCount_)
                 return objectTransforms_[index];
-            return { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f };
+            return { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f };
         }
 
         ArqenDx12VertexPositionColor TransformVertex(const ArqenDx12VertexPositionColor& src, const ArqenDx12ObjectTransform& transform) const
         {
-            constexpr float Pi = 3.14159265358979323846f;
-            const float radians = transform.rotationZDegrees * (Pi / 180.0f);
-            const float c = std::cos(radians);
-            const float s = std::sin(radians);
+            float x = src.x * transform.sx;
+            float y = src.y * transform.sy;
+            float z = src.z * transform.sz;
 
-            const float sx = src.x * transform.sx;
-            const float sy = src.y * transform.sy;
-            const float sz = src.z * transform.sz;
-            float x = sx * c - sy * s + transform.x;
-            float y = sx * s + sy * c + transform.y;
-            float z = sz + transform.z;
+            float nx = src.x;
+            float ny = src.y;
+            float nz = src.z;
+            Normalize3(nx, ny, nz);
+
+            ApplyObjectRotation(transform, x, y, z);
+            ApplyObjectRotation(transform, nx, ny, nz);
+
+            x += transform.x;
+            y += transform.y;
+            z += transform.z;
+
+            const ArqenDx12VertexPositionColor shaded = ShadeVertex(src, nx, ny, nz);
 
             if (perspectiveCameraEnabled_)
-                return ProjectPerspectiveVertex(x, y, z, src);
+                return ProjectPerspectiveVertex(x, y, z, shaded);
 
             if (cameraEnabled_)
             {
@@ -759,7 +1046,87 @@ namespace
                 z = z - camera_.z;
             }
 
-            return { x, y, z, src.r, src.g, src.b, src.a };
+            return { x, y, z, shaded.r, shaded.g, shaded.b, shaded.a };
+        }
+
+        static float ClampFloat(float value, float lo, float hi)
+        {
+            return value < lo ? lo : (value > hi ? hi : value);
+        }
+
+        static void Normalize3(float& x, float& y, float& z)
+        {
+            const float length = std::sqrt(x * x + y * y + z * z);
+            if (length <= 0.000001f)
+            {
+                x = 0.0f;
+                y = 0.0f;
+                z = 1.0f;
+                return;
+            }
+            x /= length;
+            y /= length;
+            z /= length;
+        }
+
+        static void RotateX(float radians, float& yy, float& zz)
+        {
+            const float c = std::cos(radians);
+            const float s = std::sin(radians);
+            const float ny = yy * c - zz * s;
+            const float nz = yy * s + zz * c;
+            yy = ny;
+            zz = nz;
+        }
+
+        static void RotateY(float radians, float& xx, float& zz)
+        {
+            const float c = std::cos(radians);
+            const float s = std::sin(radians);
+            const float nx = xx * c + zz * s;
+            const float nz = -xx * s + zz * c;
+            xx = nx;
+            zz = nz;
+        }
+
+        static void RotateZ(float radians, float& xx, float& yy)
+        {
+            const float c = std::cos(radians);
+            const float s = std::sin(radians);
+            const float nx = xx * c - yy * s;
+            const float ny = xx * s + yy * c;
+            xx = nx;
+            yy = ny;
+        }
+
+        static float DegToRad(float degrees)
+        {
+            constexpr float Pi = 3.14159265358979323846f;
+            return degrees * (Pi / 180.0f);
+        }
+
+        void ApplyObjectRotation(const ArqenDx12ObjectTransform& transform, float& x, float& y, float& z) const
+        {
+            RotateX(DegToRad(transform.rotationXDegrees), y, z);
+            RotateY(DegToRad(transform.rotationYDegrees), x, z);
+            RotateZ(DegToRad(transform.rotationZDegrees), x, y);
+        }
+
+        ArqenDx12VertexPositionColor ShadeVertex(const ArqenDx12VertexPositionColor& src, float nx, float ny, float nz) const
+        {
+            if (!fakeLightingEnabled_)
+                return src;
+
+            float lx = directionalLight_.x;
+            float ly = directionalLight_.y;
+            float lz = directionalLight_.z;
+            Normalize3(lx, ly, lz);
+            Normalize3(nx, ny, nz);
+            const float ndotl = ClampFloat(-(nx * lx + ny * ly + nz * lz), 0.0f, 1.0f);
+            const float ambient = ClampFloat(directionalLight_.ambient, 0.0f, 1.0f);
+            const float intensity = ClampFloat(directionalLight_.intensity, 0.0f, 4.0f);
+            const float factor = ClampFloat(ambient + ndotl * intensity, 0.0f, 1.35f);
+            return { src.x, src.y, src.z, ClampFloat(src.r * factor, 0.0f, 1.0f), ClampFloat(src.g * factor, 0.0f, 1.0f), ClampFloat(src.b * factor, 0.0f, 1.0f), src.a };
         }
 
         ArqenDx12VertexPositionColor ProjectPerspectiveVertex(float worldX, float worldY, float worldZ, const ArqenDx12VertexPositionColor& src) const
@@ -1037,6 +1404,8 @@ namespace
         ArqenDx12OrthographicCamera initialCamera_ = { 0.0f, 0.0f, 0.0f, 1.0f };
         bool perspectiveCameraEnabled_ = false;
         bool depthEnabled_ = false;
+        bool fakeLightingEnabled_ = false;
+        ArqenDx12DirectionalLight directionalLight_ = { -0.35f, -0.70f, -0.60f, 0.85f, 0.18f };
         ArqenDx12PerspectiveCamera perspectiveCamera_ = { 0.0f, 0.0f, -3.0f, 0.0f, 0.0f, 0.0f, 70.0f, 0.1f, 100.0f };
         ArqenDx12PerspectiveCamera initialPerspectiveCamera_ = { 0.0f, 0.0f, -3.0f, 0.0f, 0.0f, 0.0f, 70.0f, 0.1f, 100.0f };
         const ArqenDx12KeyBinding* keyBindings_ = nullptr;
@@ -1052,10 +1421,21 @@ namespace
         const ArqenDx12MouseWheelBinding* mouseWheelBindings_ = nullptr;
         UINT mouseWheelBindingCount_ = 0;
         volatile LONG* mouseWheelDelta_ = nullptr;
+        bool objectSelectorEnabled_ = false;
+        UINT objectSelectButton_ = 0;
+        const ArqenDx12SelectedObjectRotateBinding* selectedObjectRotateBindings_ = nullptr;
+        UINT selectedObjectRotateBindingCount_ = 0;
+        int selectedObjectIndex_ = -1;
+        bool previousObjectSelectButtonDown_ = false;
+        bool rotateMousePositionValid_ = false;
+        POINT lastRotateMouse_ = { 0, 0 };
+        std::vector<ArqenDx12ObjectTransform> dynamicObjectTransforms_;
         bool previousMouseButtonDown_[8] = {};
         POINT lastMouse_ = { 0, 0 };
         POINT mouseCenter_ = { 0, 0 };
         bool mousePositionValid_ = false;
+        bool viewportNavigationActive_ = false;
+        bool cursorVisible_ = true;
         bool animationPaused_ = false;
         bool tintEnabled_ = false;
         ArqenDx12ClearColor tintBaseColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };

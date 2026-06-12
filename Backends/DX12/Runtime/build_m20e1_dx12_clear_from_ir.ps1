@@ -263,6 +263,7 @@ int main()
     wc.hInstance = hInstance;
     wc.lpszClassName = className;
     wc.hbrBackground = nullptr;
+    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
 
     if (!RegisterClassW(&wc))
     {
@@ -313,6 +314,8 @@ int main()
     const ArqenDx12MouseMoveBinding mouseMoveBindings[] = ARQEN_M28B_MOUSE_MOVE_BINDING_DATA;
     const ArqenDx12MouseButtonBinding mouseButtonBindings[] = ARQEN_M28B_MOUSE_BUTTON_BINDING_DATA;
     const ArqenDx12MouseWheelBinding mouseWheelBindings[] = ARQEN_M28B_MOUSE_WHEEL_BINDING_DATA;
+    const ArqenDx12DirectionalLight directionalLight = ARQEN_M29_DIRECTIONAL_LIGHT_DATA;
+    const ArqenDx12SelectedObjectRotateBinding selectedObjectRotateBindings[] = ARQEN_M29C_SELECTED_OBJECT_ROTATE_BINDING_DATA;
     const ArqenDx12ClearColor tintColor = ARQEN_M21G_TINT_COLOR;
     const ArqenDx12ClearColor animationColors[] = ARQEN_M21H_COLOR_DATA;
     const std::wstring vertexShaderPath = ResolveShaderPath(ARQEN_M21B_VERTEX_SHADER_PATH);
@@ -347,6 +350,8 @@ int main()
     triangleDesc.perspectiveCamera = perspectiveCamera;
     triangleDesc.enablePerspectiveCamera = ARQEN_M27_PERSPECTIVE_CAMERA_ENABLED != 0;
     triangleDesc.enableDepth = ARQEN_M27_DEPTH_BUFFER_ENABLED != 0;
+    triangleDesc.enableFakeLighting = ARQEN_M29_FAKE_LIGHTING_ENABLED != 0;
+    triangleDesc.directionalLight = directionalLight;
     triangleDesc.keyBindings = keyBindings;
     triangleDesc.keyBindingCount = ARQEN_M26_KEY_BINDING_COUNT;
     triangleDesc.enableKeyboardInput = ARQEN_M26_KEYBOARD_INPUT_ENABLED != 0;
@@ -359,6 +364,10 @@ int main()
     triangleDesc.mouseWheelBindings = mouseWheelBindings;
     triangleDesc.mouseWheelBindingCount = ARQEN_M28B_MOUSE_WHEEL_BINDING_COUNT;
     triangleDesc.mouseWheelDelta = &gArqenM28BMouseWheelDelta;
+    triangleDesc.enableObjectSelector = ARQEN_M29C_OBJECT_SELECTOR_ENABLED != 0;
+    triangleDesc.objectSelectButton = ARQEN_M29C_OBJECT_SELECT_BUTTON;
+    triangleDesc.selectedObjectRotateBindings = selectedObjectRotateBindings;
+    triangleDesc.selectedObjectRotateBindingCount = ARQEN_M29C_SELECTED_OBJECT_ROTATE_BINDING_COUNT;
     triangleDesc.enableTint = ARQEN_M21G_TINT_ENABLED != 0;
     triangleDesc.tintColor = tintColor;
     triangleDesc.animationColors = ARQEN_M21H_COLOR_ANIMATION_ENABLED ? animationColors : nullptr;
