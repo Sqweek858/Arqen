@@ -1,0 +1,7 @@
+program "BadInvalidRayZero"
+
+define ray called "r" be ray origin [0,0,0] direction [0,0,0]
+
+blend mix to code 0
+
+end program "BadInvalidRayZero"

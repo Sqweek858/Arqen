@@ -1,0 +1,20 @@
+program "VectorComponentAccess"
+
+define vec3 called "pos" be [1, 2, 3]
+define double called "x" be 0
+
+print "pos.x"
+print "pos.y"
+print "pos.z"
+
+set "pos.x" to 10
+set "pos.z" to "pos.x" + 5
+
+print "pos"
+
+set "x" to "pos.z"
+print "x"
+
+blend mix to code 0
+
+end program "VectorComponentAccess"

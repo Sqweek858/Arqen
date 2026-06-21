@@ -1,0 +1,8 @@
+program "InvalidSqrtNegative"
+
+define double called "x" be 0
+set "x" to sqrt -1
+
+blend mix to code 0
+
+end program "InvalidSqrtNegative"

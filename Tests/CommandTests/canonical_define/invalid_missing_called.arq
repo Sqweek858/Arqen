@@ -1,0 +1,8 @@
+program "MissingCalled"
+
+define string "name" be string "Sqweek"
+set title to string "M14A"
+show string "bad"
+blend mix to code 0
+
+end program "MissingCalled"

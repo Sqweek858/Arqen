@@ -1,0 +1,5 @@
+RULE_ID|if_statement
+COMMAND_ID|if_compile_time
+EXPECT_CONTAINS|CONST|id=str_1|type=text|value=false branch
+EXPECT_NOT_CONTAINS|true branch
+EXPECT_CONTAINS|ACTION|id=act_1|op=exit|code=i32_0

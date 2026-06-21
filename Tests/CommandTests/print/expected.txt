@@ -1,0 +1,2 @@
+valid_print_values.arq|0|MESSAGE|Hi\nSqweek\n10\ntrue
+invalid_missing_symbol.arq|1|ERROR|S036|semantic

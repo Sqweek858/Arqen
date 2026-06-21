@@ -1,0 +1,16 @@
+program "StdoutDemo"
+
+define string called "name" be string "Sqweek"
+define int called "score" be 14
+define float called "speed" be 4.5
+define bool called "alive" be true
+
+print string "Hello"
+print "name"
+print "score"
+print "speed"
+print "alive"
+
+blend mix to code 0
+
+end program "StdoutDemo"

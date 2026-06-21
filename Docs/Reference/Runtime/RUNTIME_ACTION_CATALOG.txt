@@ -1,0 +1,40 @@
+# Runtime action catalog v0
+# Format: ACTION|name|route|status|since|category
+# route=fileio means PeWriter.HasFileIoActions must route the action to FileIoBackend.
+# route=core means the backend may handle it outside the FileIo runtime route.
+ACTION|file_write|fileio|supported|M17|file_io
+ACTION|file_append|fileio|supported|M17|file_io
+ACTION|file_load|fileio|supported|M17|file_io
+ACTION|print_runtime_slot|fileio|supported|M17|runtime_print
+ACTION|command_arg_count|fileio|supported|M17|command_args
+ACTION|command_arg_index|fileio|supported|M17|command_args
+ACTION|runtime_int_set|fileio|supported|M34|runtime_int
+ACTION|runtime_int_add|fileio|supported|M34|runtime_int
+ACTION|runtime_int_sub|fileio|supported|M34|runtime_int
+ACTION|runtime_bool_set|fileio|supported|M35|runtime_bool
+ACTION|runtime_bool_not_set|fileio|supported|M36|runtime_bool
+ACTION|runtime_bool_toggle|fileio|supported|M36|runtime_bool
+ACTION|runtime_trap_if_bool_false|fileio|supported|M45_M46|runtime_array
+ACTION|runtime_string_set|fileio|supported|M35|runtime_string
+ACTION|runtime_string_concat|fileio|supported|M37|runtime_string
+ACTION|runtime_string_substring|fileio|supported|M37|runtime_string
+ACTION|runtime_int_parse|fileio|supported|M37|runtime_int
+ACTION|runtime_if_int|fileio|supported|M34|runtime_control
+ACTION|runtime_if_bool|fileio|supported|M35|runtime_control
+ACTION|runtime_if_string|fileio|supported|M36|runtime_control
+ACTION|runtime_else|fileio|supported|M34|runtime_control
+ACTION|runtime_if_end|fileio|supported|M34|runtime_control
+ACTION|runtime_while_int|fileio|supported|M34|runtime_control
+ACTION|runtime_break|fileio|supported|M34|runtime_control
+ACTION|runtime_continue|fileio|supported|M34|runtime_control
+ACTION|runtime_while_end|fileio|supported|M34|runtime_control
+ACTION|function_call|fileio|supported|M39|runtime_function
+ACTION|function_call_assign|fileio|supported|M41|runtime_function
+ACTION|function_return|fileio|supported|M40|runtime_function
+ACTION|function_return_int|fileio|supported|M41|runtime_function
+ACTION|function_return_bool|fileio|supported|M41|runtime_function
+ACTION|function_return_string|fileio|supported|M41|runtime_function
+ACTION|exit|core|supported|M1|process
+# M42 note: function parameters lower through existing runtime_*_set actions followed by function_call/function_call_assign. No new runtime action is required.
+# M43 note: function locals lower through existing runtime_*_set actions and internal __fn_<function>_local_<name> slots. No new runtime action is required.
+# M44 note: function call graph hardening composes existing function_call/function_call_assign actions with params, returns, and locals. No new runtime action is required.

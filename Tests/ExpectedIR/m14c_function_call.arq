@@ -1,0 +1,11 @@
+program "M14CFunctionCall"
+
+define function called "greet"
+print string "Hello"
+end function
+
+call function "greet"
+
+blend mix to code 0
+
+end program "M14CFunctionCall"

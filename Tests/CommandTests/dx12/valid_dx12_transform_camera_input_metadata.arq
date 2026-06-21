@@ -1,0 +1,145 @@
+program "ValidDx12ObjectTransformMetadata"
+set title to string "dx12 transform camera input metadata"
+
+// M24/M25/M26 runtime scene sample:
+// - per-object transforms are applied by the native DX12 runtime
+// - an orthographic camera is bound to the renderer
+// - WASD moves the camera while the window is kept open
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#050916"
+end style
+
+define shader called "TriangleShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "CrystalPipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "CrystalPipeline" for renderer "MainRenderer"
+
+define vertex buffer called "ShardVertices"
+    vertex position [0.000, 0.210, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.055, -0.030, 0.000] color [0.240, 0.760, 1.000, 1.000]
+    vertex position [0.000, -0.115, 0.000] color [0.760, 1.000, 0.900, 1.000]
+    vertex position [0.000, 0.210, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.000, -0.115, 0.000] color [0.760, 1.000, 0.900, 1.000]
+    vertex position [0.070, -0.025, 0.000] color [0.700, 0.380, 1.000, 1.000]
+end vertex buffer
+
+define vertex buffer called "CoreVertices"
+    vertex position [0.000, 0.120, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.120, 0.000, 0.000] color [0.160, 0.900, 1.000, 1.000]
+    vertex position [0.000, -0.120, 0.000] color [0.500, 0.350, 1.000, 1.000]
+    vertex position [0.000, 0.120, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.000, -0.120, 0.000] color [0.500, 0.350, 1.000, 1.000]
+    vertex position [0.120, 0.000, 0.000] color [0.200, 1.000, 0.700, 1.000]
+end vertex buffer
+
+define constant buffer called "SceneParams"
+    color tint: color "#38FFC0"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "CrystalPipeline"
+
+define color sequence called "ScenePulse"
+    color "#38FFC0"
+    color "#7C4DFF"
+    color "#FF4FD8"
+    color "#40A0FF"
+    color "#F7FF7A"
+end color sequence
+
+animate color "SceneParams.tint"
+    using sequence "ScenePulse"
+    every 8 frames
+end animate
+
+define object called "Core"
+use renderer "MainRenderer" for object "Core"
+use pipeline "CrystalPipeline" for object "Core"
+use vertex buffer "CoreVertices" for object "Core"
+draw 6 vertices for object "Core"
+set position of object "Core" to [0.000, 0.000, 0.000]
+set rotation z of object "Core" to 45 deg
+set scale of object "Core" to [1.25, 1.25, 1.0]
+
+define object called "ShardA"
+use renderer "MainRenderer" for object "ShardA"
+use pipeline "CrystalPipeline" for object "ShardA"
+use vertex buffer "ShardVertices" for object "ShardA"
+draw 6 vertices for object "ShardA"
+set position of object "ShardA" to [-0.550, 0.300, 0.000]
+set rotation z of object "ShardA" to -28 deg
+set scale of object "ShardA" to [1.10, 1.55, 1.0]
+
+define object called "ShardB"
+use renderer "MainRenderer" for object "ShardB"
+use pipeline "CrystalPipeline" for object "ShardB"
+use vertex buffer "ShardVertices" for object "ShardB"
+draw 6 vertices for object "ShardB"
+set position of object "ShardB" to [-0.320, -0.330, 0.000]
+set rotation z of object "ShardB" to 38 deg
+set scale of object "ShardB" to [0.95, 1.35, 1.0]
+
+define object called "ShardC"
+use renderer "MainRenderer" for object "ShardC"
+use pipeline "CrystalPipeline" for object "ShardC"
+use vertex buffer "ShardVertices" for object "ShardC"
+draw 6 vertices for object "ShardC"
+set position of object "ShardC" to [0.020, 0.510, 0.000]
+set rotation z of object "ShardC" to 6 deg
+set scale of object "ShardC" to [0.80, 1.45, 1.0]
+
+define object called "ShardD"
+use renderer "MainRenderer" for object "ShardD"
+use pipeline "CrystalPipeline" for object "ShardD"
+use vertex buffer "ShardVertices" for object "ShardD"
+draw 6 vertices for object "ShardD"
+set position of object "ShardD" to [0.430, -0.230, 0.000]
+set rotation z of object "ShardD" to -54 deg
+set scale of object "ShardD" to [1.15, 1.60, 1.0]
+
+define object called "ShardE"
+use renderer "MainRenderer" for object "ShardE"
+use pipeline "CrystalPipeline" for object "ShardE"
+use vertex buffer "ShardVertices" for object "ShardE"
+draw 6 vertices for object "ShardE"
+set position of object "ShardE" to [0.640, 0.260, 0.000]
+set rotation z of object "ShardE" to 67 deg
+set scale of object "ShardE" to [0.90, 1.25, 1.0]
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set position of camera "MainCamera" to [0.000, 0.000, 0.000]
+set zoom of camera "MainCamera" to 1.000
+
+when key "W" is held move camera "MainCamera" by [0.000, 0.750, 0.000]
+when key "S" is held move camera "MainCamera" by [0.000, -0.750, 0.000]
+when key "A" is held move camera "MainCamera" by [-0.750, 0.000, 0.000]
+when key "D" is held move camera "MainCamera" by [0.750, 0.000, 0.000]
+when key "R" is pressed reset camera "MainCamera"
+when key "Space" is pressed toggle animation
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "Core"
+draw "ShardA"
+draw "ShardB"
+draw "ShardC"
+draw "ShardD"
+draw "ShardE"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "dx12 transform camera input metadata"
+blend mix to code 0
+end program "ValidDx12ObjectTransformMetadata"

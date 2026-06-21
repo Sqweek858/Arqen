@@ -1,0 +1,5 @@
+program "BadQuatAxisVec2"
+define quat called "q" be quat from axis [1, 0] angle 90 deg
+print "q"
+blend mix to code 0
+end program "BadQuatAxisVec2"

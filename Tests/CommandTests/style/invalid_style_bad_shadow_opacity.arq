@@ -1,0 +1,10 @@
+program "BadStyleShadowOpacity"
+
+with style for "Panel"
+    shadow opacity: 2
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleShadowOpacity"

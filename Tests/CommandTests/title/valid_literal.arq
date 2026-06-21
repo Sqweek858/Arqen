@@ -1,0 +1,7 @@
+program "TitleLiteral"
+
+title "Arqen Title Literal"
+message text "Title literal works"
+exit 0
+
+end program "TitleLiteral"

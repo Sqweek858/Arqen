@@ -1,0 +1,11 @@
+COMMAND_ID|exit
+CANONICAL|exit <int>
+CATEGORY|control
+TOKENS|KEYWORD(exit) INT
+AST_NODE|Exit
+SEMANTIC|only code 0 supported today
+IR|exit
+BACKEND|WindowsX64PE.exit
+VALID_TEST|Tests\CommandTests\exit\valid_zero.arq
+INVALID_TEST|Tests\CommandTests\exit\invalid_one.arq
+STATUS|stable

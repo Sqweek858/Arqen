@@ -1,0 +1,16 @@
+program "ValidDx12RendererStylePresetBackground"
+set title to string "M20C DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+define style called "RendererClear"
+    background color: color "#203040"
+end style
+
+use style "RendererClear" for "MainRenderer"
+
+show message "dx12 renderer preset clear style"
+blend mix to code 0
+end program "ValidDx12RendererStylePresetBackground"

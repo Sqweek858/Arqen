@@ -1,0 +1,4 @@
+RULE_ID|set_title_statement
+COMMAND_ID|set_title_to
+EXPECT_CONTAINS|CONST|id=str_0|type=text|value=Arqen
+EXPECT_CONTAINS|CONST|id=str_1|type=text|value=Hello

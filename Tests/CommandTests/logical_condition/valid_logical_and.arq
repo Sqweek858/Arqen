@@ -1,0 +1,12 @@
+program "LogicalAnd"
+
+define int called "score" be 10
+define bool called "alive" be true
+
+if "score" > 0 and "alive" is true
+print string "ok"
+end if
+
+blend mix to code 0
+
+end program "LogicalAnd"

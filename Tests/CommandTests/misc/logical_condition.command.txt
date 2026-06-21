@@ -1,0 +1,11 @@
+COMMAND_ID|logical_condition
+CANONICAL|condition and/or/not condition
+CATEGORY|expression
+TOKENS|CONDITION KEYWORD(and) KEYWORD(or) KEYWORD(not) CONDITION
+AST_NODE|LogicalCondition
+SEMANTIC|evaluates compile-time bool logic
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\logical_condition\valid_logical_and.arq
+INVALID_TEST|Tests\CommandTests\logical_condition\invalid_string_greater_than_int.arq
+STATUS|stable

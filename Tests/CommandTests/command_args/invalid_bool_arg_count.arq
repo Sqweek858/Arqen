@@ -1,0 +1,7 @@
+program "BadArgs"
+
+define bool called "bad" be command arg count
+
+blend mix to code 0
+
+end program "BadArgs"

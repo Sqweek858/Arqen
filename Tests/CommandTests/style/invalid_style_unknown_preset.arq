@@ -1,0 +1,10 @@
+program "InvalidStyleUnknownPreset"
+
+set title to string "Invalid"
+
+use style "Missing" for "Panel"
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleUnknownPreset"

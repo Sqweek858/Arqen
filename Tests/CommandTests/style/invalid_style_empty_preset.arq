@@ -1,0 +1,11 @@
+program "InvalidStyleEmptyPreset"
+
+set title to string "Invalid"
+
+define style called "Empty"
+end style
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleEmptyPreset"

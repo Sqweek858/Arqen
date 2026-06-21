@@ -1,0 +1,12 @@
+program "InvalidStyleBadTransitionProperty"
+
+set title to string "Invalid"
+
+with style for "Panel"
+    transition property: bananas
+end style
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleBadTransitionProperty"

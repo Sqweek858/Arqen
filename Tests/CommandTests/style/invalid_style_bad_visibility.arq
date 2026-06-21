@@ -1,0 +1,10 @@
+program "BadStyleVisibility"
+
+with style for "Panel"
+    visibility: ghost
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleVisibility"

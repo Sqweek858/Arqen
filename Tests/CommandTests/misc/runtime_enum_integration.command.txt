@@ -1,0 +1,35 @@
+COMMAND_ID|runtime_enum_integration
+MILESTONE|M59_M60
+STATUS|supported
+DOC|Docs/Milestones/M56_M60.md
+VALIDATOR|Tools/validate_m59_m60_enum_integration.ps1
+SLICE|m59m60
+
+SYNTAX|define function called "name" with runtime enum "param" from "EnumType"
+SYNTAX|return runtime enum "param"
+SYNTAX|return enum "Value" from "EnumType"
+SYNTAX|set runtime enum "dest" to call function "name" with runtime enum "source"
+SYNTAX|define record called "Actor" with runtime enum field "state" from "ActorState"
+SYNTAX|set runtime record "actor" field "state" to "Moving"
+SYNTAX|set runtime enum "out" to runtime record "actor" field "state"
+SYNTAX|set runtime enum "out" to runtime record array "actors" at 0 field "state"
+SYNTAX|define runtime enum array called "states" from "ActorState" size 3
+SYNTAX|set runtime enum array "states" at 0 to "Idle"
+SYNTAX|set runtime enum "out" to runtime enum array "states" at 0
+SYNTAX|fill runtime enum array "states" with "Idle"
+SYNTAX|copy runtime enum array "source" to runtime enum array "dest"
+SYNTAX|set runtime int "len" to length of runtime enum array "states"
+
+LOWERING|enum params lower to internal int-backed parameter slots
+LOWERING|enum returns lower to function_return_int
+LOWERING|enum call assignment lowers to function_call_assign path int
+LOWERING|enum record fields lower to runtime_int_set field slots
+LOWERING|enum arrays lower to __enumarr_<array>_<index> int slots
+BACKEND_ACTIONS|none_new
+EXISTING_ACTIONS|runtime_int_set,function_return_int,function_call_assign,runtime_trap_if_bool_false
+
+NEGATIVE_RULE|enum parameter arguments must use the same enum type
+NEGATIVE_RULE|enum return assignment must match destination enum type
+NEGATIVE_RULE|record enum fields require known enum types and values
+NEGATIVE_RULE|enum array copy requires matching enum type and size
+NEGATIVE_RULE|enum array static and dynamic indexes reuse runtime array bounds rules

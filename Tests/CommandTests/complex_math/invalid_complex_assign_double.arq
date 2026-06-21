@@ -1,0 +1,9 @@
+program "InvalidComplexAssignDouble"
+
+define double called "x" be 0
+
+set "x" to complex 1, 2
+
+blend mix to code 0
+
+end program "InvalidComplexAssignDouble"

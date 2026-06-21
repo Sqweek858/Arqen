@@ -1,0 +1,6 @@
+valid_geometry_primitives.arq|0|MESSAGE|true\ntrue\ntrue\nfalse\n[10,0]\n[5,0]
+invalid_rect_negative_size.arq|1|ERROR|S161|semantic
+invalid_circle_negative_radius.arq|1|ERROR|S163|semantic
+invalid_point_inside_vec3.arq|1|ERROR|S164|semantic
+invalid_rect_intersects_circle.arq|1|ERROR|S165|semantic
+invalid_closest_target_vec3.arq|1|ERROR|S166|semantic

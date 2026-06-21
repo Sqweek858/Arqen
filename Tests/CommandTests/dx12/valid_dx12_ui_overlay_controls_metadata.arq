@@ -1,0 +1,47 @@
+program "ValidDx12UiOverlayControlsMetadata"
+set title to string "DX12 UI Overlay Controls Metadata"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shape called "InspectorPanel"
+define text called "PanelTitle"
+define checkbox called "AnimationSwitch"
+set content of "PanelTitle" to string "ARQEN UI"
+set content of "AnimationSwitch" to string "ANIMATION"
+set checked of "AnimationSwitch" to true
+
+with layout for "InspectorPanel"
+    x: 16 px
+    y: 16 px
+    width: 260 px
+    height: 120 px
+end layout
+with layout for "PanelTitle"
+    x: 32 px
+    y: 32 px
+    width: 200 px
+    height: 24 px
+end layout
+with layout for "AnimationSwitch"
+    x: 32 px
+    y: 72 px
+    width: 180 px
+    height: 32 px
+end layout
+with style for "InspectorPanel"
+    background color: color "#101820"
+    foreground color: color "#E8FFFF"
+    opacity: 0.85
+end style
+when clicked "AnimationSwitch"
+    print string "toggle animation"
+end when
+
+show message "dx12 ui overlay controls metadata"
+blend mix to code 0
+end program "ValidDx12UiOverlayControlsMetadata"

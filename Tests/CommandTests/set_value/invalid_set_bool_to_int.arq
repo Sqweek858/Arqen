@@ -1,0 +1,8 @@
+program "SetBoolToInt"
+
+define bool called "alive" be true
+set "alive" to 1
+
+blend mix to code 0
+
+end program "SetBoolToInt"

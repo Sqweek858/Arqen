@@ -1,0 +1,7 @@
+program "BadArgs"
+
+define string called "bad" be command arg first
+
+blend mix to code 0
+
+end program "BadArgs"

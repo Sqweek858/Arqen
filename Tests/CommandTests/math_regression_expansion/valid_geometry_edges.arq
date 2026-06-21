@@ -1,0 +1,19 @@
+program "RegressionGeometryEdges"
+
+define rect called "r" be rect [0, 0] size [10, 10]
+define rect called "touch" be rect [10, 10] size [1, 1]
+define circle called "c" be circle center [0, 0] radius 5
+define bool called "ok" be false
+define vec2 called "p" be [0, 0]
+set "ok" to point [0, 0] inside "r"
+print "ok"
+set "ok" to point [10, 10] inside "r"
+print "ok"
+set "ok" to rect "r" intersects "touch"
+print "ok"
+set "p" to closest point on circle "c" to [0, 0]
+print "p"
+
+blend mix to code 0
+
+end program "RegressionGeometryEdges"

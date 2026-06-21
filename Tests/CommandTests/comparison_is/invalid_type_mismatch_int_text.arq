@@ -1,0 +1,11 @@
+program "CompareMismatchIntText"
+
+let number be 0
+
+title "M13 Compare"
+if number is "0"
+show message "bad"
+end if
+blend mix to code 0
+
+end program "CompareMismatchIntText"

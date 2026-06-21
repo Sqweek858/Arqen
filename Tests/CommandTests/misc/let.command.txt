@@ -1,0 +1,11 @@
+COMMAND_ID|let
+CANONICAL|let <identifier> be <literal>
+CATEGORY|declaration
+TOKENS|KEYWORD(let) IDENT KEYWORD(be) LITERAL
+AST_NODE|LetDeclaration
+SEMANTIC|declare variable; reject duplicate names; literal values only
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\let\valid_basic.arq
+INVALID_TEST|Tests\CommandTests\let\invalid_duplicate.arq
+STATUS|stable

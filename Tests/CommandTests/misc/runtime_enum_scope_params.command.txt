@@ -1,0 +1,24 @@
+COMMAND_ID|runtime_enum_scope_params
+MILESTONE|M61_M62
+STATUS|supported
+DOC|Docs/Milestones/M61_M62.md
+VALIDATOR|Tools/validate_m61_m62_enum_scope_params.ps1
+SLICE|m61m62
+
+SYNTAX|define local runtime enum "state" from "ActorState" be "Idle"
+SYNTAX|define local runtime enum called "state" from "ActorState" be "Idle"
+SYNTAX|define local runtime enum array called "states" from "ActorState" size 3
+SYNTAX|define function called "markDead" with runtime enum array "states" from "ActorState" size 3
+SYNTAX|call function "markDead" with runtime enum array "partyStates"
+
+LOWERING|local enum lowers to __fn_<function>_local_<name> int-backed runtime slot
+LOWERING|local enum arrays lower to __enumarr___fn_<function>_local_arr_<name>_<index> int slots
+LOWERING|enum array params lower to __enumarr___fn_<function>_param_arr_<name>_<index> int slots
+LOWERING|enum array params copy in before function_call/function_call_assign and copy back after the call
+BACKEND_ACTIONS|none_new
+EXISTING_ACTIONS|runtime_int_set,function_call,function_call_assign,function_return_int,runtime_trap_if_bool_false
+
+NEGATIVE_RULE|local enum declarations are function-body only
+NEGATIVE_RULE|local enum arrays are function-body only
+NEGATIVE_RULE|enum array params require matching enum type and fixed size
+NEGATIVE_RULE|local enum names cannot duplicate function params or other local runtime names

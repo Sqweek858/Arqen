@@ -1,0 +1,3 @@
+valid_logical_and.arq|0|MESSAGE|ok
+valid_logical_or_not.arq|0|MESSAGE|at least one\ndead
+invalid_string_greater_than_int.arq|1|ERROR|S042|semantic

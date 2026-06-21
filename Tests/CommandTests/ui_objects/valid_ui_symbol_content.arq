@@ -1,0 +1,15 @@
+program "M19CUISymbolContent"
+
+set title to string "M19C UI Symbol Content"
+
+define string called "label" be string "Continue"
+define button called "ContinueButton"
+set content of "ContinueButton" to "label"
+
+define input field called "NameInput"
+set value of "NameInput" to string "Player"
+
+show string "ui symbol content"
+blend mix to code 0
+
+end program "M19CUISymbolContent"

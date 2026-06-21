@@ -1,0 +1,10 @@
+program "M19CInvalidUnknownTarget"
+
+set title to string "M19C invalid"
+
+set content of "MissingTitle" to string "Hello"
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidUnknownTarget"

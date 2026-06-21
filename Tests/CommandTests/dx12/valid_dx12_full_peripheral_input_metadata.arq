@@ -1,0 +1,55 @@
+program "ValidDx12FullPeripheralInputMetadata"
+set title to string "dx12 full peripheral input metadata"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shader called "BoxShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "BoxPipeline"
+    renderer: "MainRenderer"
+    shader: "BoxShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "BoxPipeline" for renderer "MainRenderer"
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -4.0]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+capture mouse for window "MainWindow"
+when mouse moves rotate camera "MainCamera" by [0.12, 0.12]
+when mouse wheel moves move camera "MainCamera" by [0.0, 0.0, 1.0]
+when mouse button "Left" is held move camera "MainCamera" by [0.0, 0.0, 2.0]
+when mouse button "Right" is pressed reset camera "MainCamera"
+when mouse button "Middle" is pressed toggle animation
+when key "Q" is held move camera "MainCamera" by [0.0, -2.0, 0.0]
+when key "E" is held move camera "MainCamera" by [0.0, 2.0, 0.0]
+
+define box called "CubeA"
+set position of object "CubeA" to [0.0, 0.0, 2.0]
+set scale of object "CubeA" to [1.0, 1.0, 1.0]
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "CubeA"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "dx12 full peripheral input metadata"
+blend mix to code 0
+end program "ValidDx12FullPeripheralInputMetadata"

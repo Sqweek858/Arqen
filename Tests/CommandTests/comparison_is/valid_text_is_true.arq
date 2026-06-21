@@ -1,0 +1,13 @@
+program "CompareTextTrue"
+
+let name be "Sqweek"
+
+title "M13 Compare"
+if name is "Sqweek"
+show message "text true"
+else
+show message "text false"
+end if
+blend mix to code 0
+
+end program "CompareTextTrue"

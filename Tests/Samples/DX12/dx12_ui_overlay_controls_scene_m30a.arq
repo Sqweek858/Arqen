@@ -1,0 +1,231 @@
+program "Dx12UiOverlayControlsSceneM30A"
+set title to string "Arqen M30A UI Overlay Controls"
+
+// M30A official scene:
+// - carries the M29C 3D scene forward
+// - draws UI panel/text/buttons/switches through the DX12 runtime overlay bridge
+// - AnimationSwitch toggles color animation
+// - LightSwitch toggles fake directional lighting
+// - no docking editor, font loading, text input, sliders, dropdown popups, textures, blur, or drag/drop
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M30A UI Overlay Controls"
+set resolution of "MainWindow" to 1280 x 720
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainWindow"
+    title bar color: color "#000000"
+    title text color: color "#FFFFFF"
+end style
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shader called "BoxShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "BoxPipeline"
+    renderer: "MainRenderer"
+    shader: "BoxShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "BoxPipeline" for renderer "MainRenderer"
+
+define constant buffer called "SceneParams"
+    color tint: color "#D8FFF4"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "BoxPipeline"
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -6.0]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+capture mouse for window "MainWindow"
+when mouse moves rotate camera "MainCamera" by [0.10, 0.10]
+when mouse wheel moves move camera "MainCamera" by [0.0, 0.0, 1.0]
+when key "W" is held move camera "MainCamera" by [0.0, 0.0, 3.0]
+when key "S" is held move camera "MainCamera" by [0.0, 0.0, -3.0]
+when key "A" is held move camera "MainCamera" by [-3.0, 0.0, 0.0]
+when key "D" is held move camera "MainCamera" by [3.0, 0.0, 0.0]
+when key "Q" is held move camera "MainCamera" by [0.0, -3.0, 0.0]
+when key "E" is held move camera "MainCamera" by [0.0, 3.0, 0.0]
+
+define object selector called "PrimarySelector"
+use object selector "PrimarySelector" for renderer "MainRenderer"
+when mouse button "Left" is pressed select object using "PrimarySelector"
+when key "R" is held rotate selected object around y by mouse x sensitivity 0.35
+
+define color sequence called "PulseSequence"
+    color "#D8FFF4"
+    color "#8FE8FF"
+    color "#CBA6FF"
+end color sequence
+
+animate color "SceneParams.tint"
+    using sequence "PulseSequence"
+    every 30 frames
+end animate
+
+define directional light called "KeyLight"
+use light "KeyLight" for renderer "MainRenderer"
+set direction of light "KeyLight" to [-0.35, -0.70, -0.60]
+set intensity of light "KeyLight" to 0.95
+set ambient of light "KeyLight" to 0.16
+
+define box called "CubeA"
+use renderer "MainRenderer" for object "CubeA"
+use pipeline "BoxPipeline" for object "CubeA"
+set position of object "CubeA" to [-1.35, -0.05, 2.7]
+set rotation of object "CubeA" to [18.0, 35.0, 12.0]
+set scale of object "CubeA" to [1.0, 1.0, 1.0]
+
+define box called "CubeB"
+use renderer "MainRenderer" for object "CubeB"
+use pipeline "BoxPipeline" for object "CubeB"
+set position of object "CubeB" to [1.20, -0.20, 4.2]
+set rotation of object "CubeB" to [-12.0, 48.0, -22.0]
+set scale of object "CubeB" to [0.85, 0.85, 0.85]
+
+define box called "CubeC"
+use renderer "MainRenderer" for object "CubeC"
+use pipeline "BoxPipeline" for object "CubeC"
+set position of object "CubeC" to [0.05, 1.05, 5.9]
+set rotation of object "CubeC" to [35.0, -20.0, 42.0]
+set scale of object "CubeC" to [0.55, 0.55, 0.55]
+
+define box called "CubeD"
+use renderer "MainRenderer" for object "CubeD"
+use pipeline "BoxPipeline" for object "CubeD"
+set position of object "CubeD" to [-2.20, 0.65, 7.0]
+set rotation of object "CubeD" to [-20.0, -32.0, 15.0]
+set scale of object "CubeD" to [0.70, 0.70, 0.70]
+
+// UI overlay: existing M19 style/layout/object metadata now rendered by M30A DX12.
+define shape called "InspectorPanel"
+define text called "PanelTitle"
+define text called "HintText"
+define checkbox called "AnimationSwitch"
+define checkbox called "LightSwitch"
+define button called "AnimationButton"
+
+set content of "PanelTitle" to string "ARQEN DX12 SANDBOX"
+set content of "HintText" to string "RMB FLY  LMB SELECT  R ROTATE"
+set content of "AnimationSwitch" to string "ANIMATION"
+set checked of "AnimationSwitch" to true
+set content of "LightSwitch" to string "FAKE LIGHT"
+set checked of "LightSwitch" to true
+set content of "AnimationButton" to string "ANIMATION"
+
+with layout for "InspectorPanel"
+    x: 16 px
+    y: 16 px
+    width: 376 px
+    height: 210 px
+end layout
+
+with layout for "PanelTitle"
+    x: 34 px
+    y: 34 px
+    width: 330 px
+    height: 26 px
+end layout
+
+with layout for "HintText"
+    x: 34 px
+    y: 70 px
+    width: 330 px
+    height: 26 px
+end layout
+
+with layout for "AnimationSwitch"
+    x: 34 px
+    y: 112 px
+    width: 210 px
+    height: 34 px
+end layout
+
+with layout for "LightSwitch"
+    x: 34 px
+    y: 156 px
+    width: 210 px
+    height: 34 px
+end layout
+
+with layout for "AnimationButton"
+    x: 260 px
+    y: 112 px
+    width: 112 px
+    height: 78 px
+end layout
+
+with style for "InspectorPanel"
+    background color: color "#101820"
+    border color: color "#39D5FF"
+    border size: 2 px
+    opacity: 0.82
+end style
+
+with style for "PanelTitle"
+    foreground color: color "#E8FFFF"
+end style
+
+with style for "HintText"
+    foreground color: color "#9BE7FF"
+end style
+
+with style for "AnimationSwitch"
+    background color: color "#18384A"
+    foreground color: color "#E8FFFF"
+    border color: color "#39D5FF"
+    border size: 1 px
+end style
+
+with style for "LightSwitch"
+    background color: color "#18384A"
+    foreground color: color "#E8FFFF"
+    border color: color "#39D5FF"
+    border size: 1 px
+end style
+
+with style for "AnimationButton"
+    background color: color "#2A2048"
+    foreground color: color "#F3E8FF"
+    border color: color "#CBA6FF"
+    border size: 1 px
+end style
+
+when clicked "AnimationSwitch"
+    print string "toggle animation"
+end when
+
+when clicked "LightSwitch"
+    print string "toggle light"
+end when
+
+when clicked "AnimationButton"
+    print string "toggle animation"
+end when
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "CubeA"
+draw "CubeB"
+draw "CubeC"
+draw "CubeD"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "M30A: DX12 UI overlay draws panel/text/button/switches; click Animation/Light controls to toggle runtime state"
+blend mix to code 0
+end program "Dx12UiOverlayControlsSceneM30A"

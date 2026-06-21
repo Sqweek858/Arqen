@@ -1,0 +1,9 @@
+program "CompareUnknownVariable"
+
+title "M13 Compare"
+if missingName is 0
+show message "bad"
+end if
+blend mix to code 0
+
+end program "CompareUnknownVariable"

@@ -1,0 +1,12 @@
+program "M19CInvalidDuplicateProperty"
+
+set title to string "M19C invalid"
+
+define text called "Title"
+set content of "Title" to string "One"
+set content of "Title" to string "Two"
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidDuplicateProperty"

@@ -1,0 +1,478 @@
+program "Dx12UiControlsFancySceneM31A"
+set title to string "Arqen M31A UI Controls"
+
+// M30D/M31A/M31B official scene:
+// - carries the M29C 3D scene forward
+// - UI events use clicked event bodies for runtime action mapping
+// - renders button/checkbox/slider/input/dropdown controls
+// - exercises real DX12 raster font rendering and texture-resource preview/sampling
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M31A UI Controls"
+set resolution of "MainWindow" to 1280 x 720
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainWindow"
+    title bar color: color "#000000"
+    title text color: color "#FFFFFF"
+end style
+
+with style for "MainRenderer"
+    background color: color "#01030A"
+end style
+
+define shader called "BoxShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "BoxPipeline"
+    renderer: "MainRenderer"
+    shader: "BoxShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "BoxPipeline" for renderer "MainRenderer"
+
+define constant buffer called "SceneParams"
+    color tint: color "#D8FFF4"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "BoxPipeline"
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -6.0]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+capture mouse for window "MainWindow"
+when mouse moves rotate camera "MainCamera" by [0.10, 0.10]
+when mouse wheel moves move camera "MainCamera" by [0.0, 0.0, 1.0]
+when key "W" is held move camera "MainCamera" by [0.0, 0.0, 3.0]
+when key "S" is held move camera "MainCamera" by [0.0, 0.0, -3.0]
+when key "A" is held move camera "MainCamera" by [-3.0, 0.0, 0.0]
+when key "D" is held move camera "MainCamera" by [3.0, 0.0, 0.0]
+when key "Q" is held move camera "MainCamera" by [0.0, -3.0, 0.0]
+when key "E" is held move camera "MainCamera" by [0.0, 3.0, 0.0]
+
+define object selector called "PrimarySelector"
+use object selector "PrimarySelector" for renderer "MainRenderer"
+when mouse button "Left" is pressed select object using "PrimarySelector"
+when key "R" is held rotate selected object around y by mouse x sensitivity 0.35
+
+define color sequence called "PulseSequence"
+    color "#D8FFF4"
+    color "#8FE8FF"
+    color "#CBA6FF"
+end color sequence
+
+animate color "SceneParams.tint"
+    using sequence "PulseSequence"
+    every 30 frames
+end animate
+
+define directional light called "KeyLight"
+use light "KeyLight" for renderer "MainRenderer"
+set direction of light "KeyLight" to [-0.35, -0.70, -0.60]
+set intensity of light "KeyLight" to 0.95
+set ambient of light "KeyLight" to 0.16
+
+define box called "CubeA"
+use renderer "MainRenderer" for object "CubeA"
+use pipeline "BoxPipeline" for object "CubeA"
+set position of object "CubeA" to [-1.35, -0.05, 2.7]
+set rotation of object "CubeA" to [18.0, 35.0, 12.0]
+set scale of object "CubeA" to [1.0, 1.0, 1.0]
+
+define box called "CubeB"
+use renderer "MainRenderer" for object "CubeB"
+use pipeline "BoxPipeline" for object "CubeB"
+set position of object "CubeB" to [1.20, -0.20, 4.2]
+set rotation of object "CubeB" to [-12.0, 48.0, -22.0]
+set scale of object "CubeB" to [0.85, 0.85, 0.85]
+
+define box called "CubeC"
+use renderer "MainRenderer" for object "CubeC"
+use pipeline "BoxPipeline" for object "CubeC"
+set position of object "CubeC" to [0.05, 1.05, 5.9]
+set rotation of object "CubeC" to [35.0, -20.0, 42.0]
+set scale of object "CubeC" to [0.55, 0.55, 0.55]
+
+define box called "CubeD"
+use renderer "MainRenderer" for object "CubeD"
+use pipeline "BoxPipeline" for object "CubeD"
+set position of object "CubeD" to [-2.20, 0.65, 7.0]
+set rotation of object "CubeD" to [-20.0, -32.0, 15.0]
+set scale of object "CubeD" to [0.70, 0.70, 0.70]
+
+define font called "DebugFont" from file "fonts/inter.ttf"
+define texture called "ButtonGlow" from file "ui/button_glow.png"
+
+// Fancy UI controls; no new syntax, just existing M19 contracts wired deeper into DX12 runtime.
+define shape called "InspectorPanel"
+define text called "PanelTitle"
+define text called "HintText"
+define text called "ToolText"
+define text called "ControlsLabel"
+define text called "ExposureLabel"
+define text called "SliderHintText"
+define text called "ObjectLabel"
+define checkbox called "AnimationSwitch"
+define checkbox called "LightSwitch"
+define slider called "ExposureSlider"
+define input field called "ObjectNameInput"
+define dropdown called "QualityDropdown"
+define button called "AnimationButton"
+define text called "AnimationButtonLabel"
+define button called "DisabledButton"
+define text called "DisabledButtonLabel"
+
+parent "PanelTitle" to "InspectorPanel"
+parent "HintText" to "InspectorPanel"
+parent "ToolText" to "InspectorPanel"
+parent "ControlsLabel" to "InspectorPanel"
+parent "ExposureLabel" to "InspectorPanel"
+parent "SliderHintText" to "InspectorPanel"
+parent "ObjectLabel" to "InspectorPanel"
+parent "AnimationSwitch" to "InspectorPanel"
+parent "LightSwitch" to "InspectorPanel"
+parent "ExposureSlider" to "InspectorPanel"
+parent "ObjectNameInput" to "InspectorPanel"
+parent "QualityDropdown" to "InspectorPanel"
+parent "AnimationButton" to "InspectorPanel"
+parent "AnimationButtonLabel" to "AnimationButton"
+parent "DisabledButton" to "InspectorPanel"
+parent "DisabledButtonLabel" to "DisabledButton"
+
+set font of "PanelTitle" to "DebugFont"
+set font of "HintText" to "DebugFont"
+set font of "ToolText" to "DebugFont"
+set font of "ControlsLabel" to "DebugFont"
+set font of "ExposureLabel" to "DebugFont"
+set font of "SliderHintText" to "DebugFont"
+set font of "ObjectLabel" to "DebugFont"
+set font of "AnimationButtonLabel" to "DebugFont"
+set font of "DisabledButtonLabel" to "DebugFont"
+set texture of "AnimationButton" to "ButtonGlow"
+set texture of "DisabledButton" to "ButtonGlow"
+
+set content of "PanelTitle" to string "ARQEN DX12 UI"
+set content of "HintText" to string "RMB FLY  |  LMB SELECT"
+set content of "ToolText" to string "R + MOUSE  ROTATE"
+set content of "ControlsLabel" to string "SCENE CONTROLS"
+set content of "ExposureLabel" to string "EXPOSURE"
+set content of "SliderHintText" to string "DRAG THE CYAN KNOB - RUNTIME VISUAL"
+set content of "ObjectLabel" to string "ACTIVE OBJECT"
+set content of "AnimationSwitch" to string "ANIMATION"
+set checked of "AnimationSwitch" to true
+set content of "LightSwitch" to string "FAKE LIGHT"
+set checked of "LightSwitch" to true
+set range of "ExposureSlider" to 0, 100
+set value of "ExposureSlider" to 68
+set placeholder of "ObjectNameInput" to string "SELECTED OBJECT"
+set value of "ObjectNameInput" to string "CubeA"
+set content of "QualityDropdown" to string "QUALITY HIGH"
+add string "LOW" to "QualityDropdown"
+add string "MEDIUM" to "QualityDropdown"
+add string "HIGH" to "QualityDropdown"
+set content of "AnimationButtonLabel" to string "ANIMATE CENTERED"
+set content of "DisabledButtonLabel" to string "LOCKED CENTER"
+set enabled of "DisabledButton" to false
+set state of "DisabledButton" to disabled
+
+with layout for "InspectorPanel"
+    x: 18 px
+    y: 18 px
+    width: 700 px
+    height: 500 px
+end layout
+
+with layout for "PanelTitle"
+    x: 0 px
+    y: 0 px
+    width: 620 px
+    height: 30 px
+end layout
+
+with layout for "HintText"
+    x: 0 px
+    y: 42 px
+    width: 330 px
+    height: 18 px
+end layout
+
+with layout for "ToolText"
+    x: 0 px
+    y: 66 px
+    width: 330 px
+    height: 18 px
+end layout
+
+with layout for "ControlsLabel"
+    x: 0 px
+    y: 102 px
+    width: 300 px
+    height: 16 px
+end layout
+
+with layout for "AnimationSwitch"
+    x: 0 px
+    y: 132 px
+    width: 310 px
+    height: 36 px
+end layout
+
+with layout for "LightSwitch"
+    x: 0 px
+    y: 180 px
+    width: 310 px
+    height: 36 px
+end layout
+
+with layout for "AnimationButton"
+    x: 360 px
+    y: 132 px
+    width: 250 px
+    height: 64 px
+end layout
+
+with layout for "DisabledButton"
+    x: 360 px
+    y: 208 px
+    width: 250 px
+    height: 44 px
+end layout
+
+with layout for "ExposureLabel"
+    x: 0 px
+    y: 250 px
+    width: 140 px
+    height: 16 px
+end layout
+
+with layout for "SliderHintText"
+    x: 158 px
+    y: 250 px
+    width: 450 px
+    height: 16 px
+end layout
+
+with layout for "ExposureSlider"
+    x: 0 px
+    y: 276 px
+    width: 610 px
+    height: 48 px
+end layout
+
+with layout for "ObjectLabel"
+    x: 0 px
+    y: 356 px
+    width: 230 px
+    height: 16 px
+end layout
+
+with layout for "ObjectNameInput"
+    x: 0 px
+    y: 380 px
+    width: 330 px
+    height: 40 px
+end layout
+
+with layout for "QualityDropdown"
+    x: 360 px
+    y: 380 px
+    width: 250 px
+    height: 40 px
+end layout
+
+with style for "InspectorPanel"
+    background color: color "#081022"
+    border color: color "#39D5FF"
+    border size: 2 px
+    opacity: 0.96
+    padding: 24 px
+    clip children: true
+    overflow: hidden
+    z index: 10
+end style
+
+with style for "PanelTitle"
+    foreground color: color "#F3E8FF"
+    size: 18 px
+    font weight: bold
+    font style: italic
+    z index: 11
+end style
+
+with style for "HintText"
+    foreground color: color "#9BE7FF"
+    size: 11 px
+    z index: 11
+end style
+
+with style for "ToolText"
+    foreground color: color "#9BE7FF"
+    size: 11 px
+    z index: 11
+end style
+
+with style for "ControlsLabel"
+    foreground color: color "#CBA6FF"
+    size: 10 px
+    z index: 11
+end style
+
+with style for "ExposureLabel"
+    foreground color: color "#CBA6FF"
+    size: 10 px
+    z index: 11
+end style
+
+with style for "SliderHintText"
+    foreground color: color "#39D5FF"
+    size: 9 px
+    text align: right
+    z index: 11
+end style
+
+with style for "ObjectLabel"
+    foreground color: color "#CBA6FF"
+    size: 10 px
+    z index: 11
+end style
+
+with style for "AnimationSwitch"
+    background color: color "#102A42"
+    foreground color: color "#E8FFFF"
+    border color: color "#39D5FF"
+    border size: 1 px
+    padding: 8 px
+    size: 11 px
+    z index: 12
+end style
+
+with style for "LightSwitch"
+    background color: color "#102A42"
+    foreground color: color "#E8FFFF"
+    border color: color "#39D5FF"
+    border size: 1 px
+    padding: 8 px
+    size: 11 px
+    z index: 12
+end style
+
+with style for "ExposureSlider"
+    background color: color "#111936"
+    border color: color "#39D5FF"
+    border size: 1 px
+    padding: 8 px
+    z index: 12
+end style
+
+with style for "ObjectNameInput"
+    background color: color "#101820"
+    foreground color: color "#E8FFFF"
+    border color: color "#9BE7FF"
+    border size: 1 px
+    padding: 8 px
+    size: 11 px
+    z index: 12
+end style
+
+with style for "QualityDropdown"
+    background color: color "#101820"
+    foreground color: color "#E8FFFF"
+    border color: color "#CBA6FF"
+    border size: 1 px
+    padding: 8 px
+    size: 11 px
+    z index: 12
+end style
+
+with style for "AnimationButton"
+    background color: color "#2A2048"
+    foreground color: color "#F3E8FF"
+    border color: color "#CBA6FF"
+    border size: 1 px
+    padding: 8 px
+    size: 11 px
+    z index: 12
+end style
+
+with style for "AnimationButton" when hovered
+    background color: color "#3A2C70"
+end style
+
+with style for "AnimationButton" when pressed
+    background color: color "#1A1538"
+end style
+
+with style for "AnimationButtonLabel"
+    foreground color: color "#F3E8FF"
+    size: 13 px
+    padding: 4 px
+    text align: center
+    vertical align: middle
+    z index: 13
+end style
+
+with style for "DisabledButton"
+    background color: color "#1A1E2A"
+    foreground color: color "#667080"
+    border color: color "#303A4A"
+    border size: 1 px
+    padding: 8 px
+    size: 11 px
+    z index: 12
+end style
+
+with style for "DisabledButton" when disabled
+    opacity: 0.45
+end style
+
+with style for "DisabledButtonLabel"
+    foreground color: color "#667080"
+    size: 12 px
+    padding: 4 px
+    text align: center
+    vertical align: middle
+    z index: 13
+end style
+
+when clicked "AnimationSwitch"
+    print string "toggle animation"
+end when
+
+when clicked "LightSwitch"
+    print string "toggle fake light"
+end when
+
+when clicked "AnimationButton"
+    print string "toggle animation"
+end when
+
+when value changed "ExposureSlider"
+    print string "slider value changed"
+end when
+
+when text changed "ObjectNameInput"
+    print string "input focused"
+end when
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "CubeA"
+draw "CubeB"
+draw "CubeC"
+draw "CubeD"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "M31A/M31C: centered parent labels + draggable slider runtime visuals"
+blend mix to code 0
+end program "Dx12UiControlsFancySceneM31A"

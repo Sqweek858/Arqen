@@ -1,0 +1,10 @@
+ARQIR|version=0
+TARGET|kind=program|name=Hello
+META|source=Samples/hello_m10.arq
+CONST|id=str_0|type=text|value=Arqen Byte Zero
+CONST|id=str_1|type=text|value=Hello, Sqweek
+CONST|id=i32_0|type=int|value=0
+ACTION|id=act_0|op=show_message|title=str_0|text=str_1
+ACTION|id=act_1|op=exit|code=i32_0
+ENTRY|actions=act_0,act_1
+END

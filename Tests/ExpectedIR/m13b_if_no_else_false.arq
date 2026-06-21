@@ -1,0 +1,13 @@
+program "IfNoElseFalse"
+
+let number be 1
+
+set title to "M13B If"
+if number is 0
+show message "skipped body"
+end if
+
+show message "after if"
+blend mix to code 0
+
+end program "IfNoElseFalse"

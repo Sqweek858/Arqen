@@ -1,0 +1,8 @@
+program "MathUpdateConst"
+
+define const int called "score" be 2
+add 1 to "score"
+
+blend mix to code 0
+
+end program "MathUpdateConst"

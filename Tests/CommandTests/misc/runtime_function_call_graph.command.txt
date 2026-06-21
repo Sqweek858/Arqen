@@ -1,0 +1,22 @@
+COMMAND_ID|runtime_function_call_graph
+CANONICAL|call function "callee" inside function bodies; set runtime <type> "target" to call function "callee"
+CATEGORY|runtime_function
+TOKENS|KEYWORD(define) KEYWORD(function) KEYWORD(called) KEYWORD(call) KEYWORD(set) KEYWORD(runtime) KEYWORD(to) KEYWORD(return) KEYWORD(with)
+AST_NODE|RuntimeFunction.CallGraph
+SEMANTIC|Functions may call previously declared runtime functions; nested typed call assignments preserve params/returns/locals; direct recursion and cyclic call graphs are rejected; M44 does not introduce forward references.
+IR|function_call; function_call_assign; FUNCTION.actions
+BACKEND|WindowsX64PE.file_io_runtime
+VALID_TEST|Tools\validate_m44a_m44b_m44c_function_call_graph.ps1
+INVALID_TEST|Tools\validate_m44a_m44b_m44c_function_call_graph.ps1
+STATUS|supported
+MILESTONE|M44
+FORMS|
+call function "log"
+set runtime int "x" to call function "base"
+set runtime string "out" to call function "join" with string "Cry" and string "blo"
+NEGATIVE_TESTS|
+direct recursion
+missing nested function
+nested call assignment type mismatch
+nested call wrong argument type
+forward call before callee definition

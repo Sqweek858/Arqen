@@ -1,0 +1,10 @@
+valid_vector_basic.arq|0|MESSAGE|[4,6]\n[2,2]\n[2,4]\n[3,6]\n[1.5,2]
+valid_vector_functions.arq|0|MESSAGE|5\n[0.6,0.8,0]\n3\n[0,0,1]
+valid_vector_literal_nested.arq|0|MESSAGE|[3,4,9]
+invalid_vector_dim_mismatch.arq|1|ERROR|S102|semantic
+invalid_vector_literal_bad_count.arq|1|ERROR|S106|semantic
+invalid_vector_component_text.arq|1|ERROR|S107|semantic
+invalid_normalize_zero.arq|1|ERROR|S103|semantic
+invalid_dot_mismatch.arq|1|ERROR|S104|semantic
+invalid_cross_vec2.arq|1|ERROR|S105|semantic
+invalid_vector_scalar_add.arq|1|ERROR|S102|semantic

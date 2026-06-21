@@ -1,0 +1,121 @@
+program "Dx12CrystalClusterM22A"
+set title to string "Arqen M22A Crystal Cluster"
+
+// M22 crystal mini-scene sample: generated cluster geometry, one existing DX12 vertex buffer, one draw call.
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M22A Crystal Cluster"
+set resolution of "MainWindow" to 1280 x 720
+show window "MainWindow"
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#081018"
+end style
+
+define shader called "TriangleShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "TrianglePipeline" for renderer "MainRenderer"
+
+define vertex buffer called "TriangleVertices"
+    vertex position [0.124, -0.026, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.296, 0.040, 0.000] color [0.200, 0.750, 1.000, 1.000]
+    vertex position [0.302, 0.000, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.296, 0.040, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.480, 0.026, 0.000] color [0.200, 0.750, 1.000, 1.000]
+    vertex position [0.302, 0.000, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.480, 0.026, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.307, -0.040, 0.000] color [0.200, 0.750, 1.000, 1.000]
+    vertex position [0.302, 0.000, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.307, -0.040, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.124, -0.026, 0.000] color [0.200, 0.750, 1.000, 1.000]
+    vertex position [0.302, 0.000, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.035, 0.019, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.079, 0.302, 0.000] color [0.260, 0.750, 1.000, 1.000]
+    vertex position [0.134, 0.281, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.079, 0.302, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.232, 0.543, 0.000] color [0.260, 0.750, 1.000, 1.000]
+    vertex position [0.134, 0.281, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.232, 0.543, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.188, 0.261, 0.000] color [0.260, 0.750, 1.000, 1.000]
+    vertex position [0.134, 0.281, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.188, 0.261, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.035, 0.019, 0.000] color [0.260, 0.750, 1.000, 1.000]
+    vertex position [0.134, 0.281, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.199, -0.054, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.511, 0.175, 0.000] color [0.320, 0.750, 1.000, 1.000]
+    vertex position [-0.455, 0.226, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.511, 0.175, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.712, 0.506, 0.000] color [0.320, 0.750, 1.000, 1.000]
+    vertex position [-0.455, 0.226, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.712, 0.506, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.399, 0.278, 0.000] color [0.320, 0.750, 1.000, 1.000]
+    vertex position [-0.455, 0.226, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.399, 0.278, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.199, -0.054, 0.000] color [0.320, 0.750, 1.000, 1.000]
+    vertex position [-0.455, 0.226, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.414, -0.102, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.489, -0.339, 0.000] color [0.200, 0.750, 1.000, 1.000]
+    vertex position [-0.561, -0.279, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.489, -0.339, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.708, -0.456, 0.000] color [0.200, 0.750, 1.000, 1.000]
+    vertex position [-0.561, -0.279, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.708, -0.456, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.633, -0.219, 0.000] color [0.200, 0.750, 1.000, 1.000]
+    vertex position [-0.561, -0.279, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.633, -0.219, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.414, -0.102, 0.000] color [0.200, 0.750, 1.000, 1.000]
+    vertex position [-0.561, -0.279, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.003, 0.121, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.132, -0.185, 0.000] color [0.260, 0.750, 1.000, 1.000]
+    vertex position [0.093, -0.196, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.132, -0.185, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.183, -0.514, 0.000] color [0.260, 0.750, 1.000, 1.000]
+    vertex position [0.093, -0.196, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.183, -0.514, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.055, -0.207, 0.000] color [0.260, 0.750, 1.000, 1.000]
+    vertex position [0.093, -0.196, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [0.055, -0.207, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.003, 0.121, 0.000] color [0.260, 0.750, 1.000, 1.000]
+    vertex position [0.093, -0.196, 0.000] color [0.820, 0.950, 1.000, 1.000]
+end vertex buffer
+
+use vertex buffer "TriangleVertices" for renderer "MainRenderer"
+
+define constant buffer called "TriangleParams"
+    color tint: color "#38FFC0"
+end constant buffer
+
+use constant buffer "TriangleParams" for pipeline "TrianglePipeline"
+
+define color sequence called "CrystalPulse"
+    color "#38FFC0"
+    color "#7C4DFF"
+    color "#FF4FD8"
+    color "#40A0FF"
+    color "#F7FF7A"
+end color sequence
+
+animate color "TriangleParams.tint"
+    using sequence "CrystalPulse"
+    every 10 frames
+end animate
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw 60 vertices with renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+run window "MainWindow"
+end program "Dx12CrystalClusterM22A"

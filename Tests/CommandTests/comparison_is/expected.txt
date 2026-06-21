@@ -1,0 +1,10 @@
+valid_int_is_true.arq|0|MESSAGE|int true
+valid_int_is_false.arq|0|MESSAGE|int false selected
+valid_text_is_true.arq|0|MESSAGE|text true
+valid_bool_is_true.arq|0|MESSAGE|bool true
+valid_is_not_true.arq|0|MESSAGE|is not true
+invalid_type_mismatch_int_text.arq|1|ERROR|S021|semantic
+invalid_type_mismatch_bool_text.arq|1|ERROR|S021|semantic
+invalid_unknown_variable.arq|1|ERROR|S020|semantic
+invalid_missing_right_operand.arq|1|ERROR|P050|parse
+invalid_missing_right_operand_after_is_not.arq|1|ERROR|P051|parse

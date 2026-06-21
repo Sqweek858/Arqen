@@ -1,0 +1,12 @@
+program "InvalidUiEventDuplicate"
+set title to string "M19 UI Final"
+define button called "PlayButton"
+when clicked "PlayButton"
+    print string "One"
+end when
+when clicked "PlayButton"
+    print string "Two"
+end when
+show string "bad"
+blend mix to code 0
+end program "InvalidUiEventDuplicate"

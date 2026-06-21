@@ -1,0 +1,17 @@
+program "ValidUiResourcesBasic"
+set title to string "M19 UI Final"
+
+define texture called "ButtonTexture" from file "ui/button.png"
+define font called "MainFont" from file "fonts/inter.ttf"
+define sound called "ClickSound" from file "audio/click.wav"
+
+define button called "PlayButton"
+define text called "Title"
+
+set texture of "PlayButton" to "ButtonTexture"
+set font of "Title" to "MainFont"
+set sound of "PlayButton" to "ClickSound"
+
+show string "ui resources basic"
+blend mix to code 0
+end program "ValidUiResourcesBasic"

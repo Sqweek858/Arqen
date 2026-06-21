@@ -1,0 +1,22 @@
+COMMAND_ID|runtime_switch
+MILESTONE|M57_M58
+VALIDATOR|Tools\validate_m57_m58_runtime_switch.ps1
+SLICE|m57m58
+
+COMMAND|runtime switch enum "state"
+LOWERING|guarded runtime_if_bool plus runtime_if_int against internal enum slot
+
+COMMAND|case "EnumValue"
+LOWERING|runtime_if_int static enum-index guarded by internal switch match slot
+
+COMMAND|runtime switch int "mode"
+LOWERING|guarded runtime_if_bool plus runtime_if_int against runtime int slot
+
+COMMAND|case 0
+LOWERING|runtime_if_int static i32 value guarded by internal switch match slot
+
+COMMAND|default
+LOWERING|runtime_if_bool against internal switch match slot
+
+COMMAND|end switch
+LOWERING|closes switch parse block; generated runtime_if_end actions close lowered guards

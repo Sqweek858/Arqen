@@ -1,0 +1,7 @@
+program "InvalidUiStateBadValue"
+set title to string "M19 UI Final"
+define button called "PlayButton"
+set state of "PlayButton" to ghost
+show string "bad"
+blend mix to code 0
+end program "InvalidUiStateBadValue"

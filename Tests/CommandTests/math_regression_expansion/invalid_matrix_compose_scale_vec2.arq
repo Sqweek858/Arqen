@@ -1,0 +1,6 @@
+program "BadComposeScaleVec2"
+define transform called "t" be identity
+set "t" to compose transform position [0, 0, 0] rotation z 0 deg scale [1, 1]
+print "t"
+blend mix to code 0
+end program "BadComposeScaleVec2"

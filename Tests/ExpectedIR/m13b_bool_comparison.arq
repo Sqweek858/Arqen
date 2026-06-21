@@ -1,0 +1,12 @@
+program "IfBool"
+
+let alive be true
+
+set title to "M13B If"
+if alive is true
+show message "alive"
+end if
+
+blend mix to code 0
+
+end program "IfBool"

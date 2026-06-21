@@ -1,0 +1,12 @@
+program "M19CInvalidDuplicateOption"
+
+set title to string "M19C invalid"
+
+define dropdown called "QualityDropdown"
+add string "High" to "QualityDropdown"
+add string "High" to "QualityDropdown"
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidDuplicateOption"

@@ -1,0 +1,6 @@
+valid_set_values.arq|0|MESSAGE|Arqen\n14\nfalse
+valid_set_numeric_types.arq|0|MESSAGE|6\n0.00002
+invalid_set_missing.arq|1|ERROR|S052|semantic
+invalid_set_const.arq|1|ERROR|S053|semantic
+invalid_set_int_to_string.arq|1|ERROR|S054|semantic
+invalid_set_bool_to_int.arq|1|ERROR|S054|semantic

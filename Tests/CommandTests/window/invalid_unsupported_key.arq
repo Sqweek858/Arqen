@@ -1,0 +1,6 @@
+﻿program "InvalidUnsupportedKey"
+define window called "Window"
+when key pressed "Enter"
+close window "Window"
+end when
+end program "InvalidUnsupportedKey"

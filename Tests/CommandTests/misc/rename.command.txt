@@ -1,0 +1,11 @@
+COMMAND_ID|rename
+CANONICAL|rename "<oldName>" to "<newName>"
+CATEGORY|symbol
+TOKENS|KEYWORD(rename) STRING KEYWORD(to) STRING
+AST_NODE|Rename
+SEMANTIC|old symbol must exist; new symbol must not exist; value and type are preserved
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\rename\valid_rename_int.arq
+INVALID_TEST|Tests\CommandTests\rename\invalid_missing_symbol.arq;Tests\CommandTests\rename\invalid_existing_target.arq
+STATUS|stable

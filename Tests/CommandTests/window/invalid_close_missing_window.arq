@@ -1,0 +1,6 @@
+﻿program "InvalidCloseMissingWindow"
+define window called "Window"
+when closed "Window"
+close window "Window2"
+end when
+end program "InvalidCloseMissingWindow"

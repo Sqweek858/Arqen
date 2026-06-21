@@ -1,0 +1,11 @@
+COMMAND_ID|geometry_space_math
+CANONICAL|extended 2D and 3D geometry primitives intersections closest point and distance expressions
+CATEGORY|expression
+TOKENS|KEYWORD(define),KEYWORD(segment),KEYWORD(line),KEYWORD(ray),KEYWORD(sphere),KEYWORD(aabb),KEYWORD(plane),IDENT(intersects),IDENT(closest),IDENT(distance),LBRACKET,RBRACKET,COMMA
+AST_NODE|GeometrySpaceMathExpression
+SEMANTIC|evaluates segment/line/ray/sphere/aabb/plane literals, segment intersections, ray intersections, sphere/aabb intersections, closest point queries, and point-to-line/segment distance
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\geometry_space_math\valid_geometry_2d_extended.arq
+INVALID_TEST|Tests\CommandTests\geometry_space_math\invalid_segment_equal_points.arq
+STATUS|experimental

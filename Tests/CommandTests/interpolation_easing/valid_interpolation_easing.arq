@@ -1,0 +1,44 @@
+program "InterpolationEasing"
+
+define double called "x" be 0
+define vec3 called "v" be [0, 0, 0]
+
+set "x" to lerp 0, 10, 0.5
+print "x"
+
+set "v" to lerp [0, 0, 0], [10, 20, 30], 0.25
+print "v"
+
+set "x" to inverse lerp 0, 100, 25
+print "x"
+
+set "x" to clamped inverse lerp 0, 100, 125
+print "x"
+
+set "x" to remap 25 from 0, 100 to -1, 1
+print "x"
+
+set "x" to clamped remap 125 from 0, 100 to 0, 1
+print "x"
+
+set "x" to smoothstep 0, 1, 0.5
+print "x"
+
+set "x" to smootherstep 0, 1, 0.5
+print "x"
+
+set "x" to ease in quad 0.5
+print "x"
+
+set "x" to ease out quad 0.5
+print "x"
+
+set "x" to ease in out cubic 0.5
+print "x"
+
+set "x" to ease in sine 0.5
+print "x"
+
+blend mix to code 0
+
+end program "InterpolationEasing"

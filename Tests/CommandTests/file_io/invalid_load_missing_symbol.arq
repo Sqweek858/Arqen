@@ -1,0 +1,7 @@
+program "BadLoadMissing"
+
+load file "log.txt" to "missing"
+
+blend mix to code 0
+
+end program "BadLoadMissing"

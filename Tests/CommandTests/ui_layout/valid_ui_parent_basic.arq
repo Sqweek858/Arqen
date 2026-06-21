@@ -1,0 +1,10 @@
+program "ValidUiParentBasic"
+set title to string "M19D UI Layout"
+
+define shape called "Panel"
+define text called "Title"
+parent "Title" to "Panel"
+
+show message "ui parent basic"
+blend mix to code 0
+end program "ValidUiParentBasic"

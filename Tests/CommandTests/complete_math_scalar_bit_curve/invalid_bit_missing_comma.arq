@@ -1,0 +1,8 @@
+program "BadInvalidBitMissing"
+
+define int called "i" be 0
+set "i" to bit xor 2 3
+
+blend mix to code 0
+
+end program "BadInvalidBitMissing"

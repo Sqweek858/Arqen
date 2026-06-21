@@ -1,0 +1,4 @@
+RULE_ID|if_statement
+COMMAND_ID|if_compile_time
+EXPECT_CONTAINS|CONST|id=str_1|type=text|value=ok
+EXPECT_NOT_CONTAINS|bad

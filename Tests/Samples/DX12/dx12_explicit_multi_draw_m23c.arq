@@ -1,0 +1,47 @@
+program "Dx12ExplicitMultiDrawM23C"
+set title to string "Arqen M23C Explicit Multi Draw"
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M23C Explicit Multi Draw"
+set resolution of "MainWindow" to 960 x 540
+show window "MainWindow"
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+define shader called "TriangleShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+define vertex buffer called "TriangleA"
+    vertex position [-0.70, -0.40, 0.000] color [1.000, 0.300, 0.400, 1.000]
+    vertex position [-0.45, 0.25, 0.000] color [0.500, 1.000, 0.900, 1.000]
+    vertex position [-0.20, -0.40, 0.000] color [0.300, 0.500, 1.000, 1.000]
+end vertex buffer
+
+define vertex buffer called "TriangleB"
+    vertex position [0.20, -0.35, 0.000] color [1.000, 1.000, 0.400, 1.000]
+    vertex position [0.45, 0.35, 0.000] color [0.400, 1.000, 0.700, 1.000]
+    vertex position [0.70, -0.35, 0.000] color [0.700, 0.300, 1.000, 1.000]
+end vertex buffer
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw 3 vertices from buffer "TriangleA" with pipeline "TrianglePipeline" using renderer "MainRenderer"
+draw 3 vertices from buffer "TriangleB" with pipeline "TrianglePipeline" using renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+run window "MainWindow"
+end program "Dx12ExplicitMultiDrawM23C"

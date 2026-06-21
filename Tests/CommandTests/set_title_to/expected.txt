@@ -1,0 +1,7 @@
+valid_literal.arq|0|MESSAGE|Set title literal works
+valid_concat_variable.arq|0|MESSAGE|Set title concat works
+invalid_missing_title_keyword.arq|1|ERROR|P050|parse
+invalid_missing_to.arq|1|ERROR|P051|parse
+invalid_missing_expression.arq|1|ERROR|P052|parse
+invalid_unknown_variable.arq|1|ERROR|S010|semantic
+invalid_bool_expression.arq|1|ERROR|S012|semantic

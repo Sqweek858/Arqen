@@ -1,0 +1,6 @@
+program "BadRandomBetweenText"
+define double called "x" be 0
+set "x" to random between string "a", 1
+print "x"
+blend mix to code 0
+end program "BadRandomBetweenText"

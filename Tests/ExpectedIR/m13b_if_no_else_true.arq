@@ -1,0 +1,12 @@
+program "IfNoElseTrue"
+
+let number be 0
+
+set title to "M13B If"
+if number is 0
+show message "selected body"
+end if
+
+blend mix to code 0
+
+end program "IfNoElseTrue"

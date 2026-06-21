@@ -1,0 +1,55 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Arqen.WhatICanDo", "Projects\Arqen.WhatICanDo.vcxproj", "{A5B891B4-35E5-4F45-A932-08EF6D1A7B69}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "00 Start Here", "00 Start Here", "{3C4DB275-BF7F-437D-B7B0-CF716E3E8A1D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+		..\README.md = ..\README.md
+		..\run_me.ps1 = ..\run_me.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01 Tooling", "01 Tooling", "{8F8163E6-3907-49C1-BD04-2233647F99F1}"
+	ProjectSection(SolutionItems) = preProject
+		..\Tools\arqc.ps1 = ..\Tools\arqc.ps1
+		..\Tools\build.ps1 = ..\Tools\build.ps1
+		..\Tools\clean.ps1 = ..\Tools\clean.ps1
+		..\Tools\test.ps1 = ..\Tools\test.ps1
+		..\Tools\validate.ps1 = ..\Tools\validate.ps1
+		..\Tools\verify_repo.ps1 = ..\Tools\verify_repo.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "02 What_I_Can_Do", "02 What_I_Can_Do", "{5E311260-54A2-4750-832B-B5EBC2434047}"
+	ProjectSection(SolutionItems) = preProject
+		..\What_I_Can_Do\Build\build_all.ps1 = ..\What_I_Can_Do\Build\build_all.ps1
+		..\What_I_Can_Do\Source\01_runtime_state_control_strings.arq = ..\What_I_Can_Do\Source\01_runtime_state_control_strings.arq
+		..\What_I_Can_Do\Source\02_functions_arrays_records_enums.arq = ..\What_I_Can_Do\Source\02_functions_arrays_records_enums.arq
+		..\What_I_Can_Do\Source\03_record_arrays_switch_simulation.arq = ..\What_I_Can_Do\Source\03_record_arrays_switch_simulation.arq
+		..\What_I_Can_Do\Source\04_math_geometry_types_showcase.arq = ..\What_I_Can_Do\Source\04_math_geometry_types_showcase.arq
+		..\What_I_Can_Do\Source\05_file_io_command_args.arq = ..\What_I_Can_Do\Source\05_file_io_command_args.arq
+		..\What_I_Can_Do\Source\06_dx12_ui_scene_max_metadata.arq = ..\What_I_Can_Do\Source\06_dx12_ui_scene_max_metadata.arq
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "03 Docs", "03 Docs", "{C76483D5-F7AC-4B76-8966-9512F1F3BFB6}"
+	ProjectSection(SolutionItems) = preProject
+		..\Docs\README.md = ..\Docs\README.md
+		..\Docs\MILESTONES.md = ..\Docs\MILESTONES.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A5B891B4-35E5-4F45-A932-08EF6D1A7B69}.Debug|x64.ActiveCfg = Debug|x64
+		{A5B891B4-35E5-4F45-A932-08EF6D1A7B69}.Debug|x64.Build.0 = Debug|x64
+		{A5B891B4-35E5-4F45-A932-08EF6D1A7B69}.Release|x64.ActiveCfg = Release|x64
+		{A5B891B4-35E5-4F45-A932-08EF6D1A7B69}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

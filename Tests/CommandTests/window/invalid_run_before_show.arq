@@ -1,0 +1,4 @@
+program "Bad"
+define window called "Win1"
+run window "Win1"
+end program "Bad"

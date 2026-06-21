@@ -1,0 +1,13 @@
+program "CompareIntFalse"
+
+let number be 1
+
+title "M13 Compare"
+if number is 0
+show message "int false ok"
+else
+show message "int false selected"
+end if
+blend mix to code 0
+
+end program "CompareIntFalse"

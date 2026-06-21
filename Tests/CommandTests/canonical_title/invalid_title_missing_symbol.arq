@@ -1,0 +1,7 @@
+program "TitleMissing"
+
+set title to "missing"
+show string "Hello"
+blend mix to code 0
+
+end program "TitleMissing"

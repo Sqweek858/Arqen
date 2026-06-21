@@ -1,0 +1,9 @@
+program "InvalidComponentMissing"
+
+define vec2 called "pos" be [1, 2]
+
+print "pos.z"
+
+blend mix to code 0
+
+end program "InvalidComponentMissing"

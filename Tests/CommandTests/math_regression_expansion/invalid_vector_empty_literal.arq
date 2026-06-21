@@ -1,0 +1,5 @@
+program "BadVectorEmpty"
+define vec2 called "v" be []
+print "v"
+blend mix to code 0
+end program "BadVectorEmpty"

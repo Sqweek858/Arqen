@@ -1,0 +1,9 @@
+program "InvalidDx12SelectorDuplicateName"
+set title to string "invalid dx12 selector duplicate name"
+
+define object selector called "PrimarySelector"
+define object selector called "PrimarySelector"
+
+show message "invalid"
+blend mix to code 0
+end program "InvalidDx12SelectorDuplicateName"

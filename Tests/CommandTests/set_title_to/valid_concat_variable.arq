@@ -1,0 +1,9 @@
+program "SetTitleConcat"
+
+let userName be "Sqweek"
+
+set title to "Hello, " + userName
+message text "Set title concat works"
+exit 0
+
+end program "SetTitleConcat"

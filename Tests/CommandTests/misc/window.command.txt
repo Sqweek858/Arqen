@@ -1,0 +1,11 @@
+COMMAND_ID|window
+CANONICAL|define window called "Name"
+CATEGORY|window
+TOKENS|KEYWORD(define) KEYWORD(window) KEYWORD(called) STRING
+AST_NODE|RuntimeAction
+SEMANTIC|validates window commands
+IR|window_create, window_set_title, window_set_resolution, window_set_resizable, window_show, window_run
+BACKEND|WindowsX64PE_WindowBackend
+VALID_TEST|Tests\CommandTests\window\valid_window_demo.arq
+INVALID_TEST|Tests\CommandTests\window\invalid_missing_window.arq
+STATUS|stable

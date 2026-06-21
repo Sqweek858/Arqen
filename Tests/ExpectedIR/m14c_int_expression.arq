@@ -1,0 +1,9 @@
+program "M14CIntExpression"
+
+define int called "score" be 0
+set "score" to 2 + 3 * 4
+print "score"
+
+blend mix to code 0
+
+end program "M14CIntExpression"

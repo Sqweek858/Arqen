@@ -1,0 +1,9 @@
+program "InvalidDx12WindowConflictsRendererAfter"
+set title to string "M20D DX12"
+
+define dx12 renderer called "MainWindow"
+define window called "MainWindow"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12WindowConflictsRendererAfter"

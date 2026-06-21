@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Root">
+      <UniqueIdentifier>{F5BD5E7E-7963-45B7-B64D-C1AF0F1D444A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scripts">
+      <UniqueIdentifier>{B2DF7419-AB63-498E-B114-3D18259A0CD0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="What_I_Can_Do">
+      <UniqueIdentifier>{D23E92FA-87D6-45D9-B6E4-C2E186D7D345}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Filter>Root</Filter>
+    </None>
+    <None Include="..\..\run_me.ps1">
+      <Filter>Root</Filter>
+    </None>
+    <None Include="..\Scripts\vs_build_what_i_can_do.ps1">
+      <Filter>Scripts</Filter>
+    </None>
+    <None Include="..\Scripts\vs_clean_what_i_can_do.ps1">
+      <Filter>Scripts</Filter>
+    </None>
+    <None Include="..\..\What_I_Can_Do\Build\build_all.ps1">
+      <Filter>What_I_Can_Do</Filter>
+    </None>
+    <None Include="..\..\What_I_Can_Do\Source\01_runtime_state_control_strings.arq">
+      <Filter>What_I_Can_Do</Filter>
+    </None>
+    <None Include="..\..\What_I_Can_Do\Source\02_functions_arrays_records_enums.arq">
+      <Filter>What_I_Can_Do</Filter>
+    </None>
+    <None Include="..\..\What_I_Can_Do\Source\03_record_arrays_switch_simulation.arq">
+      <Filter>What_I_Can_Do</Filter>
+    </None>
+    <None Include="..\..\What_I_Can_Do\Source\04_math_geometry_types_showcase.arq">
+      <Filter>What_I_Can_Do</Filter>
+    </None>
+    <None Include="..\..\What_I_Can_Do\Source\05_file_io_command_args.arq">
+      <Filter>What_I_Can_Do</Filter>
+    </None>
+    <None Include="..\..\What_I_Can_Do\Source\06_dx12_ui_scene_max_metadata.arq">
+      <Filter>What_I_Can_Do</Filter>
+    </None>
+  </ItemGroup>
+</Project>

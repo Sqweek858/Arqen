@@ -1,0 +1,27 @@
+program "InvalidDx12DrawWithoutPipeline"
+set title to string "M21C DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+define vertex buffer called "TriangleVertices"
+    vertex position [-0.5, -0.5, 0.0] color [1.0, 0.0, 0.0, 1.0]
+    vertex position [0.0, 0.5, 0.0] color [0.0, 1.0, 0.0, 1.0]
+    vertex position [0.5, -0.5, 0.0] color [0.0, 0.0, 1.0, 1.0]
+end vertex buffer
+
+use vertex buffer "TriangleVertices" for renderer "MainRenderer"
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw 3 vertices with renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12DrawWithoutPipeline"

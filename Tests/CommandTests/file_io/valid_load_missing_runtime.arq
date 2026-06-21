@@ -1,0 +1,10 @@
+program "FileIOMissingRuntime"
+
+define string called "content" be string ""
+
+load file "missing.txt" to "content"
+print "content"
+
+blend mix to code 0
+
+end program "FileIOMissingRuntime"

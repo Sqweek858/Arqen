@@ -1,0 +1,11 @@
+COMMAND_ID|runtime_conditions
+CANONICAL|runtime if "<slot>" equals <operand>; runtime if "<slot>" is not <operand>; set runtime bool "<slot>" to not <operand>; toggle runtime bool "<slot>"
+CATEGORY|runtime
+TOKENS|KEYWORD(runtime) KEYWORD(if) KEYWORD(equals) KEYWORD(is) KEYWORD(not) KEYWORD(ignoring) KEYWORD(case) KEYWORD(set) KEYWORD(bool) KEYWORD(to) KEYWORD(toggle) KEYWORD(end) STRING VALUE
+AST_NODE|RuntimeAction
+SEMANTIC|evaluates runtime bool/int/string conditions and bool not/toggle operations with strict slot type checks
+IR|runtime_if_int,runtime_if_bool,runtime_if_string,runtime_bool_not_set,runtime_bool_toggle,runtime_else,runtime_if_end
+BACKEND|WindowsX64PE.file_io_runtime
+VALID_TEST|Tools\validate_m36a_m36b_m36c_runtime_conditions.ps1
+INVALID_TEST|Tools\validate_m36a_m36b_m36c_runtime_conditions.ps1
+STATUS|stable

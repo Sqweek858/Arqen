@@ -1,0 +1,19 @@
+program "M19CUIStyleIntegration"
+
+set title to string "M19C UI Style Integration"
+
+define style called "PrimaryButton"
+    background color: blue
+    foreground color: white
+    corner radius: 8 px
+end style
+
+define button called "PlayButton"
+set content of "PlayButton" to string "Play"
+use style "PrimaryButton" for "PlayButton"
+use style "PrimaryButton" for "PlayButton" when hovered
+
+show string "ui style integration"
+blend mix to code 0
+
+end program "M19CUIStyleIntegration"

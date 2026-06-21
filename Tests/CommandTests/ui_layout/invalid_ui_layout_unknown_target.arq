@@ -1,0 +1,10 @@
+program "InvalidUiLayoutUnknownTarget"
+set title to string "M19D UI Layout"
+
+with layout for "Missing"
+    x: 0 px
+end layout
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiLayoutUnknownTarget"

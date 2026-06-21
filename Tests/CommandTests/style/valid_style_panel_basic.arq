@@ -1,0 +1,16 @@
+program "StylePanelBasic"
+
+set title to string "M19B Style"
+
+with style for "Panel"
+    type: rectangle
+    color: black
+    opacity: 0.8
+    visibility: visible
+    clip children: false
+end style
+
+show string "style panel basic"
+blend mix to code 0
+
+end program "StylePanelBasic"

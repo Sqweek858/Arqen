@@ -1,0 +1,4 @@
+valid_simple_function.arq|0|AST_CONTAINS|function_call
+invalid_duplicate_function.arq|1|ERROR|S049|semantic
+invalid_call_missing.arq|1|ERROR|S050|semantic
+invalid_recursive_call.arq|1|ERROR|S051|semantic

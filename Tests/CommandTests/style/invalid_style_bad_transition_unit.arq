@@ -1,0 +1,10 @@
+program "BadStyleTransitionUnit"
+
+with style for "Button"
+    transition duration: 150 px
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleTransitionUnit"

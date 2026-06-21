@@ -1,0 +1,23 @@
+COMMAND_ID|runtime_function_locals
+CANONICAL|define local runtime <type> called "name" be <literal>
+CATEGORY|runtime_function
+TOKENS|KEYWORD(define) KEYWORD(local) KEYWORD(runtime) KEYWORD(int) KEYWORD(bool) KEYWORD(string) KEYWORD(called) KEYWORD(be) KEYWORD(function) KEYWORD(return) KEYWORD(set) KEYWORD(to)
+AST_NODE|RuntimeFunction.Local
+SEMANTIC|Local runtime declarations are only valid inside function bodies; locals use internal __fn_<function>_local_<name> slots; duplicate locals and parameter-name conflicts are rejected.
+IR|FUNCTION.locals; runtime_int_set; runtime_bool_set; runtime_string_set
+BACKEND|WindowsX64PE.file_io_runtime
+VALID_TEST|Tools\validate_m43a_m43b_m43c_function_local_scope.ps1
+INVALID_TEST|Tools\validate_m43a_m43b_m43c_function_local_scope.ps1
+STATUS|supported
+MILESTONE|M43
+FORMS|
+define local runtime int called "tmp" be 0
+define local runtime bool called "ok" be false
+define local runtime string called "text" be string ""
+NEGATIVE_TESTS|
+local declaration outside function
+duplicate local in same function
+local shadows parameter
+unsupported local type
+use local outside function
+wrong return type from local

@@ -1,0 +1,9 @@
+program "ShowConcat"
+
+let userName be "Sqweek"
+
+title "Show Concat"
+show message "Hello, " + userName
+exit 0
+
+end program "ShowConcat"

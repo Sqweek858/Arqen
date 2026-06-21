@@ -1,0 +1,12 @@
+program "InvalidUiParentDuplicate"
+set title to string "M19D UI Layout"
+
+define shape called "Root"
+define shape called "Other"
+define text called "Title"
+parent "Title" to "Root"
+parent "Title" to "Other"
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiParentDuplicate"

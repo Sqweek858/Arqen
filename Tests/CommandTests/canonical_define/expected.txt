@@ -1,0 +1,10 @@
+valid_typed_values.arq|0|MESSAGE|Done
+valid_const_and_decimal.arq|0|MESSAGE|10\n0.00001
+invalid_missing_called.arq|1|ERROR|P071|parse
+invalid_missing_quoted_name.arq|1|ERROR|P072|parse
+invalid_missing_be.arq|1|ERROR|P073|parse
+invalid_int_value.arq|1|ERROR|S031|semantic
+invalid_bool_value.arq|1|ERROR|S032|semantic
+invalid_float_string.arq|1|ERROR|S037|semantic
+invalid_double_string.arq|1|ERROR|S038|semantic
+invalid_duplicate_symbol.arq|1|ERROR|S001|semantic

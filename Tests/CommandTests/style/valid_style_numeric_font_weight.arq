@@ -1,0 +1,15 @@
+program "StyleNumericFontWeight"
+
+set title to string "M19B Style Extended"
+
+with style for "Title"
+    font: "Consolas"
+    size: 20 px
+    font weight: 700
+    color: light gray
+end style
+
+show string "style numeric font weight"
+blend mix to code 0
+
+end program "StyleNumericFontWeight"

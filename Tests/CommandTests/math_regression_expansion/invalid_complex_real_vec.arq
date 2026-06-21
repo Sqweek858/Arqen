@@ -1,0 +1,5 @@
+program "BadComplexRealVec"
+define complex called "z" be complex [1, 2], 0
+print "z"
+blend mix to code 0
+end program "BadComplexRealVec"

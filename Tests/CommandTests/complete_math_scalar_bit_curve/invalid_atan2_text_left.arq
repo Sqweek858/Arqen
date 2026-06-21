@@ -1,0 +1,8 @@
+program "BadInvalidAtan2Text"
+
+define double called "x" be 0
+set "x" to atan2 string "bad", 1
+
+blend mix to code 0
+
+end program "BadInvalidAtan2Text"

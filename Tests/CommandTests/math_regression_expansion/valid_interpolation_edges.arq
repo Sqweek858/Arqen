@@ -1,0 +1,21 @@
+program "RegressionInterpolationEdges"
+
+define double called "x" be 0
+set "x" to lerp 10, 20, 0
+print "x"
+set "x" to lerp 10, 20, 1
+print "x"
+set "x" to inverse lerp 10, 20, 15
+print "x"
+set "x" to clamped inverse lerp 10, 20, 25
+print "x"
+set "x" to smootherstep 0, 1, -1
+print "x"
+set "x" to smootherstep 0, 1, 2
+print "x"
+set "x" to ease in out quint 0.5
+print "x"
+
+blend mix to code 0
+
+end program "RegressionInterpolationEdges"

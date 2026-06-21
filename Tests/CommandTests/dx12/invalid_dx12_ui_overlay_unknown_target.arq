@@ -1,0 +1,10 @@
+program "InvalidDx12UiOverlayUnknownTarget"
+set title to string "DX12 UI Overlay Invalid"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+set content of "MissingWidget" to string "Nope"
+
+blend mix to code 0
+end program "InvalidDx12UiOverlayUnknownTarget"

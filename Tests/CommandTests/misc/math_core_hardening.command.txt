@@ -1,0 +1,11 @@
+COMMAND_ID|math_core_hardening
+CANONICAL|math core hardening finite precision and precedence guards
+CATEGORY|expression
+TOKENS|IDENT,INT,DECIMAL,PLUS,MINUS,STAR,SLASH,COMMA
+AST_NODE|MathCoreHardeningExpression
+SEMANTIC|rejects non-finite math results, snaps near-zero numeric output, preserves complex precedence, and keeps quaternion slerp normalized
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\math_core_hardening\valid_math_core_precision.arq
+INVALID_TEST|Tests\CommandTests\math_core_hardening\invalid_math_non_finite_pow.arq
+STATUS|experimental

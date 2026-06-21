@@ -1,0 +1,10 @@
+program "InvalidVectorScalarAdd"
+
+define vec2 called "a" be [1, 2]
+define vec2 called "c" be [0, 0]
+
+set "c" to "a" + 1
+
+blend mix to code 0
+
+end program "InvalidVectorScalarAdd"

@@ -1,0 +1,10 @@
+program "ValidUiDockToPanel"
+set title to string "M19D UI Layout"
+
+define shape called "Root"
+define shape called "Inspector"
+dock "Inspector" to right of "Root"
+
+show message "ui dock to panel"
+blend mix to code 0
+end program "ValidUiDockToPanel"

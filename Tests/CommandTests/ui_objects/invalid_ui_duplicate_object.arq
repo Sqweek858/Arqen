@@ -1,0 +1,11 @@
+program "M19CInvalidDuplicateObject"
+
+set title to string "M19C invalid"
+
+define button called "PlayButton"
+define text called "PlayButton"
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidDuplicateObject"

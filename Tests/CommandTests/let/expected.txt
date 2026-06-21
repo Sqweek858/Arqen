@@ -1,0 +1,4 @@
+valid_basic.arq|0|MESSAGE|Hello, Sqweek
+valid_multiple.arq|0|MESSAGE|Hello, Sqweek
+invalid_duplicate.arq|1|ERROR|S001|semantic
+invalid_missing_be.arq|1|ERROR|P001|parse

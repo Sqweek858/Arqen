@@ -1,0 +1,16 @@
+COMMAND_ID|runtime_function
+SINCE|M39
+TOKENS|define function called "name" ... end function
+TOKENS|call function "name"
+TOKENS|return
+IR|FUNCTION|name=<name>|actions=<action ids>
+IR|ACTION|op=function_call|target=<name>
+IR|ACTION|op=function_return
+VALID_TEST|function_ir_call_ret_basic
+VALID_TEST|function_call_inside_runtime_while
+VALID_TEST|function_return_basic
+INVALID_TEST|function_missing_negative
+INVALID_TEST|function_duplicate_negative
+INVALID_TEST|function_recursive_negative
+INVALID_TEST|function_nested_negative
+NOTES|M39 supports no params, no local scope, and no recursion. M40 adds bare return. M41 adds typed return values assigned into runtime slots.

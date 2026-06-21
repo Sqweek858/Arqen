@@ -1,0 +1,11 @@
+program "ArgsOutOfRangeDemo"
+
+define int called "count" be command arg count
+define string called "missing" be command arg 5
+
+print "count"
+print "missing"
+
+blend mix to code 0
+
+end program "ArgsOutOfRangeDemo"

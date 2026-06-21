@@ -1,0 +1,8 @@
+program "BadInvalidBezierMissing"
+
+define vec2 called "p" be [0, 0]
+set "p" to quadratic bezier curve [0,0], [1,1], [2,0] at 0.5
+
+blend mix to code 0
+
+end program "BadInvalidBezierMissing"

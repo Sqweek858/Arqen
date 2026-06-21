@@ -1,0 +1,22 @@
+program "RegressionVectorEdges"
+
+define vec2 called "a" be [3, 4]
+define vec2 called "b" be [1, 2]
+define vec3 called "c" be [1, 0, 0]
+define vec3 called "d" be [0, 1, 0]
+define double called "x" be 0
+
+set "a" to normalize "a"
+print "a"
+set "x" to dot "a", [0.6, 0.8]
+print "x"
+set "c" to cross "c", "d"
+print "c"
+set "b" to reflect [1, -1], [0, 1]
+print "b"
+set "b" to project [2, 2] onto [1, 0]
+print "b"
+
+blend mix to code 0
+
+end program "RegressionVectorEdges"

@@ -1,0 +1,29 @@
+program "MathCorePrecision"
+
+define complex called "z" be 0 + 0i
+define double called "x" be 0
+
+define quat called "a" be identity
+define quat called "b" be quat from axis [0, 0, 1] angle 90 deg
+define quat called "mid" be identity
+
+set "z" to 2 + 3i * 4
+print "z"
+
+set "x" to sin pi
+print "x"
+
+set "x" to cos pi
+print "x"
+
+set "x" to sqrt 2 * sqrt 2
+print "x"
+
+set "mid" to slerp "a", "b", 0.5
+set "x" to magnitude complex real "z", imag "z"
+set "x" to clamp "x" between 0 and 1
+print "x"
+
+blend mix to code 0
+
+end program "MathCorePrecision"

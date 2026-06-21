@@ -1,0 +1,7 @@
+RULE_ID|file_io_statement
+COMMAND_ID|file_io
+EXPECT_CONTAINS|ACTION|id=act_0|op=file_write|path=log.txt|value_kind=static|value=Hello
+EXPECT_CONTAINS|ACTION|id=act_1|op=file_append|path=log.txt|value_kind=static|value= again
+EXPECT_CONTAINS|ACTION|id=act_2|op=file_load|path=log.txt|value_kind=slot|value=content|target=content
+EXPECT_CONTAINS|ACTION|id=act_3|op=print_runtime_slot|path=|value_kind=slot|value=content|target=content
+EXPECT_NOT_CONTAINS|CONST|id=str_1|type=text|value=

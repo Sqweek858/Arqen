@@ -1,0 +1,11 @@
+COMMAND_ID|runtime_string_data
+CANONICAL|runtime if "<slot>" contains string "<text>"; set runtime string "<slot>" to "a" + "b"; set runtime string "<slot>" to substring "src" from 0 length 3; set runtime int "n" to parse int from "src"
+CATEGORY|runtime
+TOKENS|KEYWORD(runtime) KEYWORD(if) KEYWORD(contains) KEYWORD(string) KEYWORD(ignoring) KEYWORD(case) KEYWORD(set) KEYWORD(int) KEYWORD(parse) KEYWORD(from) KEYWORD(substring) KEYWORD(length) STRING VALUE
+AST_NODE|RuntimeAction
+SEMANTIC|supports string contains/case-insensitive equality, concat, substring, and parse-int with strict slot type checks
+IR|runtime_if_string,runtime_string_concat,runtime_string_substring,runtime_int_parse
+BACKEND|WindowsX64PE.file_io_runtime
+VALID_TEST|Tools\validate_m37a_m37b_m37c_runtime_string_data.ps1
+INVALID_TEST|Tools\validate_m37a_m37b_m37c_runtime_string_data.ps1
+STATUS|stable

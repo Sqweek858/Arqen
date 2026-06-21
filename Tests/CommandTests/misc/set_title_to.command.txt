@@ -1,0 +1,11 @@
+COMMAND_ID|set_title_to
+CANONICAL|set title to <text-expression>
+CATEGORY|metadata
+TOKENS|KEYWORD(set) KEYWORD(title) KEYWORD(to) EXPRESSION
+AST_NODE|SetTitle
+SEMANTIC|expression must resolve to text and fit output buffer
+IR|show_message.title
+BACKEND|WindowsX64PE.show_message
+VALID_TEST|Tests\CommandTests\set_title_to\valid_literal.arq
+INVALID_TEST|Tests\CommandTests\set_title_to\invalid_missing_to.arq;Tests\CommandTests\set_title_to\invalid_unknown_variable.arq
+STATUS|stable

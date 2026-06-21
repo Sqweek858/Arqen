@@ -1,0 +1,16 @@
+COMMAND_ID|runtime_function_return_values
+MILESTONE|M41
+TOKENS|return,int,bool,string,runtime,set,call,function
+IR|ACTION|op=function_return_int
+IR|ACTION|op=function_return_bool
+IR|ACTION|op=function_return_string
+IR|ACTION|op=function_call_assign
+VALID_TEST|function_return_int_static_assign
+VALID_TEST|function_return_bool_static_assign
+VALID_TEST|function_return_string_static_assign
+VALID_TEST|function_return_runtime_slots
+VALID_TEST|function_return_early_typed_if_while
+INVALID_TEST|function_return_void_assign_negative
+INVALID_TEST|function_return_type_mismatch_negative
+INVALID_TEST|function_return_mixed_types_negative
+NOTES|M41 supports typed return values for no-param runtime functions. Return assignment uses set runtime <type> "target" to call function "name".

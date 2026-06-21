@@ -1,0 +1,7 @@
+program "InvalidColorBadHex"
+
+define color called "bad" be color "#GGGGGG"
+
+blend mix to code 0
+
+end program "InvalidColorBadHex"

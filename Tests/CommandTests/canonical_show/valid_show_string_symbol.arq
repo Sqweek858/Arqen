@@ -1,0 +1,8 @@
+program "ShowStringSymbol"
+
+define string called "name" be string "Sqweek"
+set title to string "M14A"
+show "name"
+blend mix to code 0
+
+end program "ShowStringSymbol"

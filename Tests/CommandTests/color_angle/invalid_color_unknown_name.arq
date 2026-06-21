@@ -1,0 +1,7 @@
+program "InvalidColorUnknownName"
+
+define color called "bad" be color purpleish
+
+blend mix to code 0
+
+end program "InvalidColorUnknownName"

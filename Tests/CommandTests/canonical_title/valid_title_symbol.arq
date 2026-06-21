@@ -1,0 +1,8 @@
+program "TitleSymbol"
+
+define string called "titleName" be string "Arqen"
+set title to "titleName"
+show string "Hello"
+blend mix to code 0
+
+end program "TitleSymbol"

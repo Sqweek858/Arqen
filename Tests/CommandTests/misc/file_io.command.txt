@@ -1,0 +1,11 @@
+COMMAND_ID|file_io
+CANONICAL|write file "<path>" with <value> OR add <value> to file "<path>" OR load file "<path>" to "<name>"
+CATEGORY|runtime
+TOKENS|KEYWORD(write) KEYWORD(file) KEYWORD(with) KEYWORD(add) KEYWORD(to) KEYWORD(load) VALUE
+AST_NODE|FileIo
+SEMANTIC|runtime text file write append and load into runtime string slot
+IR|file_write,file_append,file_load,print_runtime_slot
+BACKEND|WindowsX64PE.file_io
+VALID_TEST|Tests\CommandTests\file_io\valid_file_io_demo.arq
+INVALID_TEST|Tests\CommandTests\file_io\invalid_load_missing_symbol.arq;Tests\CommandTests\file_io\invalid_write_missing_symbol.arq;Tests\CommandTests\file_io\invalid_append_missing_symbol.arq;Tests\CommandTests\file_io\invalid_load_int_symbol.arq
+STATUS|stable

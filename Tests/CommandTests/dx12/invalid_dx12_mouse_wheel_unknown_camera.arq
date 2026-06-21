@@ -1,0 +1,12 @@
+program "InvalidDx12MouseWheelUnknownCamera"
+set title to string "invalid dx12 mouse wheel unknown camera"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+when mouse wheel moves move camera "GhostCamera" by [0.0, 0.0, 1.0]
+
+show message "invalid dx12 mouse wheel unknown camera"
+blend mix to code 0
+end program "InvalidDx12MouseWheelUnknownCamera"

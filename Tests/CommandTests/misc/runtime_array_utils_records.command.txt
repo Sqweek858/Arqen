@@ -1,0 +1,20 @@
+COMMAND_ID|runtime_array_utils_records
+MILESTONE|M51_M52
+STATUS|implemented
+DOC|Docs\Milestones\\M51_M55.md
+VALIDATOR|Tools\validate_m51_m52_array_utils_records.ps1
+
+SYNTAX|fill runtime int array "Name" with 0
+SYNTAX|fill runtime bool array "Name" with false
+SYNTAX|fill runtime string array "Name" with string ""
+SYNTAX|fill runtime int array "Name" with runtime int "Slot"
+SYNTAX|copy runtime int array "Source" to runtime int array "Dest"
+SYNTAX|define record called "Type" with runtime int field "field"
+SYNTAX|define runtime record "Name" from "Type"
+SYNTAX|set runtime record "Name" field "field" to 42
+SYNTAX|set runtime int "Target" to runtime record "Name" field "field"
+
+LOWERING|M51 fill/copy arrays lower to existing runtime_*_set actions.
+LOWERING|M52 records lower each field to an internal runtime slot named __rec_<record>_<field>.
+BACKEND_ACTIONS|no new backend action
+LIMITS|No record arrays, record params, record returns, local records, nested records, push/pop/resize/slices, or packed record memory in M52.

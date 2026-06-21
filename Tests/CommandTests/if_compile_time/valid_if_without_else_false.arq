@@ -1,0 +1,13 @@
+program "IfNoElse"
+
+let active be false
+
+set title to "M13 If"
+if active is true
+show message "should not appear"
+end if
+
+show message "after if"
+blend mix to code 0
+
+end program "IfNoElse"

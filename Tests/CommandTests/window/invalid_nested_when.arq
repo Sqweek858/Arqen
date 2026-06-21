@@ -1,0 +1,8 @@
+﻿program "InvalidNestedWhen"
+define window called "Window"
+when closed "Window"
+when key pressed "Escape"
+close window "Window"
+end when
+end when
+end program "InvalidNestedWhen"

@@ -1,0 +1,10 @@
+program "InvalidDx12FrameBeginUnparentedRenderer"
+set title to string "M20G DX12"
+
+define dx12 renderer called "MainRenderer"
+
+begin frame of "MainRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12FrameBeginUnparentedRenderer"

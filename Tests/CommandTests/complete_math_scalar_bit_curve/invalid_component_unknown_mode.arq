@@ -1,0 +1,8 @@
+program "BadInvalidComponentUnknown"
+
+define double called "x" be 0
+set "x" to component median [1, 2, 3]
+
+blend mix to code 0
+
+end program "BadInvalidComponentUnknown"

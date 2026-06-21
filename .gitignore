@@ -1,0 +1,61 @@
+# Arqen local/IDE state
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# .NET / C# build output
+[Bb]in/
+[Oo]bj/
+publish/
+Tools/M10GDriver/bin/
+Tools/M10GDriver/obj/
+Tools/M10GDriver/publish/
+Tools/publish/
+
+# Arqen generated build output
+/Build/**
+!/Build/
+!/Build/.gitkeep
+
+
+# What_I_Can_Do generated showcase output
+/What_I_Can_Do/Build/**
+!/What_I_Can_Do/Build/
+!/What_I_Can_Do/Build/.gitkeep
+!/What_I_Can_Do/Build/build_all.ps1
+/What_I_Can_Do/Exe/**
+!/What_I_Can_Do/Exe/
+!/What_I_Can_Do/Exe/.gitkeep
+
+# Native/debug artifacts
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+*.tmp
+*.log
+*.cache
+
+# Local executables
+*.exe
+!Tools/arqc_m10g.exe
+
+# Local archives/backups
+*.zip
+*.7z
+*.rar
+
+# Patch leftovers
+*.patch
+*.rej
+*.orig
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

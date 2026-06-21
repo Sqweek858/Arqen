@@ -1,0 +1,12 @@
+program "InvalidDx12WindowStyleNamedColor"
+set title to string "dx12 window style named color"
+
+define window called "MainWindow"
+
+with style for "MainWindow"
+    title bar color: black
+end style
+
+show message "dx12 window style named color"
+blend mix to code 0
+end program "InvalidDx12WindowStyleNamedColor"

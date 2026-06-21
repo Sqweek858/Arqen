@@ -1,0 +1,10 @@
+program "BadStyleTextAlign"
+
+with style for "Title"
+    text align: diagonal
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleTextAlign"

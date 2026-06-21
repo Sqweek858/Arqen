@@ -1,0 +1,11 @@
+program "InvalidUiLayoutBadAnchor"
+set title to string "M19D UI Layout"
+
+define shape called "Panel"
+with layout for "Panel"
+    anchor: somewhere
+end layout
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiLayoutBadAnchor"

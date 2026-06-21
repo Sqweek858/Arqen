@@ -1,0 +1,23 @@
+program "Dx12FrameClearSmokeM20H"
+set title to string "M20H DX12"
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M20H DX12 Frame Clear"
+set resolution of "MainWindow" to 1280 x 720
+show window "MainWindow"
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "dx12 frame clear smoke m20h"
+blend mix to code 0
+end program "Dx12FrameClearSmokeM20H"

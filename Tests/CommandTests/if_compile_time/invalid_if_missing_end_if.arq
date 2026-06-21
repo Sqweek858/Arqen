@@ -1,0 +1,10 @@
+program "IfMissingEndIf"
+
+let number be 0
+
+title "M13 If"
+if number is 0
+show message "bad"
+blend mix to code 0
+
+end program "IfMissingEndIf"

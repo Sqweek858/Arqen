@@ -1,0 +1,11 @@
+program "InvalidUiParentCycle"
+set title to string "M19D UI Layout"
+
+define shape called "A"
+define shape called "B"
+parent "A" to "B"
+parent "B" to "A"
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiParentCycle"

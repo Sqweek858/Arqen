@@ -1,0 +1,9 @@
+program "RenameOldName"
+
+define int called "score" be 1
+rename "score" to "points"
+set title to string "M14A"
+show "score"
+blend mix to code 0
+
+end program "RenameOldName"

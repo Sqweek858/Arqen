@@ -1,0 +1,3 @@
+program "Bad"
+set title of "MissingWindow" to string "Bad"
+end program "Bad"

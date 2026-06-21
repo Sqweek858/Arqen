@@ -1,0 +1,7 @@
+program "SetTitleLiteral"
+
+set title to "Set Title Literal"
+message text "Set title literal works"
+blend mix to code 0
+
+end program "SetTitleLiteral"

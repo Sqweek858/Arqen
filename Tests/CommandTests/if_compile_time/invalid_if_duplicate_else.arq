@@ -1,0 +1,15 @@
+program "IfDuplicateElse"
+
+let number be 0
+
+title "M13 If"
+if number is 0
+show message "good"
+else
+show message "bad"
+else
+show message "bad again"
+end if
+blend mix to code 0
+
+end program "IfDuplicateElse"

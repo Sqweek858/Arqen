@@ -1,0 +1,9 @@
+﻿program "InvalidDuplicateKey"
+define window called "Window"
+when key pressed "Escape"
+close window "Window"
+end when
+when key pressed "Escape"
+close window "Window"
+end when
+end program "InvalidDuplicateKey"

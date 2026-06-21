@@ -1,0 +1,18 @@
+COMMAND_ID|ui_layout
+CANONICAL|parent "Child" to "Parent"; with layout for "Name" ... end layout; dock "Toolbar" to top of "Window"
+CATEGORY|ui
+TOKENS|parent STRING to STRING NEWLINE
+TOKENS|with layout for STRING NEWLINE LAYOUT_PROPERTY COLON LAYOUT_VALUE NEWLINE end layout NEWLINE
+TOKENS|dock STRING to DOCK_SIDE of STRING NEWLINE
+AST_NODE|UiParent;UiDock;UiLayoutProperty
+SEMANTIC|validates child UI object existence, parent UI/window existence, self-parenting, duplicate parent/dock relationships, simple cycle prevention, layout target existence, duplicate layout properties, supported layout properties/values, dock sides, and metadata-only boundary
+IR|UI_PARENT;UI_DOCK;UI_LAYOUT metadata lines
+BACKEND|metadata only; ignored by WindowsX64PE until layout/render backends consume UI metadata
+SUPPORTED_LAYOUT_PROPERTIES|x;y;width;height;anchor;offset x;offset y;margin;padding;mode;direction;gap;columns;rows
+SUPPORTED_ANCHORS|center;top;bottom;left;right;top left;top right;bottom left;bottom right
+SUPPORTED_LAYOUT_MODES|absolute;flex;grid
+SUPPORTED_DIRECTIONS|horizontal;vertical
+SUPPORTED_DOCK_SIDES|top;right;bottom;left;fill;center
+VALID_TEST|Tests\CommandTests\ui_layout\valid_ui_parent_basic.arq;Tests\CommandTests\ui_layout\valid_ui_layout_absolute.arq;Tests\CommandTests\ui_layout\valid_ui_layout_anchor_offsets.arq;Tests\CommandTests\ui_layout\valid_ui_layout_flex.arq;Tests\CommandTests\ui_layout\valid_ui_layout_grid.arq;Tests\CommandTests\ui_layout\valid_ui_dock_to_window.arq;Tests\CommandTests\ui_layout\valid_ui_dock_to_panel.arq
+INVALID_TEST|Tests\CommandTests\ui_layout\invalid_ui_parent_unknown_child.arq;Tests\CommandTests\ui_layout\invalid_ui_parent_unknown_parent.arq;Tests\CommandTests\ui_layout\invalid_ui_parent_self.arq;Tests\CommandTests\ui_layout\invalid_ui_parent_duplicate.arq;Tests\CommandTests\ui_layout\invalid_ui_parent_cycle.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_unknown_target.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_unknown_property.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_missing_end.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_duplicate_property.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_negative_width.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_missing_px.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_bad_anchor.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_bad_columns.arq;Tests\CommandTests\ui_layout\invalid_ui_layout_empty_block.arq;Tests\CommandTests\ui_layout\invalid_ui_dock_unknown_target.arq;Tests\CommandTests\ui_layout\invalid_ui_dock_bad_side.arq;Tests\CommandTests\ui_layout\invalid_ui_dock_duplicate_relationship.arq
+STATUS|m19d_ui_layout_foundation

@@ -1,0 +1,14 @@
+program "IfText"
+
+let name be "Sqweek"
+
+set title to "M13 If"
+if name is "Sqweek"
+show message "name ok"
+else
+show message "name bad"
+end if
+
+blend mix to code 0
+
+end program "IfText"

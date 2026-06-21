@@ -1,0 +1,6 @@
+program "BadRandomIntReversed"
+define int called "x" be 0
+set "x" to random int between 5, 1
+print "x"
+blend mix to code 0
+end program "BadRandomIntReversed"

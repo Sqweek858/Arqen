@@ -1,0 +1,14 @@
+program "ValidUiLayoutAbsolute"
+set title to string "M19D UI Layout"
+
+define shape called "Panel"
+with layout for "Panel"
+    x: 100 px
+    y: 50 px
+    width: 300 px
+    height: 80 px
+end layout
+
+show message "ui layout absolute"
+blend mix to code 0
+end program "ValidUiLayoutAbsolute"

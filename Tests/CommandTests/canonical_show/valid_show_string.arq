@@ -1,0 +1,7 @@
+program "ShowString"
+
+set title to string "M14A"
+show string "Hello"
+blend mix to code 0
+
+end program "ShowString"

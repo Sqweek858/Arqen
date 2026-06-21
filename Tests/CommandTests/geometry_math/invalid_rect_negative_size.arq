@@ -1,0 +1,7 @@
+program "InvalidRectNegativeSize"
+
+define rect called "bad" be rect [0, 0] size [-1, 10]
+
+blend mix to code 0
+
+end program "InvalidRectNegativeSize"

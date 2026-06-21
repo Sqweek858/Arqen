@@ -1,0 +1,9 @@
+program "WhileGuard"
+
+while 1 > 0
+print string "x"
+end while
+
+blend mix to code 0
+
+end program "WhileGuard"

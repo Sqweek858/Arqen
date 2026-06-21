@@ -1,0 +1,16 @@
+valid_file_io_demo.arq|0|MESSAGE|
+valid_file_io_symbols.arq|0|MESSAGE|
+valid_file_io_numeric.arq|0|MESSAGE|
+valid_load_missing_runtime.arq|0|MESSAGE|
+valid_mixed_runtime.arq|0|MESSAGE|
+invalid_load_missing_symbol.arq|1|ERROR|S060|semantic
+invalid_write_missing_symbol.arq|1|ERROR|S036|semantic
+invalid_append_missing_symbol.arq|1|ERROR|S036|semantic
+invalid_load_int_symbol.arq|1|ERROR|S061|semantic
+invalid_load_bool_symbol.arq|1|ERROR|S061|semantic
+invalid_write_missing_with.arq|1|ERROR|P101|parse
+invalid_add_missing_to.arq|1|ERROR|P076|parse
+invalid_load_missing_to.arq|1|ERROR|P105|parse
+invalid_nonquoted_path.arq|1|ERROR|L001|lex
+invalid_empty_path.arq|1|ERROR|S062|semantic
+invalid_load_const_string.arq|1|ERROR|S063|semantic

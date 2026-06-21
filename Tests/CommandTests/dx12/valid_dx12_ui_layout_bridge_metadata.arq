@@ -1,0 +1,57 @@
+program "ValidDx12UiLayoutBridgeMetadata"
+set title to string "M30B UI Layout Bridge Metadata"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#02030A"
+end style
+
+define shape called "Panel"
+define text called "Title"
+define checkbox called "AnimationSwitch"
+parent "Title" to "Panel"
+parent "AnimationSwitch" to "Panel"
+
+set content of "Title" to string "PANEL"
+set content of "AnimationSwitch" to string "ANIMATION"
+set checked of "AnimationSwitch" to true
+
+with layout for "Panel"
+    x: 16 px
+    y: 16 px
+    width: 280 px
+    height: 120 px
+end layout
+with layout for "Title"
+    x: 0 px
+    y: 0 px
+    width: 240 px
+    height: 24 px
+end layout
+with layout for "AnimationSwitch"
+    x: 0 px
+    y: 42 px
+    width: 180 px
+    height: 32 px
+end layout
+
+with style for "Panel"
+    background color: color "#101820"
+    border color: color "#39D5FF"
+    border size: 1 px
+    padding: 12 px
+    clip children: true
+    overflow: hidden
+    z index: 10
+end style
+
+when clicked "AnimationSwitch"
+    print string "toggle animation"
+end when
+
+show message "dx12 ui layout bridge metadata"
+blend mix to code 0
+end program "ValidDx12UiLayoutBridgeMetadata"

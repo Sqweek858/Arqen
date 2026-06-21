@@ -1,0 +1,77 @@
+program "WICD_FunctionsArraysRecordsEnums"
+// What_I_Can_Do sample 02
+// Current high-end core runtime: functions, typed params/returns, local scope,
+// fixed runtime arrays, record params/copy-back, enum returns, enum arrays,
+// enum record fields and runtime switch.
+
+print string "== Arqen functions + arrays + records + enums =="
+
+define enum called "ActorState" with "Idle", "Moving", "Dead"
+define record called "Actor" with runtime int field "hp", runtime bool field "alive", runtime string field "name", runtime enum field "state" from "ActorState"
+
+define function called "damage" with runtime record "target" from "Actor"
+define local runtime int called "hp" be 0
+set runtime int "hp" to runtime record "target" field "hp"
+remove 12 from "hp"
+set runtime record "target" field "hp" to runtime int "hp"
+set runtime record "target" field "state" to "Moving"
+end function
+
+define function called "pickPartyState" with runtime enum array "states" from "ActorState" size 3
+define local runtime enum "out" from "ActorState" be "Idle"
+set runtime enum "out" to runtime enum array "states" at 1
+return runtime enum "out"
+end function
+
+define function called "localArrayScore"
+define local runtime int array called "scores" size 3
+define local runtime int called "out" be 0
+fill runtime int array "scores" with 7
+set runtime int array "scores" at 2 to 42
+set runtime int "out" to runtime int array "scores" at 2
+return runtime int "out"
+end function
+
+define runtime record "player" from "Actor"
+define runtime record "snapshot" from "Actor"
+define runtime enum array called "partyStates" from "ActorState" size 3
+define runtime enum "selected" from "ActorState" be "Idle"
+define runtime int called "hp_out" be 0
+define runtime int called "score" be 0
+define runtime int called "len" be 0
+define runtime string called "name_out" be string ""
+
+set runtime record "player" field "hp" to 100
+set runtime record "player" field "alive" to true
+set runtime record "player" field "name" to string "Worker-7"
+set runtime record "player" field "state" to "Idle"
+
+call function "damage" with runtime record "player"
+copy runtime record "player" to runtime record "snapshot"
+
+set runtime int "hp_out" to runtime record "snapshot" field "hp"
+set runtime string "name_out" to runtime record "snapshot" field "name"
+print "name_out"
+print "hp_out"
+
+fill runtime enum array "partyStates" with "Idle"
+set runtime enum array "partyStates" at 1 to "Moving"
+set runtime enum array "partyStates" at 2 to "Dead"
+set runtime enum "selected" to call function "pickPartyState" with runtime enum array "partyStates"
+set runtime int "len" to length of runtime enum array "partyStates"
+print "len"
+
+runtime switch enum "selected"
+case "Idle"
+print string "selected idle"
+case "Moving"
+print string "selected moving"
+case "Dead"
+print string "selected dead"
+end switch
+
+set runtime int "score" to call function "localArrayScore"
+print "score"
+
+blend mix to code 0
+end program "WICD_FunctionsArraysRecordsEnums"

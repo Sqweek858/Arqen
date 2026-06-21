@@ -1,0 +1,14 @@
+program "MathUpdates"
+
+define int called "score" be 2
+
+add 1 + 2 to "score"
+multiply "score" by 2
+divide "score" by 2
+remove 1 from "score"
+
+print "score"
+
+blend mix to code 0
+
+end program "MathUpdates"

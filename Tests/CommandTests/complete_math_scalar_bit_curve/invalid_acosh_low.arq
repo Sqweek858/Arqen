@@ -1,0 +1,8 @@
+program "BadInvalidAcoshLow"
+
+define double called "x" be 0
+set "x" to acosh 0.5
+
+blend mix to code 0
+
+end program "BadInvalidAcoshLow"

@@ -1,0 +1,17 @@
+program "RegressionComplexEdges"
+
+define complex called "z" be complex 2, 3
+define complex called "w" be complex 1, -1
+define double called "x" be 0
+set "z" to -"z"
+print "z"
+set "z" to "z" / "w"
+print "z"
+set "z" to 2 + 3i * 4
+print "z"
+set "x" to phase complex -1, 0
+print "x"
+
+blend mix to code 0
+
+end program "RegressionComplexEdges"

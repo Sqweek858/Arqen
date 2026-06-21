@@ -1,0 +1,15 @@
+program "M19CUIBasic"
+
+set title to string "M19C UI Basic"
+
+define shape called "Panel"
+define text called "Title"
+define button called "PlayButton"
+
+set content of "Title" to string "Main Menu"
+set content of "PlayButton" to string "Play"
+
+show string "ui objects basic"
+blend mix to code 0
+
+end program "M19CUIBasic"

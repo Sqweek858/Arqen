@@ -1,0 +1,308 @@
+program "Dx12InteractiveCameraSceneM26C"
+set title to string "Arqen M26C interactive crystal field"
+
+// M26C richer runtime demo:
+// - large 2.5D/orthographic crystal field
+// - real objects with per-object transforms
+// - orthographic camera that can roam with WASD
+// - Space toggles color animation, R resets camera, Esc/Q/X closes
+
+// Note: this is still orthographic 2.5D, not perspective/depth 3D yet.
+// It gives you a world to move through before M27/M28 scene graph + real 3D.
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#02040C"
+end style
+
+define shader called "CrystalShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "CrystalPipeline"
+    renderer: "MainRenderer"
+    shader: "CrystalShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "CrystalPipeline" for renderer "MainRenderer"
+
+// Big background panel. It is world-space for now, not a real skybox.
+define vertex buffer called "SkyPanelVertices"
+    vertex position [-1.000, -1.000, 0.000] color [0.010, 0.015, 0.045, 1.000]
+    vertex position [1.000, -1.000, 0.000] color [0.020, 0.035, 0.090, 1.000]
+    vertex position [1.000, 1.000, 0.000] color [0.035, 0.055, 0.130, 1.000]
+    vertex position [-1.000, -1.000, 0.000] color [0.010, 0.015, 0.045, 1.000]
+    vertex position [1.000, 1.000, 0.000] color [0.035, 0.055, 0.130, 1.000]
+    vertex position [-1.000, 1.000, 0.000] color [0.012, 0.025, 0.070, 1.000]
+end vertex buffer
+
+define vertex buffer called "GroundPlateVertices"
+    vertex position [-1.000, -0.160, 0.000] color [0.020, 0.080, 0.090, 1.000]
+    vertex position [1.000, -0.160, 0.000] color [0.030, 0.140, 0.145, 1.000]
+    vertex position [1.000, 0.160, 0.000] color [0.040, 0.180, 0.160, 1.000]
+    vertex position [-1.000, -0.160, 0.000] color [0.020, 0.080, 0.090, 1.000]
+    vertex position [1.000, 0.160, 0.000] color [0.040, 0.180, 0.160, 1.000]
+    vertex position [-1.000, 0.160, 0.000] color [0.025, 0.110, 0.125, 1.000]
+end vertex buffer
+
+define vertex buffer called "StarVertices"
+    vertex position [0.000, 0.035, 0.000] color [0.820, 0.950, 1.000, 1.000]
+    vertex position [-0.030, -0.020, 0.000] color [0.320, 0.620, 1.000, 1.000]
+    vertex position [0.030, -0.020, 0.000] color [0.620, 0.820, 1.000, 1.000]
+end vertex buffer
+
+define vertex buffer called "CrystalShardVertices"
+    vertex position [0.000, 0.240, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.070, -0.045, 0.000] color [0.180, 0.760, 1.000, 1.000]
+    vertex position [0.000, -0.150, 0.000] color [0.680, 1.000, 0.860, 1.000]
+    vertex position [0.000, 0.240, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.000, -0.150, 0.000] color [0.680, 1.000, 0.860, 1.000]
+    vertex position [0.090, -0.035, 0.000] color [0.780, 0.380, 1.000, 1.000]
+end vertex buffer
+
+define vertex buffer called "TallCrystalVertices"
+    vertex position [0.000, 0.380, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.095, -0.110, 0.000] color [0.120, 0.620, 1.000, 1.000]
+    vertex position [0.000, -0.260, 0.000] color [0.320, 1.000, 0.760, 1.000]
+    vertex position [0.000, 0.380, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.000, -0.260, 0.000] color [0.320, 1.000, 0.760, 1.000]
+    vertex position [0.115, -0.080, 0.000] color [0.920, 0.320, 1.000, 1.000]
+end vertex buffer
+
+define vertex buffer called "CoreCrystalVertices"
+    vertex position [0.000, 0.260, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [-0.220, 0.000, 0.000] color [0.080, 0.920, 1.000, 1.000]
+    vertex position [0.000, -0.260, 0.000] color [0.520, 0.260, 1.000, 1.000]
+    vertex position [0.000, 0.260, 0.000] color [1.000, 1.000, 1.000, 1.000]
+    vertex position [0.000, -0.260, 0.000] color [0.520, 0.260, 1.000, 1.000]
+    vertex position [0.220, 0.000, 0.000] color [0.160, 1.000, 0.680, 1.000]
+end vertex buffer
+
+define constant buffer called "SceneParams"
+    color tint: color "#48FFD2"
+end constant buffer
+use constant buffer "SceneParams" for pipeline "CrystalPipeline"
+
+define color sequence called "ScenePulse"
+    color "#48FFD2"
+    color "#7C4DFF"
+    color "#FF4FD8"
+    color "#40A0FF"
+    color "#F7FF7A"
+    color "#52FF8A"
+end color sequence
+
+animate color "SceneParams.tint"
+    using sequence "ScenePulse"
+    every 10 frames
+end animate
+
+// Backdrop and terrain bands.
+define object called "SkyDome"
+use renderer "MainRenderer" for object "SkyDome"
+use pipeline "CrystalPipeline" for object "SkyDome"
+use vertex buffer "SkyPanelVertices" for object "SkyDome"
+draw 6 vertices for object "SkyDome"
+set position of object "SkyDome" to [0.000, 0.000, -0.800]
+set rotation z of object "SkyDome" to 0 deg
+set scale of object "SkyDome" to [9.000, 6.000, 1.0]
+
+define object called "MistHorizon"
+use renderer "MainRenderer" for object "MistHorizon"
+use pipeline "CrystalPipeline" for object "MistHorizon"
+use vertex buffer "GroundPlateVertices" for object "MistHorizon"
+draw 6 vertices for object "MistHorizon"
+set position of object "MistHorizon" to [0.000, -1.050, -0.600]
+set rotation z of object "MistHorizon" to 0 deg
+set scale of object "MistHorizon" to [8.500, 2.200, 1.0]
+
+define object called "FarRidge"
+use renderer "MainRenderer" for object "FarRidge"
+use pipeline "CrystalPipeline" for object "FarRidge"
+use vertex buffer "GroundPlateVertices" for object "FarRidge"
+draw 6 vertices for object "FarRidge"
+set position of object "FarRidge" to [0.000, -1.650, -0.500]
+set rotation z of object "FarRidge" to -3 deg
+set scale of object "FarRidge" to [9.500, 1.400, 1.0]
+
+// Starfield / floating particles.
+define object called "StarA"
+use renderer "MainRenderer" for object "StarA"
+use pipeline "CrystalPipeline" for object "StarA"
+use vertex buffer "StarVertices" for object "StarA"
+draw 3 vertices for object "StarA"
+set position of object "StarA" to [-3.200, 1.900, 0.000]
+set rotation z of object "StarA" to 12 deg
+set scale of object "StarA" to [0.700, 0.700, 1.0]
+
+define object called "StarB"
+use renderer "MainRenderer" for object "StarB"
+use pipeline "CrystalPipeline" for object "StarB"
+use vertex buffer "StarVertices" for object "StarB"
+draw 3 vertices for object "StarB"
+set position of object "StarB" to [-1.850, 2.400, 0.000]
+set rotation z of object "StarB" to -34 deg
+set scale of object "StarB" to [0.500, 0.500, 1.0]
+
+define object called "StarC"
+use renderer "MainRenderer" for object "StarC"
+use pipeline "CrystalPipeline" for object "StarC"
+use vertex buffer "StarVertices" for object "StarC"
+draw 3 vertices for object "StarC"
+set position of object "StarC" to [0.950, 2.100, 0.000]
+set rotation z of object "StarC" to 62 deg
+set scale of object "StarC" to [0.620, 0.620, 1.0]
+
+define object called "StarD"
+use renderer "MainRenderer" for object "StarD"
+use pipeline "CrystalPipeline" for object "StarD"
+use vertex buffer "StarVertices" for object "StarD"
+draw 3 vertices for object "StarD"
+set position of object "StarD" to [2.650, 1.650, 0.000]
+set rotation z of object "StarD" to -18 deg
+set scale of object "StarD" to [0.800, 0.800, 1.0]
+
+define object called "StarE"
+use renderer "MainRenderer" for object "StarE"
+use pipeline "CrystalPipeline" for object "StarE"
+use vertex buffer "StarVertices" for object "StarE"
+draw 3 vertices for object "StarE"
+set position of object "StarE" to [3.700, 2.600, 0.000]
+set rotation z of object "StarE" to 5 deg
+set scale of object "StarE" to [0.450, 0.450, 1.0]
+
+// Landmarks: a core and several crystal clusters spread out so camera movement matters.
+define object called "CentralCore"
+use renderer "MainRenderer" for object "CentralCore"
+use pipeline "CrystalPipeline" for object "CentralCore"
+use vertex buffer "CoreCrystalVertices" for object "CentralCore"
+draw 6 vertices for object "CentralCore"
+set position of object "CentralCore" to [0.000, 0.000, 0.100]
+set rotation z of object "CentralCore" to 45 deg
+set scale of object "CentralCore" to [1.050, 1.050, 1.0]
+
+define object called "CoreShardLeft"
+use renderer "MainRenderer" for object "CoreShardLeft"
+use pipeline "CrystalPipeline" for object "CoreShardLeft"
+use vertex buffer "CrystalShardVertices" for object "CoreShardLeft"
+draw 6 vertices for object "CoreShardLeft"
+set position of object "CoreShardLeft" to [-0.500, 0.120, 0.120]
+set rotation z of object "CoreShardLeft" to -32 deg
+set scale of object "CoreShardLeft" to [0.800, 1.350, 1.0]
+
+define object called "CoreShardRight"
+use renderer "MainRenderer" for object "CoreShardRight"
+use pipeline "CrystalPipeline" for object "CoreShardRight"
+use vertex buffer "CrystalShardVertices" for object "CoreShardRight"
+draw 6 vertices for object "CoreShardRight"
+set position of object "CoreShardRight" to [0.540, -0.080, 0.120]
+set rotation z of object "CoreShardRight" to 41 deg
+set scale of object "CoreShardRight" to [0.760, 1.220, 1.0]
+
+define object called "NorthSpire"
+use renderer "MainRenderer" for object "NorthSpire"
+use pipeline "CrystalPipeline" for object "NorthSpire"
+use vertex buffer "TallCrystalVertices" for object "NorthSpire"
+draw 6 vertices for object "NorthSpire"
+set position of object "NorthSpire" to [0.250, 1.700, 0.150]
+set rotation z of object "NorthSpire" to 8 deg
+set scale of object "NorthSpire" to [0.950, 1.650, 1.0]
+
+define object called "WestSpire"
+use renderer "MainRenderer" for object "WestSpire"
+use pipeline "CrystalPipeline" for object "WestSpire"
+use vertex buffer "TallCrystalVertices" for object "WestSpire"
+draw 6 vertices for object "WestSpire"
+set position of object "WestSpire" to [-2.100, 0.550, 0.150]
+set rotation z of object "WestSpire" to -22 deg
+set scale of object "WestSpire" to [0.850, 1.450, 1.0]
+
+define object called "EastSpire"
+use renderer "MainRenderer" for object "EastSpire"
+use pipeline "CrystalPipeline" for object "EastSpire"
+use vertex buffer "TallCrystalVertices" for object "EastSpire"
+draw 6 vertices for object "EastSpire"
+set position of object "EastSpire" to [2.150, 0.380, 0.150]
+set rotation z of object "EastSpire" to 26 deg
+set scale of object "EastSpire" to [0.920, 1.500, 1.0]
+
+define object called "SouthClusterA"
+use renderer "MainRenderer" for object "SouthClusterA"
+use pipeline "CrystalPipeline" for object "SouthClusterA"
+use vertex buffer "CrystalShardVertices" for object "SouthClusterA"
+draw 6 vertices for object "SouthClusterA"
+set position of object "SouthClusterA" to [-1.150, -1.420, 0.180]
+set rotation z of object "SouthClusterA" to 64 deg
+set scale of object "SouthClusterA" to [0.750, 1.380, 1.0]
+
+define object called "SouthClusterB"
+use renderer "MainRenderer" for object "SouthClusterB"
+use pipeline "CrystalPipeline" for object "SouthClusterB"
+use vertex buffer "CrystalShardVertices" for object "SouthClusterB"
+draw 6 vertices for object "SouthClusterB"
+set position of object "SouthClusterB" to [-0.750, -1.700, 0.190]
+set rotation z of object "SouthClusterB" to -48 deg
+set scale of object "SouthClusterB" to [0.650, 1.120, 1.0]
+
+define object called "EastClusterA"
+use renderer "MainRenderer" for object "EastClusterA"
+use pipeline "CrystalPipeline" for object "EastClusterA"
+use vertex buffer "CrystalShardVertices" for object "EastClusterA"
+draw 6 vertices for object "EastClusterA"
+set position of object "EastClusterA" to [3.050, -0.950, 0.180]
+set rotation z of object "EastClusterA" to 16 deg
+set scale of object "EastClusterA" to [0.760, 1.350, 1.0]
+
+define object called "WestClusterA"
+use renderer "MainRenderer" for object "WestClusterA"
+use pipeline "CrystalPipeline" for object "WestClusterA"
+use vertex buffer "CrystalShardVertices" for object "WestClusterA"
+draw 6 vertices for object "WestClusterA"
+set position of object "WestClusterA" to [-3.050, -0.850, 0.180]
+set rotation z of object "WestClusterA" to -12 deg
+set scale of object "WestClusterA" to [0.820, 1.460, 1.0]
+
+// Orthographic camera starts zoomed out enough to see the first landmarks.
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set position of camera "MainCamera" to [0.000, 0.000, 0.000]
+set zoom of camera "MainCamera" to 0.650
+
+when key "W" is held move camera "MainCamera" by [0.000, 1.100, 0.000]
+when key "S" is held move camera "MainCamera" by [0.000, -1.100, 0.000]
+when key "A" is held move camera "MainCamera" by [-1.100, 0.000, 0.000]
+when key "D" is held move camera "MainCamera" by [1.100, 0.000, 0.000]
+when key "R" is pressed reset camera "MainCamera"
+when key "Space" is pressed toggle animation
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw "SkyDome"
+draw "MistHorizon"
+draw "FarRidge"
+draw "StarA"
+draw "StarB"
+draw "StarC"
+draw "StarD"
+draw "StarE"
+draw "CentralCore"
+draw "CoreShardLeft"
+draw "CoreShardRight"
+draw "NorthSpire"
+draw "WestSpire"
+draw "EastSpire"
+draw "SouthClusterA"
+draw "SouthClusterB"
+draw "EastClusterA"
+draw "WestClusterA"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "M26C interactive crystal field: WASD camera, R reset, Space pulse"
+blend mix to code 0
+end program "Dx12InteractiveCameraSceneM26C"

@@ -1,0 +1,11 @@
+COMMAND_ID|show_value
+CANONICAL|show "<name>"
+CATEGORY|output
+TOKENS|KEYWORD(show) STRING
+AST_NODE|ShowValue
+SEMANTIC|quoted symbol must exist; string, int, and bool values lower to visual text
+IR|show_message.text
+BACKEND|WindowsX64PE.show_message
+VALID_TEST|Tests\CommandTests\canonical_show\valid_show_string_symbol.arq
+INVALID_TEST|Tests\CommandTests\canonical_show\invalid_show_missing_symbol.arq
+STATUS|stable

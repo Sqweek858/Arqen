@@ -1,0 +1,8 @@
+program "BadInvalidBitText"
+
+define int called "i" be 0
+set "i" to bit or 2, string "bad"
+
+blend mix to code 0
+
+end program "BadInvalidBitText"

@@ -1,0 +1,6 @@
+valid_precedence.arq|0|MESSAGE|14\n20\n5\n8\n1
+invalid_division_by_zero.arq|1|ERROR|S046|semantic
+invalid_modulo_non_int.arq|1|ERROR|S045|semantic
+invalid_malformed_expression.arq|1|ERROR|P010|parse
+invalid_unmatched_parentheses.arq|1|ERROR|P001|parse
+invalid_unicode_multiply.arq|1|ERROR|L001|lex

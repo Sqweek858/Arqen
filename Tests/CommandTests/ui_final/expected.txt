@@ -1,0 +1,25 @@
+valid_ui_events_basic.arq|0|MESSAGE|ui events basic
+valid_ui_events_value_text.arq|0|MESSAGE|ui events value text
+valid_ui_binding_basic.arq|0|MESSAGE|ui binding basic
+valid_ui_state_contract.arq|0|MESSAGE|ui state contract
+valid_ui_resources_basic.arq|0|MESSAGE|ui resources basic
+valid_ui_final_combo.arq|0|MESSAGE|ui final combo
+invalid_ui_event_unknown_target.arq|1|ERROR|S251|semantic
+invalid_ui_event_bad_event.arq|1|ERROR|S250|semantic
+invalid_ui_event_empty.arq|1|ERROR|S253|semantic
+invalid_ui_event_duplicate.arq|1|ERROR|S252|semantic
+invalid_ui_event_nested.arq|1|ERROR|S254|semantic
+invalid_ui_event_incompatible.arq|1|ERROR|S250|semantic
+invalid_ui_binding_unknown_target.arq|1|ERROR|S240|semantic
+invalid_ui_binding_unknown_source.arq|1|ERROR|S261|semantic
+invalid_ui_binding_type_mismatch.arq|1|ERROR|S263|semantic
+invalid_ui_binding_duplicate.arq|1|ERROR|S262|semantic
+invalid_ui_state_bad_bool.arq|1|ERROR|S271|semantic
+invalid_ui_state_bad_value.arq|1|ERROR|S271|semantic
+invalid_ui_state_duplicate.arq|1|ERROR|S272|semantic
+invalid_ui_resource_duplicate.arq|1|ERROR|S281|semantic
+invalid_ui_resource_bad_extension.arq|1|ERROR|S283|semantic
+invalid_ui_resource_unknown.arq|1|ERROR|S284|semantic
+invalid_ui_resource_wrong_type.arq|1|ERROR|S285|semantic
+invalid_ui_resource_bad_target.arq|1|ERROR|S285|semantic
+invalid_ui_resource_duplicate_use.arq|1|ERROR|S286|semantic

@@ -1,0 +1,8 @@
+program "CommentsFull"
+
+// ignored full line comment
+title "Comments Full"
+message text "Full comment works"
+blend mix to code 0
+
+end program "CommentsFull"

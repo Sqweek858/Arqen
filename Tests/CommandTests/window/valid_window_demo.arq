@@ -1,0 +1,12 @@
+program "WindowDemo"
+
+define window called "Window"
+
+set title of "Window" to string "Arqen Window"
+set resolution of "Window" to 1280 x 720
+set resizable of "Window" to true
+
+show window "Window"
+run window "Window"
+
+end program "WindowDemo"

@@ -1,0 +1,5 @@
+program "BadComponentUnknown"
+define vec3 called "v" be [1, 2, 3]
+print "v.q"
+blend mix to code 0
+end program "BadComponentUnknown"

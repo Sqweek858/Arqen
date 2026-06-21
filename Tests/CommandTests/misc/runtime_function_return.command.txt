@@ -1,0 +1,10 @@
+COMMAND_ID|runtime_function_return
+SINCE|M40
+TOKENS|return
+IR|ACTION|op=function_return
+VALID_TEST|function_return_basic
+VALID_TEST|function_return_inside_runtime_if
+VALID_TEST|function_return_inside_runtime_while
+INVALID_TEST|function_return_outside_function_negative
+INVALID_TEST|function_return_value_rejected_negative
+NOTES|M40 supports bare return. M41 extends function returns with typed int/bool/string values in runtime_function_return_values.command.txt.

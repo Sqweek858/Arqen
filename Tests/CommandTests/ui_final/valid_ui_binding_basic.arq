@@ -1,0 +1,20 @@
+program "ValidUiBindingBasic"
+set title to string "M19 UI Final"
+
+define int called "score" be 10
+define float called "panelWidth" be 300
+define bool called "menuEnabled" be true
+define color called "accent" be color green
+
+define text called "ScoreText"
+define shape called "Panel"
+define button called "PlayButton"
+
+link "ScoreText" content to "score"
+link "Panel" width to "panelWidth"
+link "PlayButton" enabled to "menuEnabled"
+link "Panel" color to "accent"
+
+show string "ui binding basic"
+blend mix to code 0
+end program "ValidUiBindingBasic"

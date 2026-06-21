@@ -1,0 +1,22 @@
+program "StyleInteractionTransform"
+
+set title to string "M19B Style Transform"
+
+with style for "PlayButton"
+    pointer events: true
+    interactable: true
+    cursor: pointer
+    scale: 1
+    rotation: 0 deg
+    pivot: center
+end style
+
+with style for "PlayButton" when hovered
+    scale: 1.05
+    translate y: -2 px
+end style
+
+show string "style interaction transform"
+blend mix to code 0
+
+end program "StyleInteractionTransform"

@@ -1,0 +1,9 @@
+program "InvalidDx12ObjectDuplicate"
+set title to string "M23 DX12"
+
+define object called "CrystalA"
+define object called "CrystalA"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12ObjectDuplicate"

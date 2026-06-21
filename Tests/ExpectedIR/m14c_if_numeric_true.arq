@@ -1,0 +1,13 @@
+program "M14CIfNumericTrue"
+
+define int called "score" be 14
+
+if "score" > 10
+print string "high"
+else
+print string "low"
+end if
+
+blend mix to code 0
+
+end program "M14CIfNumericTrue"

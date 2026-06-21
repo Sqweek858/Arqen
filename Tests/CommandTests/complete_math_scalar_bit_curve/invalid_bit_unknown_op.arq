@@ -1,0 +1,8 @@
+program "BadInvalidBitUnknown"
+
+define int called "i" be 0
+set "i" to bit nand 1, 2
+
+blend mix to code 0
+
+end program "BadInvalidBitUnknown"

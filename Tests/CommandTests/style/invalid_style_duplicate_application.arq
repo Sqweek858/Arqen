@@ -1,0 +1,15 @@
+program "InvalidStyleDuplicateApplication"
+
+set title to string "Invalid"
+
+define style called "Primary"
+    color: white
+end style
+
+use style "Primary" for "Panel"
+use style "Primary" for "Panel"
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleDuplicateApplication"

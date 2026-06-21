@@ -1,0 +1,23 @@
+program "VectorFunctions"
+
+define vec3 called "x" be [3, 4, 0]
+define vec3 called "axisX" be [1, 0, 0]
+define vec3 called "axisY" be [0, 1, 0]
+define vec3 called "out" be [0, 0, 0]
+define double called "d" be 0
+
+set "d" to length "x"
+print "d"
+
+set "out" to normalize "x"
+print "out"
+
+set "d" to dot "x", "axisX"
+print "d"
+
+set "out" to cross "axisX", "axisY"
+print "out"
+
+blend mix to code 0
+
+end program "VectorFunctions"

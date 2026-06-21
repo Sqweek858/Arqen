@@ -1,0 +1,10 @@
+program "BadInvalidRectIntersects"
+
+define rect called "r" be rect [0,0] size [1,1]
+define sphere called "s" be sphere center [0,0,0] radius 1
+define bool called "hit" be false
+set "hit" to rect "r" intersects "s"
+
+blend mix to code 0
+
+end program "BadInvalidRectIntersects"

@@ -1,0 +1,11 @@
+COMMAND_ID|geometry_math
+CANONICAL|2D rect and circle primitives with containment/intersection helpers
+CATEGORY|expression
+TOKENS|KEYWORD(rect),KEYWORD(circle),IDENT(size),IDENT(center),IDENT(radius),IDENT(point),IDENT(inside),IDENT(intersects),IDENT(closest),IDENT(on)
+AST_NODE|GeometryMathExpression
+SEMANTIC|evaluates compile-time rect/circle literals, point containment, rect intersection, and closest point queries
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\geometry_math\valid_geometry_primitives.arq
+INVALID_TEST|Tests\CommandTests\geometry_math\invalid_rect_negative_size.arq
+STATUS|experimental

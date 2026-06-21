@@ -1,0 +1,11 @@
+program "MixedRuntime"
+
+define string called "argVal" be command arg 0
+write file "mixed_test.txt" with "argVal"
+add string "\nAdded line" to file "mixed_test.txt"
+load file "mixed_test.txt" to "argVal"
+print "argVal"
+
+blend mix to code 0
+
+end program "MixedRuntime"

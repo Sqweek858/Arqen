@@ -1,0 +1,31 @@
+COMMAND_ID|runtime_record_utils_enums
+MILESTONE|M55_M56
+VALIDATOR|Tools\validate_m55_m56_record_utils_enums.ps1
+SLICE|m55m56
+
+COMMAND|copy runtime record "source" to runtime record "dest"
+LOWERING|per-field runtime_*_set slot copy
+
+COMMAND|reset runtime record "record"
+LOWERING|per-field runtime_*_set static default
+
+COMMAND|copy runtime record array "source" to runtime record array "dest"
+LOWERING|per-index/per-field runtime_*_set slot copy
+
+COMMAND|reset runtime record array "array"
+LOWERING|per-index/per-field runtime_*_set static default
+
+COMMAND|define enum called "Type" with "A", "B"
+LOWERING|parser enum type metadata only
+
+COMMAND|define runtime enum "state" from "Type" be "A"
+LOWERING|runtime_int_set static enum-index to internal enum slot
+
+COMMAND|set runtime enum "state" to "B"
+LOWERING|runtime_int_set static enum-index to internal enum slot
+
+COMMAND|set runtime enum "dst" to runtime enum "src"
+LOWERING|runtime_int_set slot copy between matching enum types
+
+COMMAND|runtime if enum "state" is "B"
+LOWERING|runtime_if_int against internal enum slot

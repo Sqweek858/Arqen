@@ -1,0 +1,13 @@
+program "VarColorAngle"
+
+define var called "bg" be color black
+define var called "turn" be 180 deg
+define double called "x" be 0
+
+print "bg"
+set "x" to cos "turn"
+print "x"
+
+blend mix to code 0
+
+end program "VarColorAngle"

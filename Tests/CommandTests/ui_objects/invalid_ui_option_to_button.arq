@@ -1,0 +1,11 @@
+program "M19CInvalidOptionToButton"
+
+set title to string "M19C invalid"
+
+define button called "PlayButton"
+add string "Play" to "PlayButton"
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidOptionToButton"

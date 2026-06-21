@@ -1,0 +1,7 @@
+program "BadTitleMissing"
+
+title
+message text "nope"
+exit 0
+
+end program "BadTitleMissing"

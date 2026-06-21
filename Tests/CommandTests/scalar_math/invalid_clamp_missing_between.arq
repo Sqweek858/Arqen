@@ -1,0 +1,8 @@
+program "InvalidClampMissingBetween"
+
+define double called "x" be 0
+set "x" to clamp 10 0 and 100
+
+blend mix to code 0
+
+end program "InvalidClampMissingBetween"

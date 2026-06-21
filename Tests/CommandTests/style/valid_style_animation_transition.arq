@@ -1,0 +1,17 @@
+program "StyleAnimationTransition"
+
+set title to string "M19B Style Motion"
+
+with style for "Toast"
+    transition property: opacity
+    transition delay: 25 ms
+    transition duration: 200 ms
+    transition easing: ease out
+    animation duration: 1 sec
+    animation easing: smooth
+end style
+
+show string "style animation transition"
+blend mix to code 0
+
+end program "StyleAnimationTransition"

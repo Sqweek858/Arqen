@@ -1,0 +1,16 @@
+program "RegressionQuaternionEdges"
+
+define quat called "a" be identity
+define quat called "b" be quat from axis [0, 1, 0] angle 180 deg
+define quat called "q" be identity
+define vec3 called "v" be [0, 0, 0]
+set "q" to slerp "a", "b", 0
+print "q"
+set "q" to slerp "a", "b", 1
+print "q"
+set "v" to rotate vector [1, 0, 0] by "b"
+print "v"
+
+blend mix to code 0
+
+end program "RegressionQuaternionEdges"

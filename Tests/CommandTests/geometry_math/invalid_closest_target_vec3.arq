@@ -1,0 +1,10 @@
+program "InvalidClosestTargetVec3"
+
+define rect called "panel" be rect [0, 0] size [10, 10]
+define vec2 called "closest" be [0, 0]
+
+set "closest" to closest point on rect "panel" to [1, 2, 3]
+
+blend mix to code 0
+
+end program "InvalidClosestTargetVec3"

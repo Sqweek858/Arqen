@@ -1,0 +1,13 @@
+program "ValidDx12WindowStyleTitlebarMetadata"
+set title to string "dx12 window titlebar style metadata"
+
+define window called "MainWindow"
+
+with style for "MainWindow"
+    title bar color: color "#000000"
+    title text color: color "#FFFFFF"
+end style
+
+show message "dx12 window titlebar style metadata"
+blend mix to code 0
+end program "ValidDx12WindowStyleTitlebarMetadata"

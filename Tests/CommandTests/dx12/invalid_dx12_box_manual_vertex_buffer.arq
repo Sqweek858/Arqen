@@ -1,0 +1,19 @@
+program "InvalidDx12BoxManualVertexBuffer"
+set title to string "dx12 box manual vertex buffer"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+define vertex buffer called "ManualVertices"
+    vertex position [-0.5, -0.5, 0.0] color [1.0, 0.0, 0.0, 1.0]
+    vertex position [0.5, -0.5, 0.0] color [0.0, 1.0, 0.0, 1.0]
+    vertex position [0.0, 0.5, 0.0] color [0.0, 0.0, 1.0, 1.0]
+end vertex buffer
+
+define box called "CubeA"
+use vertex buffer "ManualVertices" for object "CubeA"
+
+show message "dx12 box manual vertex buffer"
+blend mix to code 0
+end program "InvalidDx12BoxManualVertexBuffer"

@@ -1,0 +1,10 @@
+program "RenameExisting"
+
+define int called "score" be 1
+define int called "points" be 2
+rename "score" to "points"
+set title to string "M14A"
+show string "bad"
+blend mix to code 0
+
+end program "RenameExisting"

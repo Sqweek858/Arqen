@@ -1,0 +1,6 @@
+program "BadComponentOutOfRange"
+define vec2 called "v" be [1, 2]
+set "v.z" to 3
+print "v"
+blend mix to code 0
+end program "BadComponentOutOfRange"

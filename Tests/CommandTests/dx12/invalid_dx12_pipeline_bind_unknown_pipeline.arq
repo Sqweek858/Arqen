@@ -1,0 +1,12 @@
+program "InvalidDx12PipelineBindUnknownPipeline"
+set title to string "M21B DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+use pipeline "MissingPipeline" for renderer "MainRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12PipelineBindUnknownPipeline"

@@ -1,0 +1,31 @@
+program "StyleStates"
+
+set title to string "M19B Style"
+
+with style for "PlayButton"
+    type: button
+    background color: dark blue
+    foreground color: white
+    border color: light blue
+    border size: 2 px
+    corner radius: 12 px
+    padding: 16 px
+    margin: 4 px
+end style
+
+with style for "PlayButton" when hovered
+    background color: light blue
+end style
+
+with style for "PlayButton" when pressed
+    background color: blue
+end style
+
+with style for "PlayButton" when disabled
+    opacity: 0.5
+end style
+
+show string "style states"
+blend mix to code 0
+
+end program "StyleStates"

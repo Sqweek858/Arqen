@@ -1,0 +1,52 @@
+program "WICD_RuntimeStateControlStrings"
+// What_I_Can_Do sample 01
+// Core runtime state: int/bool/string slots, if/else, while, break/continue,
+// string contains/casefold/concat/substring/parse-int, bool not/toggle.
+
+print string "== Arqen runtime state + control + strings =="
+
+define runtime string called "zone" be string "Thermal Bloom"
+define runtime string called "status" be string "BOOT"
+define runtime string called "tag" be string ""
+define runtime string called "part" be string ""
+define runtime string called "raw" be string "37"
+define runtime int called "value" be 0
+define runtime int called "i" be 0
+define runtime bool called "active" be false
+
+runtime if "zone" contains string "Bloom"
+print string "zone contains Bloom"
+end if
+
+runtime if "status" equals string "boot" ignoring case
+set runtime string "status" to string "ready"
+set runtime bool "active" to not "active"
+end if
+
+runtime if "active" is true
+print string "runtime bool flipped to active"
+end if
+
+set runtime string "tag" to string "Cry" + string "blo"
+print "tag"
+set runtime string "part" to substring "tag" from 1 length 3
+print "part"
+
+set runtime int "value" to parse int from "raw"
+add 5 to "value"
+print "value"
+
+print string "loop with continue/break"
+runtime while "i" is less than 8
+add 1 to "i"
+runtime if "i" equals 3
+continue
+end if
+runtime if "i" equals 6
+break
+end if
+print "i"
+end while
+
+blend mix to code 0
+end program "WICD_RuntimeStateControlStrings"

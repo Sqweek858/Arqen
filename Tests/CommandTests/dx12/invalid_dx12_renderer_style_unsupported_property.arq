@@ -1,0 +1,12 @@
+program "InvalidDx12RendererStyleUnsupportedProperty"
+set title to string "M20C DX12"
+
+define dx12 renderer called "MainRenderer"
+
+with style for "MainRenderer"
+    opacity: 0.5
+end style
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12RendererStyleUnsupportedProperty"

@@ -1,0 +1,11 @@
+program "IfNonBool"
+
+let active be true
+
+title "M13 If"
+if active
+show message "bad"
+end if
+blend mix to code 0
+
+end program "IfNonBool"

@@ -1,0 +1,5 @@
+valid_concat_name.arq|0|MESSAGE|Hello, Sqweek
+valid_string_concat.arq|0|MESSAGE|Hello from M10
+invalid_unknown_variable.arq|1|ERROR|S010|semantic
+invalid_bool_concat.arq|1|ERROR|S011|semantic
+invalid_broken_plus.arq|1|ERROR|P011|parse

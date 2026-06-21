@@ -1,0 +1,11 @@
+program "ValidDx12ShaderDefine"
+set title to string "M21B DX12"
+
+define shader called "TriangleShader"
+    vertex source file "Shaders/triangle_vs.hlsl"
+    pixel source file "Shaders/triangle_ps.hlsl"
+end shader
+
+show message "dx12 shader define"
+blend mix to code 0
+end program "ValidDx12ShaderDefine"

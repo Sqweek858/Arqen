@@ -1,0 +1,6 @@
+program "BadDegreesText"
+define double called "x" be 0
+set "x" to degrees from radians string "bad"
+print "x"
+blend mix to code 0
+end program "BadDegreesText"

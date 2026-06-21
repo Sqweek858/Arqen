@@ -1,0 +1,12 @@
+program "WindowSmallDemo"
+
+define window called "Window"
+
+set title of "Window" to string "Small"
+set resolution of "Window" to 640 x 360
+set resizable of "Window" to false
+
+show window "Window"
+run window "Window"
+
+end program "WindowSmallDemo"

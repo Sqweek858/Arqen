@@ -1,0 +1,8 @@
+COMMAND_ID|runtime_int_arrays
+MILESTONE|M45_M46
+STATUS|implemented
+TOKENS|define runtime int array called <string> size <int>; set runtime int array <string> at <int> to <int-or-runtime-int-slot>; set runtime int <string> to runtime int array <string> at <int-or-runtime-int-slot>
+BACKEND_ACTIONS|runtime_int_set,runtime_if_int,runtime_bool_set,runtime_if_end,runtime_trap_if_bool_false
+POSITIVE_TESTS|static set/get; dynamic set/get; function read/write; runtime slot value source; runtime bounds trap
+NEGATIVE_TESTS|size zero; negative size parse rejection; static out of bounds; missing array; wrong dynamic index slot type; symbol collisions
+NOTES|M45 adds fixed-size runtime int arrays with static indexing. M46 adds dynamic runtime-int indexing lowered through bounds-checked dispatch. Arrays are global runtime storage in this milestone.

@@ -1,0 +1,7 @@
+B001|unsupported backend action
+B002|template validation failed
+B003|rdata overflow
+B004|text section overflow
+B005|missing import
+B006|output write failed
+B007|PE verification failed

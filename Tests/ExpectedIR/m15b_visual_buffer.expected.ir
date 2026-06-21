@@ -1,0 +1,5 @@
+RULE_ID|show_string_statement
+COMMAND_ID|show_string
+EXPECT_CONTAINS|ACTION|id=act_0|op=show_message|title=str_0|text=str_1
+EXPECT_CONTAINS|CONST|id=str_1|type=text|value=Line 1\\nLine 2\\nLine 3\\nLine 4\\nLine 5
+EXPECT_NOT_CONTAINS|op=print_stdout

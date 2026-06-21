@@ -1,0 +1,16 @@
+program "ValidUiLayoutFlex"
+set title to string "M19D UI Layout"
+
+define shape called "Menu"
+define button called "PlayButton"
+parent "PlayButton" to "Menu"
+with layout for "Menu"
+    mode: flex
+    direction: vertical
+    gap: 8 px
+    padding: 12 px
+end layout
+
+show message "ui layout flex"
+blend mix to code 0
+end program "ValidUiLayoutFlex"

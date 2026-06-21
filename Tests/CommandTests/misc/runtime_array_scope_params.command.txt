@@ -1,0 +1,8 @@
+COMMAND_ID|runtime_array_scope_params
+MILESTONE|M49_M50
+STATUS|implemented
+TOKENS|define local runtime <int/bool/string> array called <string> size <int>; define function called <string> with runtime <int/bool/string> array <string> size <int>; call function <string> with runtime <int/bool/string> array <string>
+BACKEND_ACTIONS|runtime_int_set,runtime_bool_set,runtime_string_set,runtime_if_int,runtime_if_end,runtime_trap_if_bool_false,function_call,function_call_assign
+POSITIVE_TESTS|local int array return; local string array dynamic index; local array shadows global array; array parameter read/write copy-back; array parameter mixed with scalar parameter
+NEGATIVE_TESTS|local array outside function; local array conflicts with param; array parameter wrong type; array parameter size mismatch
+NOTES|M49 adds function-local runtime arrays. M50 adds fixed-size array parameters lowered through copy-in/copy-back element copies before and after function calls, avoiding pointer/heap ABI changes.

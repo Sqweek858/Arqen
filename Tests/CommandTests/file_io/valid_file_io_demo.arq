@@ -1,0 +1,14 @@
+program "FileIODemo"
+
+define string called "content" be string ""
+
+write file "log.txt" with string "Hello"
+add string " again" to file "log.txt"
+
+load file "log.txt" to "content"
+
+print "content"
+
+blend mix to code 0
+
+end program "FileIODemo"

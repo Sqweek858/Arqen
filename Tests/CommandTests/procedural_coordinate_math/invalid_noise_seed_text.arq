@@ -1,0 +1,6 @@
+program "BadNoiseSeedText"
+define double called "n" be 0
+set "n" to noise at [1, 2] seed string "bad"
+print "n"
+blend mix to code 0
+end program "BadNoiseSeedText"

@@ -1,0 +1,63 @@
+program "WICD_RecordArraysSwitchSimulation"
+// What_I_Can_Do sample 03
+// Record arrays, dynamic runtime index, record array copy/reset, enum fields,
+// int switch and enum switch. Tiny simulation, because apparently samples
+// also need lore now.
+
+print string "== Arqen record arrays + switch simulation =="
+
+define enum called "NodeState" with "Cold", "Warm", "Critical"
+define record called "Node" with runtime int field "heat", runtime string field "label", runtime enum field "state" from "NodeState"
+
+define runtime record array called "nodes" from "Node" size 3
+define runtime record array called "backup" from "Node" size 3
+define runtime int called "i" be 1
+define runtime int called "heat" be 0
+define runtime enum "state" from "NodeState" be "Cold"
+define runtime string called "label" be string ""
+
+set runtime record array "nodes" at 0 field "label" to string "north"
+set runtime record array "nodes" at 0 field "heat" to 12
+set runtime record array "nodes" at 0 field "state" to "Cold"
+
+set runtime record array "nodes" at 1 field "label" to string "core"
+set runtime record array "nodes" at 1 field "heat" to 88
+set runtime record array "nodes" at 1 field "state" to "Critical"
+
+set runtime record array "nodes" at 2 field "label" to string "south"
+set runtime record array "nodes" at 2 field "heat" to 41
+set runtime record array "nodes" at 2 field "state" to "Warm"
+
+copy runtime record array "nodes" to runtime record array "backup"
+
+set runtime string "label" to runtime record array "backup" at runtime int "i" field "label"
+set runtime int "heat" to runtime record array "backup" at runtime int "i" field "heat"
+set runtime enum "state" to runtime record array "backup" at runtime int "i" field "state"
+
+print "label"
+print "heat"
+
+runtime switch enum "state"
+case "Cold"
+print string "node cold"
+case "Warm"
+print string "node warm"
+case "Critical"
+print string "node critical"
+end switch
+
+runtime switch int "heat"
+case 12
+print string "low heat"
+case 41
+print string "medium heat"
+default
+print string "custom heat bucket"
+end switch
+
+reset runtime record array "backup"
+set runtime int "heat" to runtime record array "backup" at 1 field "heat"
+print "heat"
+
+blend mix to code 0
+end program "WICD_RecordArraysSwitchSimulation"

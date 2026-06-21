@@ -1,0 +1,12 @@
+program "InvalidStyleBadScaleNegative"
+
+set title to string "Invalid"
+
+with style for "Panel"
+    scale: -1
+end style
+
+show string "invalid"
+blend mix to code 0
+
+end program "InvalidStyleBadScaleNegative"

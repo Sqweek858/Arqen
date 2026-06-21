@@ -1,0 +1,14 @@
+program "PrintCanonical"
+
+define string called "name" be string "Sqweek"
+define int called "score" be 10
+define bool called "alive" be true
+
+print string "Hi"
+print "name"
+print "score"
+print "alive"
+
+blend mix to code 0
+
+end program "PrintCanonical"

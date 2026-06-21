@@ -1,0 +1,7 @@
+program "BadInvalidPlaneZero"
+
+define plane called "p" be plane normal [0,0,0] distance 0
+
+blend mix to code 0
+
+end program "BadInvalidPlaneZero"

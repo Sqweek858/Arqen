@@ -1,0 +1,11 @@
+COMMAND_ID|comments
+CANONICAL|// <comment text>
+CATEGORY|syntax
+TOKENS|COMMENT_OR_IGNORED_LINE
+AST_NODE|none
+SEMANTIC|ignored
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\comments\valid_full_line_comment.arq
+INVALID_TEST|Tests\CommandTests\comments\invalid_single_slash.arq
+STATUS|stable

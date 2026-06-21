@@ -1,0 +1,23 @@
+program "ValidDx12PerspectiveCameraMetadata"
+set title to string "dx12 perspective camera metadata"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#050916"
+end style
+
+define camera called "MainCamera"
+use camera "MainCamera" for renderer "MainRenderer"
+set camera "MainCamera" projection to perspective
+set position of camera "MainCamera" to [0.0, 0.0, -3.0]
+set rotation of camera "MainCamera" to [0.0, 0.0, 0.0]
+set field of view of camera "MainCamera" to 70 deg
+set near plane of camera "MainCamera" to 0.1
+set far plane of camera "MainCamera" to 100.0
+
+show message "dx12 perspective camera metadata"
+blend mix to code 0
+end program "ValidDx12PerspectiveCameraMetadata"

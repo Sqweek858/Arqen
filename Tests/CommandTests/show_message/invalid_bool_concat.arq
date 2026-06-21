@@ -1,0 +1,6 @@
+program "ShowBadBool"
+let active be true
+title "Bad"
+show message "Hello, " + active
+exit 0
+end program "ShowBadBool"

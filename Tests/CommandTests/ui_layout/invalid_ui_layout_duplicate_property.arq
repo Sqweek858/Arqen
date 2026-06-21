@@ -1,0 +1,12 @@
+program "InvalidUiLayoutDuplicateProperty"
+set title to string "M19D UI Layout"
+
+define shape called "Panel"
+with layout for "Panel"
+    x: 0 px
+    x: 10 px
+end layout
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiLayoutDuplicateProperty"

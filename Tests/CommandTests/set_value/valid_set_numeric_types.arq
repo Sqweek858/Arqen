@@ -1,0 +1,14 @@
+program "SetNumericTypes"
+
+define float called "speed" be 4.5
+define double called "precision" be 0.00001
+
+set "speed" to "speed" + 1.5
+set "precision" to "precision" * 2
+
+print "speed"
+print "precision"
+
+blend mix to code 0
+
+end program "SetNumericTypes"

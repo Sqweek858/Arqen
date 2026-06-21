@@ -1,0 +1,7 @@
+program "Hello"
+
+title "Arqen Byte Zero"
+message text "Hello"
+exit 0
+
+end program "Other"

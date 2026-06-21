@@ -1,0 +1,10 @@
+﻿program "EscapeCloseDemo"
+define window called "Window"
+set title of "Window" to string "Escape To Close"
+set resolution of "Window" to 800 x 600
+show window "Window"
+when key pressed "Escape"
+close window "Window"
+end when
+run window "Window"
+end program "EscapeCloseDemo"

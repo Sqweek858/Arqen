@@ -1,0 +1,11 @@
+program "CacheTest"
+
+let userName be "Sqweek"
+let projectName be "Arqen"
+let greeting be "Hello"
+
+title "Arqen Cache Test"
+message text greeting + ", " + userName + " from " + projectName
+exit 0
+
+end program "CacheTest"

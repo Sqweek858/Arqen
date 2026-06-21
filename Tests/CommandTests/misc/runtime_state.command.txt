@@ -1,0 +1,11 @@
+COMMAND_ID|runtime_state
+CANONICAL|define runtime <type> called "<name>" be <value>; set runtime <type> "<name>" to <value>; print "<name>"
+CATEGORY|runtime
+TOKENS|KEYWORD(define) KEYWORD(runtime) KEYWORD(int) KEYWORD(bool) KEYWORD(string) KEYWORD(called) KEYWORD(be) KEYWORD(set) KEYWORD(to) KEYWORD(print) STRING VALUE
+AST_NODE|RuntimeAction
+SEMANTIC|declares and updates runtime int bool string slots; runtime slot types must match operands
+IR|runtime_int_set,runtime_bool_set,runtime_string_set,print_runtime_slot
+BACKEND|WindowsX64PE.file_io_runtime
+VALID_TEST|Tools\validate_m35a_m35b_m35c_runtime_state.ps1
+INVALID_TEST|Tools\validate_m35a_m35b_m35c_runtime_state.ps1
+STATUS|stable

@@ -1,0 +1,12 @@
+RULE_ID|command_args_statement
+COMMAND_ID|command_args
+EXPECT_CONTAINS|SYMBOL|name=count|type=int|value=runtime(command_arg_count)
+EXPECT_CONTAINS|SYMBOL|name=first|type=text|value=runtime(command_arg_0)
+EXPECT_CONTAINS|SYMBOL|name=second|type=text|value=runtime(command_arg_1)
+EXPECT_CONTAINS|ACTION|id=act_0|op=command_arg_count|path=|value_kind=slot|value=count|target=count
+EXPECT_CONTAINS|ACTION|id=act_1|op=command_arg_index|path=|value_kind=index|value=0|target=first
+EXPECT_CONTAINS|ACTION|id=act_2|op=command_arg_index|path=|value_kind=index|value=1|target=second
+EXPECT_CONTAINS|ACTION|id=act_3|op=print_runtime_slot|path=|value_kind=slot|value=count|target=count
+EXPECT_CONTAINS|ACTION|id=act_4|op=print_runtime_slot|path=|value_kind=slot|value=first|target=first
+EXPECT_CONTAINS|ACTION|id=act_5|op=print_runtime_slot|path=|value_kind=slot|value=second|target=second
+EXPECT_NOT_CONTAINS|CONST|id=str_1|type=text|value=

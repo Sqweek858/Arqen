@@ -1,0 +1,7 @@
+﻿program "HelloMessage"
+
+print string "Hello from Arqen"
+
+blend mix to code 0
+
+end program "HelloMessage"

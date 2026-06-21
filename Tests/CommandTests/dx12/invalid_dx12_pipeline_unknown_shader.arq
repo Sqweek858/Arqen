@@ -1,0 +1,16 @@
+program "InvalidDx12PipelineUnknownShader"
+set title to string "M21B DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "MissingShader"
+    topology: triangle list
+end pipeline
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12PipelineUnknownShader"

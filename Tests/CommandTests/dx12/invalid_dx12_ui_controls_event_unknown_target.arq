@@ -1,0 +1,10 @@
+program "Dx12UiControlsEventUnknownTarget"
+set title to string "dx12 ui invalid"
+
+define button called "AnimationButton"
+when clicked "MissingButton"
+    print string "toggle animation"
+end when
+
+show message "should fail"
+blend mix to code 0

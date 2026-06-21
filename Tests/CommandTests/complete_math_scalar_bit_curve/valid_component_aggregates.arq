@@ -1,0 +1,24 @@
+program "ComponentAggregates"
+
+
+define double called "x" be 0
+
+set "x" to component sum [1, 2, 3]
+print "x"
+
+set "x" to component average [1, 2, 3]
+print "x"
+
+set "x" to component min [-1, 2, 5]
+print "x"
+
+set "x" to component max [-1, 2, 5]
+print "x"
+
+set "x" to component product [2, 3, 4]
+print "x"
+
+
+blend mix to code 0
+
+end program "ComponentAggregates"

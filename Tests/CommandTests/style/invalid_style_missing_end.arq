@@ -1,0 +1,9 @@
+program "BadStyleMissingEnd"
+
+with style for "Panel"
+    color: black
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleMissingEnd"

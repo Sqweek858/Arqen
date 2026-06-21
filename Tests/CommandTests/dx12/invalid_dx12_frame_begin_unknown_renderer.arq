@@ -1,0 +1,8 @@
+program "InvalidDx12FrameBeginUnknownRenderer"
+set title to string "M20G DX12"
+
+begin frame of "MissingRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12FrameBeginUnknownRenderer"

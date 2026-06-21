@@ -1,0 +1,6 @@
+program "BadAngleMismatch"
+define double called "x" be 0
+set "x" to angle between [1, 0], [0, 1, 0]
+print "x"
+blend mix to code 0
+end program "BadAngleMismatch"

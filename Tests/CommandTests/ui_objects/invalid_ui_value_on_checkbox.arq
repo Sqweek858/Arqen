@@ -1,0 +1,11 @@
+program "M19CInvalidValueOnCheckbox"
+
+set title to string "M19C invalid"
+
+define checkbox called "FullscreenCheck"
+set value of "FullscreenCheck" to 1
+
+show string "should fail"
+blend mix to code 0
+
+end program "M19CInvalidValueOnCheckbox"

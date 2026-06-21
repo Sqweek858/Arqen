@@ -1,0 +1,45 @@
+program "InvalidDx12ConstantBufferUnknownField"
+set title to string "M21GH DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+define shader called "TriangleShader"
+    vertex source file "Samples/DX12/Shaders/triangle_vs.hlsl"
+    pixel source file "Samples/DX12/Shaders/triangle_tint_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "TrianglePipeline" for renderer "MainRenderer"
+
+define vertex buffer called "TriangleVertices"
+    vertex position [-0.5, -0.5, 0.0] color [1.0, 1.0, 1.0, 1.0]
+    vertex position [0.0, 0.5, 0.0] color [1.0, 1.0, 1.0, 1.0]
+    vertex position [0.5, -0.5, 0.0] color [1.0, 1.0, 1.0, 1.0]
+end vertex buffer
+
+use vertex buffer "TriangleVertices" for renderer "MainRenderer"
+
+define constant buffer called "TriangleParams"
+    color glow: color "#38FFC0"
+end constant buffer
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+draw 3 vertices with renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12ConstantBufferUnknownField"

@@ -1,0 +1,9 @@
+program "BadStyleEmptyBlock"
+
+with style for "Panel"
+end style
+
+show string "nope"
+blend mix to code 0
+
+end program "BadStyleEmptyBlock"

@@ -1,0 +1,6 @@
+program "BadSphericalYaw"
+define vec3 called "p" be [0, 0, 0]
+set "p" to spherical radius 1 yaw string "bad" pitch 0 deg
+print "p"
+blend mix to code 0
+end program "BadSphericalYaw"

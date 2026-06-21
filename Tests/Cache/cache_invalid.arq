@@ -1,0 +1,7 @@
+program "CacheInvalid"
+
+title "Bad"
+message text "Hello, " + missingName
+exit 0
+
+end program "CacheInvalid"

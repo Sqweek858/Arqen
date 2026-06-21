@@ -1,0 +1,11 @@
+COMMAND_ID|show_message
+CANONICAL|show message <text-expression>
+CATEGORY|output
+TOKENS|KEYWORD(show) KEYWORD(message) EXPRESSION
+AST_NODE|ShowMessage
+SEMANTIC|expression must resolve to text; reject unknown variables and type mismatches
+IR|show_message.text
+BACKEND|WindowsX64PE.show_message
+VALID_TEST|Tests\CommandTests\show_message\valid_literal.arq
+INVALID_TEST|Tests\CommandTests\show_message\invalid_unknown_variable.arq;Tests\CommandTests\show_message\invalid_bool_concat.arq
+STATUS|stable

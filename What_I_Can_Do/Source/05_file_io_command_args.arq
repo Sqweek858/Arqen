@@ -1,0 +1,22 @@
+program "WICD_FileIoCommandArgs"
+// What_I_Can_Do sample 05
+// File I/O + command args. Run the built exe with an argument if you want
+// to see it write/load a small file in the current working directory.
+
+define string called "argVal" be command arg 0
+define string called "content" be string ""
+define int called "score" be 68
+define bool called "ok" be true
+
+write file "what_i_can_do_runtime_log.txt" with string "ARG: "
+add "argVal" to file "what_i_can_do_runtime_log.txt"
+add string "\nSCORE: " to file "what_i_can_do_runtime_log.txt"
+add "score" to file "what_i_can_do_runtime_log.txt"
+add string "\nOK: " to file "what_i_can_do_runtime_log.txt"
+add "ok" to file "what_i_can_do_runtime_log.txt"
+
+load file "what_i_can_do_runtime_log.txt" to "content"
+print "content"
+
+blend mix to code 0
+end program "WICD_FileIoCommandArgs"

@@ -1,0 +1,7 @@
+ARQIR|version=0
+TARGET|kind=program|name=BadAction
+META|source=Tests/Backend/WindowsX64PE/invalid_unsupported_action.arqir
+CONST|id=i32_0|type=int|value=0
+ACTION|id=act_0|op=print|text=i32_0
+ENTRY|actions=act_0
+END

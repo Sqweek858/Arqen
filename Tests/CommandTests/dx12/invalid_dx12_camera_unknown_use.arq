@@ -1,0 +1,12 @@
+program "InvalidDx12CameraUnknownUse"
+set title to string "M25 DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+use camera "GhostCamera" for renderer "MainRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12CameraUnknownUse"

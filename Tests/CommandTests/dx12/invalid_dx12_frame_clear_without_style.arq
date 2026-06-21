@@ -1,0 +1,13 @@
+program "InvalidDx12FrameClearWithoutStyle"
+set title to string "M20G DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12FrameClearWithoutStyle"

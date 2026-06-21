@@ -1,0 +1,16 @@
+program "ProceduralRandomVectors"
+
+set random seed to 7
+
+define vec2 called "p2" be [0, 0]
+define vec3 called "p3" be [0, 0, 0]
+
+set "p2" to random vector2 inside circle radius 5
+print "p2"
+
+set "p3" to random vector3 inside sphere radius 2
+print "p3"
+
+blend mix to code 0
+
+end program "ProceduralRandomVectors"

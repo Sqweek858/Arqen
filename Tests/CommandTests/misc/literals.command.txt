@@ -1,0 +1,11 @@
+COMMAND_ID|literals
+CANONICAL|"text" | 0 | true | false
+CATEGORY|expression
+TOKENS|STRING INT KEYWORD(true) KEYWORD(false)
+AST_NODE|Literal
+SEMANTIC|type inferred from literal token
+IR|constant
+BACKEND|none
+VALID_TEST|Tests\CommandTests\let\valid_multiple.arq
+INVALID_TEST|Tests\CommandTests\message_text\invalid_bool_concat.arq
+STATUS|stable

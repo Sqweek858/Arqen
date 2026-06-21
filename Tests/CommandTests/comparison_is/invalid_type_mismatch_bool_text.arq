@@ -1,0 +1,11 @@
+program "CompareMismatchBoolText"
+
+let active be true
+
+title "M13 Compare"
+if active is "true"
+show message "bad"
+end if
+blend mix to code 0
+
+end program "CompareMismatchBoolText"

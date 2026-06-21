@@ -1,0 +1,11 @@
+﻿COMMAND_ID|vector_math
+CANONICAL|vector math literals and scalar/vector operations
+CATEGORY|expression
+TOKENS|KEYWORD(vec2),KEYWORD(vec3),KEYWORD(vec4),LBRACKET,RBRACKET,COMMA,IDENT
+AST_NODE|VectorExpression
+SEMANTIC|evaluates compile-time vec2, vec3, vec4 literals, vector arithmetic, length, normalize, dot, and cross
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\vector_math\valid_vector_basic.arq
+INVALID_TEST|Tests\CommandTests\vector_math\invalid_vector_dim_mismatch.arq
+STATUS|experimental

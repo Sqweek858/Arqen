@@ -1,0 +1,9 @@
+program "BadComparison"
+
+if string "name" > 1
+print string "bad"
+end if
+
+blend mix to code 0
+
+end program "BadComparison"

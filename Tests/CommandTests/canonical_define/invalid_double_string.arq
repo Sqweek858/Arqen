@@ -1,0 +1,7 @@
+program "BadDouble"
+
+define double called "precision" be string "tiny"
+
+blend mix to code 0
+
+end program "BadDouble"

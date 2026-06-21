@@ -1,0 +1,8 @@
+program "InvalidDx12SelectWithUnknownSelector"
+set title to string "invalid dx12 select unknown selector"
+
+when mouse button "Left" is pressed select object using "MissingSelector"
+
+show message "invalid"
+blend mix to code 0
+end program "InvalidDx12SelectWithUnknownSelector"

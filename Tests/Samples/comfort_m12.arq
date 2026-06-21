@@ -1,0 +1,12 @@
+program "ComfortDemo"
+
+// comments work
+let userName be "Sqweek"
+let greeting be "Hello"
+
+set title to "Arqen M12"
+show message greeting + ", " + userName // trailing comment
+
+blend mix to code 0
+
+end program "ComfortDemo"

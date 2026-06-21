@@ -1,0 +1,10 @@
+program "ValidDx12RendererParentWindow"
+set title to string "M20B DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+show message "dx12 renderer parent"
+blend mix to code 0
+end program "ValidDx12RendererParentWindow"

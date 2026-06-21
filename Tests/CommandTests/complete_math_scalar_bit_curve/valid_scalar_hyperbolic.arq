@@ -1,0 +1,27 @@
+program "ScalarHyperbolic"
+
+
+define double called "x" be 0
+
+set "x" to sinh 0
+print "x"
+
+set "x" to cosh 0
+print "x"
+
+set "x" to tanh 0
+print "x"
+
+set "x" to asinh 0
+print "x"
+
+set "x" to acosh 1
+print "x"
+
+set "x" to atanh 0.5
+print "x"
+
+
+blend mix to code 0
+
+end program "ScalarHyperbolic"

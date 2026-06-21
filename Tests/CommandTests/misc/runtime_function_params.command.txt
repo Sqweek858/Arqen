@@ -1,0 +1,37 @@
+COMMAND|runtime_function_params|M42|runtime_function
+STATUS|supported
+
+FORMS|
+define function called "Name" with runtime int "x"
+define function called "Name" with runtime bool "flag"
+define function called "Name" with runtime string "text"
+define function called "Name" with runtime int "x", runtime string "name"
+call function "Name" with int 1
+call function "Name" with bool true
+call function "Name" with string "Cryblo"
+call function "Name" with runtime int "slot"
+set runtime int "out" to call function "Name" with int 41
+set runtime string "out" to call function "Name" with string "Cryblo"
+
+IR|
+FUNCTION|params=<type:name:internal_slot>
+runtime_int_set / runtime_bool_set / runtime_string_set copied before function_call/function_call_assign
+function_call
+function_call_assign
+
+SEMANTIC|
+Parameter declarations require runtime int/bool/string.
+Arguments must match parameter count and type.
+Static arguments use int/bool/string syntax.
+Slot arguments use runtime int/bool/string syntax.
+Parameter names cannot duplicate each other or shadow existing symbols in M42.
+M42 uses internal parameter slots; M43 adds explicit function-local runtime slots.
+
+NEGATIVE_TESTS|
+missing argument
+extra argument
+wrong argument type
+duplicate parameter name
+parameter shadows global symbol
+call with args to no-param function
+call without args to param function

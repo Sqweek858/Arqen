@@ -1,0 +1,7 @@
+program "InvalidAngleMissingUnit"
+
+define angle called "bad" be 90
+
+blend mix to code 0
+
+end program "InvalidAngleMissingUnit"

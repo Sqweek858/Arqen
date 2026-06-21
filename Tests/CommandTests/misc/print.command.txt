@@ -1,0 +1,11 @@
+COMMAND_ID|print
+CANONICAL|print string "<text>" OR print "<name>"
+CATEGORY|output
+TOKENS|KEYWORD(print) VALUE
+AST_NODE|Print
+SEMANTIC|compile-time output value is appended to the stdout print buffer
+IR|print_stdout.text
+BACKEND|WindowsX64PE.print_stdout
+VALID_TEST|Tests\CommandTests\print\valid_print_values.arq
+INVALID_TEST|Tests\CommandTests\print\invalid_missing_symbol.arq
+STATUS|stable

@@ -1,0 +1,14 @@
+valid_if_true_branch.arq|0|MESSAGE|true branch
+valid_if_false_else_branch.arq|0|MESSAGE|false branch
+valid_if_without_else_false.arq|0|MESSAGE|after if
+valid_text_comparison.arq|0|MESSAGE|name ok
+valid_is_not.arq|0|MESSAGE|not bob
+invalid_if_no_condition.arq|1|ERROR|P053|parse
+invalid_if_non_bool_condition.arq|1|ERROR|P052|parse
+invalid_if_missing_end_if.arq|1|ERROR|P057|parse
+invalid_if_else_without_if.arq|1|ERROR|P055|parse
+invalid_if_end_if_without_if.arq|1|ERROR|P056|parse
+invalid_if_duplicate_else.arq|1|ERROR|P055|parse
+invalid_if_type_mismatch.arq|1|ERROR|S021|semantic
+invalid_if_unknown_variable.arq|1|ERROR|S020|semantic
+invalid_if_nested_if_if_not_supported.arq|1|ERROR|P054|parse

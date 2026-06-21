@@ -1,0 +1,34 @@
+program "Dx12ShaderPipelineM21B"
+set title to string "Arqen M21B DX12 Shader Pipeline"
+
+define window called "MainWindow"
+set title of "MainWindow" to string "Arqen M21B DX12 Shader Pipeline"
+set resolution of "MainWindow" to 1280 x 720
+show window "MainWindow"
+
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+with style for "MainRenderer"
+    background color: color "#101820"
+end style
+
+define shader called "TriangleShader"
+    vertex source file "Shaders/triangle_vs.hlsl"
+    pixel source file "Shaders/triangle_ps.hlsl"
+end shader
+
+define dx12 pipeline called "TrianglePipeline"
+    renderer: "MainRenderer"
+    shader: "TriangleShader"
+    topology: triangle list
+end pipeline
+
+use pipeline "TrianglePipeline" for renderer "MainRenderer"
+begin frame of "MainRenderer"
+clear renderer "MainRenderer"
+end frame of "MainRenderer"
+present frame of "MainRenderer"
+
+run window "MainWindow"
+end program "Dx12ShaderPipelineM21B"

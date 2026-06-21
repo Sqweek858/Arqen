@@ -1,0 +1,7 @@
+program "ShowMissing"
+
+set title to string "M14A"
+show "missing"
+blend mix to code 0
+
+end program "ShowMissing"

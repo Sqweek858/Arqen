@@ -1,0 +1,11 @@
+program "RecursiveFunction"
+
+define function called "loop"
+call function "loop"
+end function
+
+call function "loop"
+
+blend mix to code 0
+
+end program "RecursiveFunction"

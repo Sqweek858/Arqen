@@ -1,0 +1,27 @@
+program "AdvancedVector"
+
+define vec3 called "a" be [0, 0, 0]
+define vec3 called "b" be [10, 0, 0]
+define vec3 called "dir" be [1, -1, 0]
+define vec3 called "normal" be [0, 1, 0]
+define vec3 called "out" be [0, 0, 0]
+define double called "d" be 0
+
+set "out" to lerp "a", "b", 0.25
+print "out"
+
+set "d" to distance "a", "b"
+print "d"
+
+set "out" to reflect "dir", "normal"
+print "out"
+
+set "out" to project [2, 2, 0] onto [1, 0, 0]
+print "out"
+
+set "out" to clamp length [10, 0, 0] to 3
+print "out"
+
+blend mix to code 0
+
+end program "AdvancedVector"

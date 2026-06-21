@@ -1,0 +1,6 @@
+program "BadScalarTanColor"
+define double called "x" be 0
+set "x" to tan color red
+print "x"
+blend mix to code 0
+end program "BadScalarTanColor"

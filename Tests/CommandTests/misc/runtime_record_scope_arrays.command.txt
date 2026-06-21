@@ -1,0 +1,17 @@
+COMMAND_ID|runtime_record_scope_arrays
+MILESTONE|M53_M54
+VALIDATOR|Tools\validate_m53_m54_record_scope_arrays.ps1
+DOC|Docs\Milestones\\M51_M55.md
+
+SYNTAX|define local runtime record "<name>" from "<record type>"
+SYNTAX|define function called "<name>" with runtime record "<param>" from "<record type>"
+SYNTAX|call function "<name>" with runtime record "<record>"
+SYNTAX|define runtime record array called "<name>" from "<record type>" size <positive-int>
+SYNTAX|set runtime record array "<name>" at <index> field "<field>" to <runtime-compatible-value>
+SYNTAX|set runtime <type> "<slot>" to runtime record array "<name>" at <index> field "<field>"
+
+LOWERING|local records use function-owned __fn_<function>_local_rec_<record> storage
+LOWERING|record params use copy-in/copy-back between caller record fields and param record fields
+LOWERING|record arrays use __recarr_<array>_<index>_<field> slots
+LOWERING|dynamic record-array indexes reuse runtime_if_int dispatch and runtime_trap_if_bool_false
+BACKEND_ACTIONS|none-new

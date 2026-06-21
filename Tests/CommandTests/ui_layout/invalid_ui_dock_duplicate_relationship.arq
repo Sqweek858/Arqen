@@ -1,0 +1,11 @@
+program "InvalidUiDockDuplicateRelationship"
+set title to string "M19D UI Layout"
+
+define shape called "Root"
+define shape called "Panel"
+parent "Panel" to "Root"
+dock "Panel" to left of "Root"
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiDockDuplicateRelationship"

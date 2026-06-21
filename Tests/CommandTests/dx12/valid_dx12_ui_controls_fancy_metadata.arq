@@ -1,0 +1,39 @@
+program "Dx12UiControlsFancyMetadata"
+set title to string "dx12 ui controls fancy metadata"
+
+define dx12 renderer called "MainRenderer"
+define shape called "Panel"
+define slider called "ExposureSlider"
+set range of "ExposureSlider" to 0, 100
+set value of "ExposureSlider" to 50
+
+define input field called "NameInput"
+set placeholder of "NameInput" to string "Name"
+set value of "NameInput" to string "CubeA"
+
+define dropdown called "QualityDropdown"
+set content of "QualityDropdown" to string "Quality"
+add string "Low" to "QualityDropdown"
+add string "High" to "QualityDropdown"
+
+define button called "AnimationButton"
+set content of "AnimationButton" to string "Toggle"
+when clicked "AnimationButton"
+    print string "toggle animation"
+end when
+
+with layout for "Panel"
+    x: 0 px
+    y: 0 px
+    width: 320 px
+    height: 200 px
+end layout
+
+with style for "Panel"
+    background color: color "#101820"
+    clip children: true
+end style
+
+show message "dx12 ui controls fancy metadata"
+blend mix to code 0
+end program "Dx12UiControlsFancyMetadata"

@@ -1,0 +1,9 @@
+program "WhileMissingSymbol"
+
+while "missing" > 0
+print string "bad"
+end while
+
+blend mix to code 0
+
+end program "WhileMissingSymbol"

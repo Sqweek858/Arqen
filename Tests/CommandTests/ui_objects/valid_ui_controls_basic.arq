@@ -1,0 +1,24 @@
+program "M19CUIControls"
+
+set title to string "M19C UI Controls"
+
+define slider called "VolumeSlider"
+set range of "VolumeSlider" to 0, 100
+set value of "VolumeSlider" to 50
+
+define input field called "NameInput"
+set placeholder of "NameInput" to string "Enter name"
+set value of "NameInput" to string "Sqweek"
+
+define checkbox called "FullscreenCheck"
+set checked of "FullscreenCheck" to false
+
+define dropdown called "QualityDropdown"
+add string "Low" to "QualityDropdown"
+add string "Medium" to "QualityDropdown"
+add string "High" to "QualityDropdown"
+
+show string "ui controls basic"
+blend mix to code 0
+
+end program "M19CUIControls"

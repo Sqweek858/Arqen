@@ -1,0 +1,28 @@
+program "ComplexBasic"
+
+define complex called "z" be 2 + 3i
+define complex called "w" be complex 1, -4
+define complex called "out" be complex 0, 0
+define double called "x" be 0
+
+set "out" to "z" + "w"
+print "out"
+
+set "out" to "z" * "w"
+print "out"
+
+set "x" to real "z"
+print "x"
+
+set "x" to imag "z"
+print "x"
+
+set "x" to magnitude complex 3, 4
+print "x"
+
+set "x" to phase complex 1, 0
+print "x"
+
+blend mix to code 0
+
+end program "ComplexBasic"

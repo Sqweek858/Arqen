@@ -1,0 +1,9 @@
+program "InvalidUiParentUnknownParent"
+set title to string "M19D UI Layout"
+
+define text called "Title"
+parent "Title" to "Missing"
+
+show message "nope"
+blend mix to code 0
+end program "InvalidUiParentUnknownParent"

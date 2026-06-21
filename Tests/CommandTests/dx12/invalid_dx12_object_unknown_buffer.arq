@@ -1,0 +1,9 @@
+program "InvalidDx12ObjectUnknownBuffer"
+set title to string "M23 DX12"
+
+define object called "CrystalA"
+use vertex buffer "MissingVertices" for object "CrystalA"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12ObjectUnknownBuffer"

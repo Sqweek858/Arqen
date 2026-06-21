@@ -1,0 +1,9 @@
+program "InvalidDx12SelectorUnknownRenderer"
+set title to string "invalid dx12 selector unknown renderer"
+
+define object selector called "PrimarySelector"
+use object selector "PrimarySelector" for renderer "MissingRenderer"
+
+show message "invalid"
+blend mix to code 0
+end program "InvalidDx12SelectorUnknownRenderer"

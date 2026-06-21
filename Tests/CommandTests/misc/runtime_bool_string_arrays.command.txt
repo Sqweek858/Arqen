@@ -1,0 +1,8 @@
+COMMAND_ID|runtime_bool_string_arrays
+MILESTONE|M47_M48
+STATUS|implemented
+TOKENS|define runtime bool array called <string> size <int>; define runtime string array called <string> size <int>; set runtime bool/string array <string> at <int-or-runtime-int-slot> to <bool-or-string-or-slot>; set runtime bool/string <string> to runtime bool/string array <string> at <int-or-runtime-int-slot>; set runtime int <string> to length of runtime <int/bool/string> array <string>
+BACKEND_ACTIONS|runtime_bool_set,runtime_string_set,runtime_int_set,runtime_if_int,runtime_if_end,runtime_trap_if_bool_false
+POSITIVE_TESTS|bool static set/get; bool dynamic set/get; string static set/get; string dynamic set/get; array length; function integration; bounds trap
+NEGATIVE_TESTS|wrong value type; wrong get target type; size zero; static out of bounds; missing array; wrong dynamic index slot type; symbol collisions
+NOTES|M47 extends the M45/M46 internal-slot array lowering model to bool and string arrays. M48 adds a length helper lowered to runtime_int_set with the fixed array size. Arrays remain global runtime storage only.

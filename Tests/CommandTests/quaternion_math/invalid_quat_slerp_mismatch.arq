@@ -1,0 +1,11 @@
+program "InvalidQuatSlerpMismatch"
+
+define quat called "a" be identity
+define vec3 called "b" be [0, 0, 1]
+define quat called "out" be identity
+
+set "out" to slerp "a", "b", 0.5
+
+blend mix to code 0
+
+end program "InvalidQuatSlerpMismatch"

@@ -1,0 +1,9 @@
+program "InvalidDx12ObjectRotationBadVector"
+set title to string "invalid dx12 object rotation bad vector"
+
+define box called "CubeA"
+set rotation of object "CubeA" to [10.0, 20.0]
+
+show message "invalid dx12 object rotation bad vector"
+blend mix to code 0
+end program "InvalidDx12ObjectRotationBadVector"

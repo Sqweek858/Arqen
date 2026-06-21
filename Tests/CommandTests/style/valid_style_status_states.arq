@@ -1,0 +1,23 @@
+program "StyleStatusStates"
+
+set title to string "M19B Style States"
+
+with style for "NameInput" when error
+    border color: crimson
+    outline color: crimson
+end style
+
+with style for "NameInput" when success
+    border color: emerald
+    outline color: emerald
+end style
+
+with style for "Card" when dragged
+    opacity: 0.75
+    shadow opacity: 0.45
+end style
+
+show string "style status states"
+blend mix to code 0
+
+end program "StyleStatusStates"

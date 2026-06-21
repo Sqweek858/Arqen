@@ -1,0 +1,11 @@
+COMMAND_ID|comparison_is
+CANONICAL|<value> is <value>
+CATEGORY|expression
+TOKENS|VALUE KEYWORD(is) VALUE KEYWORD(not)
+AST_NODE|CompareIs
+SEMANTIC|operands must have same compile-time type; result is bool
+IR|none
+BACKEND|none
+VALID_TEST|Tests\CommandTests\comparison_is\valid_int_is_true.arq
+INVALID_TEST|Tests\CommandTests\comparison_is\invalid_type_mismatch_int_text.arq;Tests\CommandTests\comparison_is\invalid_unknown_variable.arq;Tests\CommandTests\comparison_is\invalid_missing_right_operand.arq
+STATUS|stable

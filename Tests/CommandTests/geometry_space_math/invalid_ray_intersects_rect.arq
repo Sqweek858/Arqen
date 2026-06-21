@@ -1,0 +1,10 @@
+program "BadInvalidRayIntersects"
+
+define ray called "r" be ray origin [0,0,0] direction [1,0,0]
+define rect called "box2d" be rect [0,0] size [1,1]
+define bool called "hit" be false
+set "hit" to ray "r" intersects "box2d"
+
+blend mix to code 0
+
+end program "BadInvalidRayIntersects"

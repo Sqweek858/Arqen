@@ -1,0 +1,10 @@
+program "VectorLiteralNested"
+
+define vec3 called "v" be [0, 0, 0]
+
+set "v" to [1 + 2, sqrt 16, max 5, 9]
+print "v"
+
+blend mix to code 0
+
+end program "VectorLiteralNested"

@@ -1,0 +1,37 @@
+program "ValidDx12TwoPipelinesTwoRenderers"
+set title to string "M21B DX12"
+
+define window called "MainWindow"
+define dx12 renderer called "RendererA"
+define dx12 renderer called "RendererB"
+parent renderer "RendererA" to window "MainWindow"
+parent renderer "RendererB" to window "MainWindow"
+
+define shader called "ShaderA"
+    vertex source file "Shaders/a_vs.hlsl"
+    pixel source file "Shaders/a_ps.hlsl"
+end shader
+
+define shader called "ShaderB"
+    vertex source file "Shaders/b_vs.hlsl"
+    pixel source file "Shaders/b_ps.hlsl"
+end shader
+
+define dx12 pipeline called "PipelineA"
+    renderer: "RendererA"
+    shader: "ShaderA"
+    topology: triangle list
+end pipeline
+
+define dx12 pipeline called "PipelineB"
+    renderer: "RendererB"
+    shader: "ShaderB"
+    topology: triangle list
+end pipeline
+
+use pipeline "PipelineA" for renderer "RendererA"
+use pipeline "PipelineB" for renderer "RendererB"
+
+show message "dx12 two pipelines"
+blend mix to code 0
+end program "ValidDx12TwoPipelinesTwoRenderers"

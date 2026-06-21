@@ -1,0 +1,17 @@
+program "FileIOWithSymbols"
+
+define string called "line" be string "First"
+define string called "extra" be string "Second"
+define string called "content" be string ""
+
+write file "log.txt" with "line"
+add string "\n" to file "log.txt"
+add "extra" to file "log.txt"
+
+load file "log.txt" to "content"
+
+print "content"
+
+blend mix to code 0
+
+end program "FileIOWithSymbols"

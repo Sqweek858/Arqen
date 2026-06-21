@@ -1,0 +1,59 @@
+program "MathScalarDemo"
+
+define double called "x" be 0
+define int called "i" be 0
+
+set "x" to sqrt 25
+print "x"
+
+set "x" to abs -10
+print "x"
+
+set "i" to floor 4.9
+print "i"
+
+set "i" to ceil 4.1
+print "i"
+
+set "i" to round 4.5
+print "i"
+
+set "x" to min 10, 20
+print "x"
+
+set "x" to max 10, 20
+print "x"
+
+set "x" to clamp 120 between 0 and 100
+print "x"
+
+set "x" to sin 0
+print "x"
+
+set "x" to cos 0
+print "x"
+
+set "x" to tan 0
+print "x"
+
+set "x" to pow 2, 8
+print "x"
+
+set "x" to log 1
+print "x"
+
+set "x" to log10 100
+print "x"
+
+set "x" to exp 0
+print "x"
+
+set "x" to pi
+print "x"
+
+set "x" to e
+print "x"
+
+blend mix to code 0
+
+end program "MathScalarDemo"

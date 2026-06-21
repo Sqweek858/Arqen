@@ -1,0 +1,8 @@
+program "InvalidDx12RendererEmptyName"
+set title to string "M20B DX12"
+
+define dx12 renderer called ""
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12RendererEmptyName"

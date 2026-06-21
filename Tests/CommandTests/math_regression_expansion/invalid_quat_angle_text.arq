@@ -1,0 +1,5 @@
+program "BadQuatAngleText"
+define quat called "q" be quat from axis [1, 0, 0] angle string "bad"
+print "q"
+blend mix to code 0
+end program "BadQuatAngleText"

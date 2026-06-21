@@ -1,0 +1,15 @@
+program "ValidDx12ObjectSelectorRotateMetadata"
+set title to string "dx12 object selector rotate metadata"
+
+define window called "MainWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "MainWindow"
+
+define object selector called "PrimarySelector"
+use object selector "PrimarySelector" for renderer "MainRenderer"
+when mouse button "Left" is pressed select object using "PrimarySelector"
+when key "R" is held rotate selected object around y by mouse x sensitivity 0.35
+
+show message "dx12 object selector rotate metadata"
+blend mix to code 0
+end program "ValidDx12ObjectSelectorRotateMetadata"

@@ -1,0 +1,5 @@
+program "BadRandomSeedNegative"
+set random seed to -1
+print string "x"
+blend mix to code 0
+end program "BadRandomSeedNegative"

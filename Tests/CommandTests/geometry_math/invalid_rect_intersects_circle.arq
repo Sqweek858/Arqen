@@ -1,0 +1,11 @@
+program "InvalidRectIntersectsUnsupportedShape"
+
+define rect called "panel" be rect [0, 0] size [10, 10]
+define segment called "edge" be segment from [0, 0] to [10, 0]
+
+set "hit" to rect "panel" intersects "edge"
+
+set title to "InvalidRectIntersectsUnsupportedShape"
+show message "should not compile"
+blend mix to code 0
+end program

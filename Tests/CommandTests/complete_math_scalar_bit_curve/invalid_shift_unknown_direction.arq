@@ -1,0 +1,8 @@
+program "BadInvalidShiftUnknown"
+
+define int called "i" be 0
+set "i" to shift sideways 1 by 2
+
+blend mix to code 0
+
+end program "BadInvalidShiftUnknown"

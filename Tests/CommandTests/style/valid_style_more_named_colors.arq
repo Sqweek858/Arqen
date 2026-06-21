@@ -1,0 +1,16 @@
+program "StyleMoreNamedColors"
+
+set title to string "M19B Style Colors"
+
+with style for "Badge"
+    background color: gold
+    foreground color: indigo
+    accent color: amber
+    border color: violet
+    shadow color: slate
+end style
+
+show string "style more named colors"
+blend mix to code 0
+
+end program "StyleMoreNamedColors"

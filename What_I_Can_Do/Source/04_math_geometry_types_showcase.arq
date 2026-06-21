@@ -1,0 +1,49 @@
+program "WICD_MathGeometryTypesShowcase"
+// What_I_Can_Do sample 04
+// Compile-time/math surface: scalar helpers, vectors, matrices, quaternions,
+// complex numbers, 2D/3D geometry primitives and intersection tests.
+
+print string "== Arqen math + geometry type showcase =="
+
+define double called "x" be 0
+define vec3 called "p" be [0, 0, 0]
+define mat4 called "m" be identity
+define quat called "rot" be quat from axis [0, 0, 1] angle 90 deg
+define complex called "z" be 2 + 3i
+define complex called "w" be complex 1, -4
+define complex called "out" be complex 0, 0
+define rect called "panel" be rect [0, 0] size [10, 10]
+define circle called "area" be circle center [0, 0] radius 5
+define sphere called "s1" be sphere center [0, 0, 0] radius 2
+define sphere called "s2" be sphere center [3, 0, 0] radius 2
+define aabb called "b1" be aabb center [0, 0, 0] size [2, 2, 2]
+define aabb called "b2" be aabb center [1, 1, 1] size [2, 2, 2]
+define bool called "hit" be false
+
+set "x" to smoothstep 0, 1, 0.5
+print "x"
+set "x" to remap 25 from 0, 100 to 0, 1
+print "x"
+
+set "m" to rotate z 90 deg
+set "p" to transform point "m", [1, 0, 0]
+print "p"
+set "p" to rotate vector [1, 0, 0] by "rot"
+print "p"
+
+set "out" to "z" * "w"
+print "out"
+set "x" to magnitude complex 3, 4
+print "x"
+
+set "hit" to point [3, 4] inside "area"
+print "hit"
+set "hit" to point [5, 5] inside "panel"
+print "hit"
+set "hit" to sphere "s1" intersects "s2"
+print "hit"
+set "hit" to aabb "b1" intersects "b2"
+print "hit"
+
+blend mix to code 0
+end program "WICD_MathGeometryTypesShowcase"

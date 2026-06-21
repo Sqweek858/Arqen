@@ -1,0 +1,5 @@
+program "BadCircleCenterVec3"
+define circle called "c" be circle center [0, 0, 0] radius 1
+print "c"
+blend mix to code 0
+end program "BadCircleCenterVec3"

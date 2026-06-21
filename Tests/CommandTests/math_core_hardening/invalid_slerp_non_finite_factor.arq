@@ -1,0 +1,11 @@
+program "InvalidSlerpNonFiniteFactor"
+
+define quat called "a" be identity
+define quat called "b" be quat from axis [0, 0, 1] angle 90 deg
+define quat called "out" be identity
+
+set "out" to slerp "a", "b", exp 100000
+
+blend mix to code 0
+
+end program "InvalidSlerpNonFiniteFactor"

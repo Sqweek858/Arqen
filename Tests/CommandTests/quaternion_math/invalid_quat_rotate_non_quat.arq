@@ -1,0 +1,10 @@
+program "InvalidQuatRotateNonQuat"
+
+define vec3 called "notRot" be [0, 0, 1]
+define vec3 called "out" be [0, 0, 0]
+
+set "out" to rotate vector [1, 0, 0] by "notRot"
+
+blend mix to code 0
+
+end program "InvalidQuatRotateNonQuat"

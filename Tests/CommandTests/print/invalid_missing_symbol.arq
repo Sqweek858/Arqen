@@ -1,0 +1,7 @@
+program "PrintMissing"
+
+print "missing"
+
+blend mix to code 0
+
+end program "PrintMissing"

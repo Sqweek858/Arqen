@@ -1,0 +1,14 @@
+program "CanonicalIfInt"
+
+define int called "score" be 10
+
+set title to string "M14A"
+if "score" is 10
+show string "ok"
+else
+show string "bad"
+end if
+
+blend mix to code 0
+
+end program "CanonicalIfInt"

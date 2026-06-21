@@ -1,0 +1,7 @@
+program "SetMissing"
+
+set "missing" to 1
+
+blend mix to code 0
+
+end program "SetMissing"

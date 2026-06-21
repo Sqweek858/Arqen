@@ -1,0 +1,10 @@
+program "InvalidDx12ParentToButtonInsteadOfWindow"
+set title to string "M20D DX12"
+
+define button called "FakeWindow"
+define dx12 renderer called "MainRenderer"
+parent renderer "MainRenderer" to window "FakeWindow"
+
+show message "bad"
+blend mix to code 0
+end program "InvalidDx12ParentToButtonInsteadOfWindow"
